@@ -8,8 +8,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.locale = locale;
   context.locals.t = createT(locale);
 
+  // Bypass cookie cache so role/disabled changes (e.g. /setup) are visible immediately.
   const session = await auth.api.getSession({
-    headers: context.request.headers
+    headers: context.request.headers,
+    query: { disableCookieCache: true }
   });
 
   const user = session?.user
@@ -28,6 +30,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     : null;
 
+  // Authoritative role/disabled from DB (session can lag after direct updates).
+  if (user) {
+    const [row] = await db
+      .select({ role: User.role, disabled: User.disabled })
+      .from(User)
+      .where(eq(User.id, user.id))
+      .limit(1);
+    if (row) {
+      user.role = row.role ?? "member";
+      user.disabled = row.disabled ?? false;
+    }
+  }
+
   context.locals.user = user;
   context.locals.session = session?.session ?? null;
 
@@ -41,15 +56,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (path.startsWith("/admin")) {
     if (!user) return context.redirect("/sign-in");
-    // Role can be stale in Better Auth cookie cache after /setup — trust the DB.
-    const [row] = await db
-      .select({ role: User.role })
-      .from(User)
-      .where(eq(User.id, user.id))
-      .limit(1);
-    const role = row?.role ?? user.role;
-    user.role = role;
-    if (role !== "admin") return context.redirect("/");
+    if (user.role !== "admin") return context.redirect("/");
   }
 
   if (path === "/settings" || path === "/setup") {

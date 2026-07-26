@@ -7,9 +7,14 @@ import { db, eq, User } from "astro:db";
 const { t, user } = Astro.locals;
 
 // Check action result before the "admin exists" gate: the becomeAdmin
-// handler creates an admin, so checking the DB first would 404 the success redirect.
+// handler creates an admin, so checking the DB first would block the success redirect.
 const result = Astro.getActionResult(actions.auth.becomeAdmin);
 if (result?.data?.success) {
+  return Astro.redirect("/admin/users");
+}
+
+// Already admin (e.g. after a prior successful setup) → go to admin UI.
+if (user?.role === "admin") {
   return Astro.redirect("/admin/users");
 }
 
