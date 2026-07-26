@@ -1,10 +1,9 @@
 import { betterAuth } from "better-auth";
 import { Account, db, Session, User, Verification } from "astro:db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { Resend } from "resend";
 import { SITE_NAME } from "./config";
-
-const resend = new Resend(import.meta.env.RESEND_API_KEY);
+import { sendEmail } from "./email";
+import type { Locale } from "./i18n";
 
 /** Set per-request in the auth API route so databaseHooks can read it. */
 export let pendingSignupIp: string | null = null;
@@ -13,23 +12,11 @@ export function setPendingSignupIp(ip: string | null) {
   pendingSignupIp = ip;
 }
 
-async function sendAuthEmail(opts: {
-  to: string;
-  subject: string;
-  html: string;
-}) {
-  const from =
-    import.meta.env.RESEND_FROM_EMAIL || "Vinya Canadell Tennis <onboarding@resend.dev>";
-  const { error } = await resend.emails.send({
-    from,
-    to: opts.to,
-    subject: opts.subject,
-    html: opts.html
-  });
-  if (error) {
-    console.error("Resend error:", error);
-    throw new Error("Failed to send email");
-  }
+/** Set per-request in the auth API route so databaseHooks can read it. */
+export let pendingSignupLocale: Locale = "en";
+
+export function setPendingSignupLocale(locale: Locale) {
+  pendingSignupLocale = locale;
 }
 
 export const auth = betterAuth({
@@ -68,6 +55,12 @@ export const auth = betterAuth({
         required: false,
         defaultValue: false,
         input: false
+      },
+      locale: {
+        type: "string",
+        required: false,
+        defaultValue: "en",
+        input: false
       }
     }
   },
@@ -84,7 +77,8 @@ export const auth = betterAuth({
               role: "member",
               showName: true,
               disabled: false,
-              signupIp: pendingSignupIp
+              signupIp: pendingSignupIp,
+              locale: pendingSignupLocale
             }
           };
         }
@@ -98,7 +92,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, token }) => {
       const base = import.meta.env.BETTER_AUTH_URL.replace(/\/$/, "");
       const url = `${base}/reset-password?token=${encodeURIComponent(token)}`;
-      await sendAuthEmail({
+      await sendEmail({
         to: user.email,
         subject: `${SITE_NAME} — reset password`,
         html: `
@@ -113,7 +107,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendAuthEmail({
+      await sendEmail({
         to: user.email,
         subject: `${SITE_NAME} — verify your email`,
         html: `
@@ -142,6 +136,7 @@ export type SessionUser = {
   showName: boolean;
   signupIp?: string | null;
   disabled: boolean;
+  locale: Locale;
   image?: string | null;
   emailVerified: boolean;
   createdAt: Date;

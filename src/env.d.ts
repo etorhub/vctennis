@@ -26,6 +26,7 @@ interface ImportMetaEnv {
   readonly BETTER_AUTH_SECRET: string;
   readonly RESEND_API_KEY: string;
   readonly RESEND_FROM_EMAIL?: string;
+  readonly CRON_SECRET: string;
 }
 
 interface ImportMeta {
