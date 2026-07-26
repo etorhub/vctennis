@@ -29,6 +29,18 @@ textarea {
   scroll-margin-top: 4.5rem;
 }
 
+/* Desktop: show every day column even when Alpine x-show hides non-active days. */
+@media (min-width: 1024px) {
+  .agenda-days {
+    grid-template-columns: repeat(var(--day-cols, 3), minmax(0, 1fr));
+  }
+
+  .agenda-day,
+  .agenda-day[x-cloak] {
+    display: block !important;
+  }
+}
+
 .agenda-grid {
   position: relative;
   overflow: hidden;
@@ -46,6 +58,12 @@ textarea {
   min-height: 28px;
 }
 
+@media (min-width: 1024px) {
+  .agenda-booking {
+    @apply left-12 right-1.5 px-1.5;
+  }
+}
+
 .agenda-booking.mine {
   background: #16a34a;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
@@ -55,6 +73,15 @@ textarea {
   @apply fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white shadow-2xl border-t border-slate-200;
   padding-bottom: calc(1rem + var(--safe-bottom));
   max-height: 85vh;
+}
+
+/* Center a capped sheet on larger viewports without fighting slide transitions. */
+@media (min-width: 768px) {
+  .bottom-sheet {
+    inset-inline: max(1rem, calc(50% - 14rem));
+    width: auto;
+    max-width: 28rem;
+  }
 }
 
 .sheet-backdrop {

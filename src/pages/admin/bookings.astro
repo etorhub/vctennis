@@ -15,7 +15,7 @@ const userMap = new Map(users.map((u) => [u.id, u]));
 
 <Layout title={t("bookings")}>
   <AppHeader title={`${t("admin")} · ${t("bookings")}`} backHref="/" />
-  <main class="mx-auto max-w-lg px-3 py-4 pb-20">
+  <main class="mx-auto w-full max-w-lg px-3 py-4 pb-20 md:max-w-2xl lg:max-w-4xl lg:px-4">
     <div class="mb-4 flex gap-2">
       <a href="/admin/users" class="btn btn-ghost btn-sm">{t("users")}</a>
       <a href="/admin/bookings" class="btn btn-primary btn-sm">{t("bookings")}</a>

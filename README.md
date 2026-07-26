@@ -19,7 +19,7 @@ Public day agenda, email/password accounts with verification, and admin tools â€
 
 ## Features
 
-- One-court agenda (today + 2 days), one day at a time
+- One-court agenda (today + 2 days); one day at a time on mobile, all days side by side on desktop
 - Book 30 or 60 minutes on `:00` / `:30` slots (09:00â€“21:00)
 - Max 3 active future bookings per member; overlaps hard-blocked
 - Open signup with email verification and password reset (Resend)

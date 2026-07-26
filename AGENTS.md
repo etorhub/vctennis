@@ -27,7 +27,7 @@ All constants live in [`src/lib/config.ts`](src/lib/config.ts):
 
 Server-side validation is in [`src/actions/bookings.ts`](src/actions/bookings.ts). Overlaps are hard-blocked. One court only.
 
-UI: Google-agenda style, **one day visible at a time** with prev/next (still covers the full `BOOK_AHEAD_DAYS` window).
+UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. Desktop (`lg+`): all `BOOK_AHEAD_DAYS` side by side.
 
 ## Auth & roles
 

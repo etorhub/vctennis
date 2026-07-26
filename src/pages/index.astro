@@ -127,11 +127,11 @@ const dayViews = days.map((day, index) => {
   }
 
   <main
-    class="mx-auto max-w-lg pb-28"
+    class="mx-auto w-full max-w-lg pb-28 md:max-w-2xl lg:max-w-6xl"
     x-data={`{ dayIndex: 0, dayCount: ${dayViews.length} }`}
   >
     <div
-      class="sticky top-[57px] z-10 flex items-center gap-1 border-b border-slate-100 bg-slate-50/95 px-2 py-2 backdrop-blur"
+      class="sticky top-[57px] z-10 flex items-center gap-1 border-b border-slate-100 bg-slate-50/95 px-2 py-2 backdrop-blur lg:hidden"
     >
       <button
         type="button"
@@ -188,6 +188,10 @@ const dayViews = days.map((day, index) => {
       </button>
     </div>
 
+    <div
+      class="agenda-days lg:grid lg:gap-3 lg:px-2 lg:pt-3"
+      style={`--day-cols: ${dayViews.length}`}
+    >
     {
       dayViews.map((day) => {
         const offsetPx = day.hiddenPastHours * hourHeight;
@@ -198,13 +202,18 @@ const dayViews = days.map((day, index) => {
 
         return (
           <section
-            class="agenda-day"
+            class="agenda-day lg:overflow-hidden lg:rounded-xl lg:border lg:border-slate-200 lg:bg-white"
             id={`day-${day.dateKey}`}
             x-show={`dayIndex === ${day.index}`}
             x-cloak={day.index !== 0 ? true : undefined}
           >
+            <div class="sticky top-[57px] z-10 hidden border-b border-slate-100 bg-slate-50/95 px-3 py-2.5 backdrop-blur lg:block">
+              <h2 class="text-center text-sm font-semibold capitalize text-slate-700">
+                {day.title}
+              </h2>
+            </div>
             <div
-              class="relative px-2 pb-4 pt-2"
+              class="relative px-2 pb-4 pt-2 md:px-3"
               x-data={`{ showPastHours: false, hiddenPastHours: ${day.hiddenPastHours}, hourHeight: ${hourHeight}, fullHours: ${fullHours}, collapsedHours: ${collapsedHours} }`}
             >
               {day.hiddenPastHours > 0 && (
@@ -239,7 +248,7 @@ const dayViews = days.map((day, index) => {
                           : undefined
                       }
                     >
-                      <span class="absolute left-2 top-0 -translate-y-1/2 text-xs text-slate-400">
+                      <span class="absolute left-2 top-0 -translate-y-1/2 text-xs text-slate-400 lg:left-1 lg:text-[11px]">
                         {String(h).padStart(2, "0")}:00
                       </span>
                     </div>
@@ -290,7 +299,7 @@ const dayViews = days.map((day, index) => {
                 })}
               </div>
               {day.bookings.length === 0 && (
-                <p class="pointer-events-none absolute inset-x-16 top-10 text-center text-sm text-slate-400">
+                <p class="pointer-events-none absolute inset-x-16 top-10 text-center text-sm text-slate-400 lg:inset-x-10">
                   {t("noBookings")}
                 </p>
               )}
@@ -299,6 +308,7 @@ const dayViews = days.map((day, index) => {
         );
       })
     }
+    </div>
   </main>
 
   <button
