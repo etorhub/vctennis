@@ -7,10 +7,9 @@
   "license": "MIT",
   "scripts": {
     "check:env": "node scripts/check-env.js",
-    "dev": "npm run check:env && astro dev --remote",
-    "dev:local": "ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro dev",
-    "dev:host": "npm run check:env && astro dev --host --remote",
-    "start": "npm run check:env && astro dev --remote",
+    "dev": "npm run check:env && astro dev --host --remote",
+    "dev:local": "ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro dev --host",
+    "start": "npm run check:env && astro dev --host --remote",
     "build": "astro check && astro build --remote",
     "build:local": "ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro check && ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro build",
     "preview": "astro preview",
