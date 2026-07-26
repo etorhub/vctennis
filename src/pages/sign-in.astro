@@ -127,6 +127,7 @@ const messages = {
             type="button"
             class="btn btn-sm border-0"
             :class="mode === 'signIn' ? 'btn-primary' : 'btn-ghost'"
+            :aria-pressed="mode === 'signIn'"
             @click="setMode('signIn')"
           >
             {t("signIn")}
@@ -135,6 +136,7 @@ const messages = {
             type="button"
             class="btn btn-sm border-0"
             :class="mode === 'signUp' ? 'btn-primary' : 'btn-ghost'"
+            :aria-pressed="mode === 'signUp'"
             @click="setMode('signUp')"
           >
             {t("signUp")}
@@ -146,102 +148,129 @@ const messages = {
         <h1 class="mb-1 text-xl font-semibold" x-show="mode === 'forgot'" x-cloak>{t("forgotPassword")}</h1>
         <p class="mb-6 text-sm text-slate-500">{t("tagline")}</p>
 
-        <label class="form-control w-full">
-          <div class="label py-1"><span class="label-text">{t("email")}</span></div>
-          <input
-            type="email"
-            class="input input-bordered w-full"
-            x-model="email"
-            required
-            autocomplete="email"
-            placeholder="name@example.com"
-          />
-        </label>
-
-        <label class="form-control mt-3 w-full" x-show="mode !== 'forgot'">
-          <div class="label py-1"><span class="label-text">{t("password")}</span></div>
-          <input
-            type="password"
-            class="input input-bordered w-full"
-            x-model="password"
-            required
-            minlength="8"
-            :autocomplete="mode === 'signUp' ? 'new-password' : 'current-password'"
-          />
-        </label>
-
-        <label class="form-control mt-3 w-full" x-show="mode === 'signUp'" x-cloak>
-          <div class="label py-1"><span class="label-text">{t("confirmPassword")}</span></div>
-          <input
-            type="password"
-            class="input input-bordered w-full"
-            x-model="confirmPassword"
-            required
-            minlength="8"
-            autocomplete="new-password"
-          />
-        </label>
-
-        <label class="mt-4 flex cursor-pointer items-center gap-2" x-show="mode === 'signIn'" x-cloak>
-          <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" x-model="rememberMe" />
-          <span class="text-sm">{t("rememberMe")}</span>
-        </label>
-
-        <p class="mt-2 text-sm text-error" x-show="error" x-text="error"></p>
-
-        <button
-          type="button"
-          class="btn btn-primary mt-4 w-full"
-          x-show="mode === 'signIn'"
-          :disabled="loading || !email || !password"
-          @click="signIn()"
+        <form
+          autocomplete="on"
+          @submit.prevent="mode === 'signIn' ? signIn() : mode === 'signUp' ? signUp() : forgot()"
         >
-          <span x-show="!loading">{t("signIn")}</span>
-          <span x-show="loading" x-cloak>{t("loading")}</span>
-        </button>
+          <label class="form-control w-full" for="email">
+            <div class="label py-1"><span class="label-text">{t("email")}</span></div>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              class="input input-bordered w-full"
+              x-model="email"
+              required
+              :autocomplete="mode === 'signUp' ? 'email' : 'username'"
+              :aria-invalid="!!error"
+              :aria-describedby="error ? 'auth-error' : undefined"
+              placeholder="name@example.com"
+            />
+          </label>
 
-        <button
-          type="button"
-          class="btn btn-primary mt-4 w-full"
-          x-show="mode === 'signUp'"
-          x-cloak
-          :disabled="loading || !email || !password || !confirmPassword"
-          @click="signUp()"
-        >
-          <span x-show="!loading">{t("signUp")}</span>
-          <span x-show="loading" x-cloak>{t("loading")}</span>
-        </button>
+          <label class="form-control mt-3 w-full" for="password" x-show="mode !== 'forgot'">
+            <div class="label py-1"><span class="label-text">{t("password")}</span></div>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              class="input input-bordered w-full"
+              x-model="password"
+              :required="mode !== 'forgot'"
+              minlength="8"
+              :autocomplete="mode === 'signUp' ? 'new-password' : 'current-password'"
+              :aria-invalid="!!error"
+              :aria-describedby="error ? 'auth-error' : undefined"
+            />
+          </label>
 
-        <button
-          type="button"
-          class="btn btn-primary mt-4 w-full"
-          x-show="mode === 'forgot'"
-          x-cloak
-          :disabled="loading || !email"
-          @click="forgot()"
-        >
-          <span x-show="!loading">{t("sendResetLink")}</span>
-          <span x-show="loading" x-cloak>{t("loading")}</span>
-        </button>
+          <label class="form-control mt-3 w-full" for="confirm-password" x-show="mode === 'signUp'" x-cloak>
+            <div class="label py-1"><span class="label-text">{t("confirmPassword")}</span></div>
+            <input
+              id="confirm-password"
+              name="confirm-password"
+              type="password"
+              class="input input-bordered w-full"
+              x-model="confirmPassword"
+              :required="mode === 'signUp'"
+              minlength="8"
+              autocomplete="new-password"
+              :aria-invalid="!!error"
+              :aria-describedby="error ? 'auth-error' : undefined"
+            />
+          </label>
 
-        <button
-          type="button"
-          class="btn btn-link mt-2 w-full text-sm"
-          x-show="mode === 'signIn'"
-          @click="setMode('forgot')"
-        >
-          {t("forgotPassword")}
-        </button>
+          <label class="mt-4 flex cursor-pointer items-center gap-2" for="remember-me" x-show="mode === 'signIn'" x-cloak>
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              class="checkbox checkbox-sm checkbox-primary"
+              x-model="rememberMe"
+            />
+            <span class="text-sm">{t("rememberMe")}</span>
+          </label>
 
-        <button
-          type="button"
-          class="btn btn-ghost mt-2 w-full"
-          x-show="mode === 'forgot'"
-          x-cloak
-          @click="setMode('signIn')"
-        >
-          {t("backToSignIn")}
-        </button>
+          <p
+            id="auth-error"
+            class="mt-2 text-sm text-error"
+            role="alert"
+            aria-live="polite"
+            x-show="error"
+            x-text="error"
+          ></p>
+
+          <button
+            type="submit"
+            class="btn btn-primary mt-4 w-full"
+            x-show="mode === 'signIn'"
+            :disabled="loading || !email || !password"
+          >
+            <span x-show="!loading">{t("signIn")}</span>
+            <span x-show="loading" x-cloak>{t("loading")}</span>
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary mt-4 w-full"
+            x-show="mode === 'signUp'"
+            x-cloak
+            :disabled="loading || !email || !password || !confirmPassword"
+          >
+            <span x-show="!loading">{t("signUp")}</span>
+            <span x-show="loading" x-cloak>{t("loading")}</span>
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary mt-4 w-full"
+            x-show="mode === 'forgot'"
+            x-cloak
+            :disabled="loading || !email"
+          >
+            <span x-show="!loading">{t("sendResetLink")}</span>
+            <span x-show="loading" x-cloak>{t("loading")}</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-link mt-2 w-full text-sm"
+            x-show="mode === 'signIn'"
+            @click="setMode('forgot')"
+          >
+            {t("forgotPassword")}
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-ghost mt-2 w-full"
+            x-show="mode === 'forgot'"
+            x-cloak
+            @click="setMode('signIn')"
+          >
+            {t("backToSignIn")}
+          </button>
+        </form>
       </div>
 
       <div x-show="sent" x-cloak class="text-center">
