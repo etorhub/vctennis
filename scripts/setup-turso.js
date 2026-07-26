@@ -52,8 +52,8 @@ async function setupTurso(argv) {
     // Use database name from CLI args or prompt
     const dbName =
       argv.flags.name ||
-      (await question("\nEnter a name for your database (default: freedom-stack-db): ")) ||
-      "freedom-stack-db";
+      (await question("\nEnter a name for your database (default: vctennis): ")) ||
+      "vctennis";
 
     // Create database
     console.log(`\n📚 Creating database: ${dbName}...`);
@@ -126,7 +126,7 @@ cli(
   {
     name: "setup-turso",
     version: "0.1.0",
-    description: "Set up a Turso database for your Freedom Stack project",
+    description: "Set up a Turso database for Vinya Canadell Tennis",
     flags: {
       name: {
         type: String,

@@ -1,5 +1,7 @@
 import { createAuthClient } from "better-auth/client";
+import { magicLinkClient } from "better-auth/client/plugins";
 
-export const client = createAuthClient({
-  baseURL: import.meta.env.BETTER_AUTH_URL
+export const authClient = createAuthClient({
+  baseURL: import.meta.env.BETTER_AUTH_URL,
+  plugins: [magicLinkClient()]
 });

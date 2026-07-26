@@ -1,2 +1,1 @@
-# Redirect default Netlify subdomain to primary domain
-https://freedom-stack.netlify.app/* https://freedom.faith.tools/:splat 301!
+# SPA-style fallbacks are not needed; Astro SSR handles routes.

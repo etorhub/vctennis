@@ -1,0 +1,39 @@
+---
+import { actions } from "astro:actions";
+import Layout from "@/layouts/Layout.astro";
+import AppHeader from "@/components/AppHeader.astro";
+import { db, eq, User } from "astro:db";
+
+const { t, user } = Astro.locals;
+
+const admins = await db.select().from(User).where(eq(User.role, "admin")).limit(1);
+if (admins.length > 0) {
+  return new Response(null, { status: 404, statusText: "Not Found" });
+}
+
+const result = Astro.getActionResult(actions.auth.becomeAdmin);
+if (result?.data?.success) {
+  return Astro.redirect("/admin/users");
+}
+---
+
+<Layout title={t("setupTitle")}>
+  <AppHeader title={t("setupTitle")} backHref="/" />
+  <main class="mx-auto max-w-sm px-4 py-8">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h1 class="mb-2 text-xl font-semibold">{t("setupTitle")}</h1>
+      <p class="mb-6 text-sm text-slate-600">{t("setupHelp")}</p>
+      {
+        result?.error && (
+          <p class="mb-4 text-sm text-error">{result.error.message}</p>
+        )
+      }
+      <p class="mb-4 text-sm">
+        {user?.email}
+      </p>
+      <form method="POST" action={actions.auth.becomeAdmin}>
+        <button type="submit" class="btn btn-primary w-full">{t("becomeAdmin")}</button>
+      </form>
+    </div>
+  </main>
+</Layout>

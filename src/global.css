@@ -1,122 +1,68 @@
-/* Add CSS styles below. */
-.example-class {
-  /* You can even apply Tailwind classes here. */
-  @apply bg-red-500 text-white;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --agenda-hour-height: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Override some of the Tailwind .prose CSS */
-.prose h1,
-.prose h2,
-.prose h3,
-.prose h4,
-.prose h5,
-.prose h6 {
-  @apply m-0 mb-2;
-  text-wrap: balance;
+html,
+body {
+  @apply bg-base-100 text-neutral antialiased;
+  overscroll-behavior-y: none;
 }
 
-.balanced {
-  max-inline-size: 50ch;
-  text-wrap: balance;
-}
-
-/* Daisy UI Overrides */
-.breadcrumbs > ul > li,
-.breadcrumbs > ol > li {
-  @apply p-0;
-}
-
-.text-muted {
-  @apply text-gray-500;
-}
-
-.container {
-  max-width: 768px !important;
-}
-
-/* Alpine.js */
 [x-cloak] {
-  display: none;
-}
-
-.btn.btn-outline {
-  @apply border-2 border-slate-200 hover:border-slate-200 hover:bg-inherit hover:text-inherit;
-}
-
-.btn.btn-primary {
-  @apply text-white;
-}
-
-.btn.btn-primary:disabled {
-  @apply bg-slate-200 text-slate-400 cursor-not-allowed shadow-none;
-}
-
-/* Trix Editor */
-#trix-editor trix-toolbar {
-  .trix-button-group {
-    button.trix-button,
-    input[type="button"].trix-button {
-      &.trix-active {
-        @apply bg-slate-200;
-      }
-
-      &:hover {
-        @apply bg-slate-200;
-      }
-
-      @apply !border-0 rounded-lg;
-    }
-
-    @apply border-0 rounded-lg mb-0;
-  }
-
-  [data-trix-button-group="file-tools"] {
-    @apply !hidden;
-  }
-
-  [data-trix-attribute="quote"] {
-    @apply !border-l-0;
-  }
-
-  [data-trix-dialog][data-trix-active] {
-    .trix-input {
-      @apply border-2 border-slate-200 rounded-lg;
-    }
-
-    @apply !border-0 rounded-xl p-6;
-  }
-
-  @apply mb-6 sticky top-2 left-0 right-0 z-50 border-0 bg-slate-100 px-3 py-2 rounded-full;
-}
-
-trix-editor,
-.rendered-markdown {
-  h1 {
-    @apply text-2xl font-extrabold;
-  }
-
-  :first-child {
-    @apply mt-0;
-  }
-
-  :last-child {
-    @apply mb-0;
-  }
-
-  @apply p-0 m-0 border-0 text-xl leading-relaxed;
-}
-
-#trix-editor trix-editor {
-  a {
-    @apply font-medium underline;
-  }
-
-  @apply p-6 border-2 border-slate-200 rounded-lg;
+  display: none !important;
 }
 
 input[type="text"],
-input[type="password"],
 input[type="email"],
+input[type="datetime-local"],
+select,
 textarea {
-  @apply !border-2 !border-slate-200 bg-white;
+  @apply border-2 border-slate-200 bg-white;
+}
+
+.agenda-day {
+  scroll-margin-top: 4.5rem;
+}
+
+.agenda-grid {
+  position: relative;
+  height: calc(var(--agenda-hour-height) * 12); /* 9–21 = 12 hours */
+}
+
+.agenda-hour-line {
+  height: var(--agenda-hour-height);
+  @apply border-t border-slate-100;
+}
+
+.agenda-booking {
+  @apply absolute left-14 right-2 rounded-lg px-2 py-1 text-white shadow-sm overflow-hidden;
+  background: #16a34a;
+  min-height: 28px;
+}
+
+.agenda-booking.mine {
+  background: #15803d;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.bottom-sheet {
+  @apply fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white shadow-2xl border-t border-slate-200;
+  padding-bottom: calc(1rem + var(--safe-bottom));
+  max-height: 85vh;
+}
+
+.sheet-backdrop {
+  @apply fixed inset-0 z-40 bg-black/40;
+}
+
+.fab {
+  @apply fixed right-4 z-30 btn btn-primary btn-circle shadow-lg;
+  bottom: calc(1.25rem + var(--safe-bottom));
+  width: 3.5rem;
+  height: 3.5rem;
 }

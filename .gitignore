@@ -23,5 +23,8 @@ pnpm-debug.log*
 # Astro
 .astro/
 
+# Local Astro DB file
+.data/
+
 # Netlify
 .netlify/

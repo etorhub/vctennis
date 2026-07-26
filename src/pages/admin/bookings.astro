@@ -1,0 +1,55 @@
+---
+import { actions } from "astro:actions";
+import Layout from "@/layouts/Layout.astro";
+import AppHeader from "@/components/AppHeader.astro";
+import { db, Bookings as BookingsTable, User } from "astro:db";
+import { bookingEnd, formatTime, getZonedParts } from "@/lib/time";
+
+const { t, locale } = Astro.locals;
+
+const bookingRows = await db.select().from(BookingsTable);
+bookingRows.sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime());
+const users = await db.select().from(User);
+const userMap = new Map(users.map((u) => [u.id, u]));
+---
+
+<Layout title={t("bookings")}>
+  <AppHeader title={`${t("admin")} · ${t("bookings")}`} backHref="/" />
+  <main class="mx-auto max-w-lg px-3 py-4 pb-20">
+    <div class="mb-4 flex gap-2">
+      <a href="/admin/users" class="btn btn-ghost btn-sm">{t("users")}</a>
+      <a href="/admin/bookings" class="btn btn-primary btn-sm">{t("bookings")}</a>
+    </div>
+
+    <ul class="flex flex-col gap-3">
+      {
+        bookingRows.length === 0 && (
+          <li class="py-8 text-center text-slate-500">{t("noBookings")}</li>
+        )
+      }
+      {
+        bookingRows.map((b) => {
+          const u = userMap.get(b.userId);
+          const end = bookingEnd(b.startsAt, b.durationMin);
+          const p = getZonedParts(b.startsAt);
+          return (
+            <li class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="font-semibold">
+                {p.dateKey} · {formatTime(b.startsAt, locale)} – {formatTime(end, locale)}
+              </p>
+              <p class="text-sm text-slate-500">
+                {u?.name || "—"} · {u?.email || b.userId} · {b.durationMin} min
+              </p>
+              <form method="POST" action={actions.admin.deleteBooking} class="mt-3">
+                <input type="hidden" name="id" value={b.id} />
+                <button type="submit" class="btn btn-outline btn-error btn-xs">
+                  {t("delete")}
+                </button>
+              </form>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </main>
+</Layout>

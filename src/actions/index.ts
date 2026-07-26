@@ -1,9 +1,9 @@
-import { posts } from "./posts";
 import { auth } from "./auth";
-import { bknd } from "@/integrations/bknd/actions";
+import { bookings } from "./bookings";
+import { admin } from "./admin";
 
 export const server = {
-  posts,
   auth,
-  bknd
+  bookings,
+  admin
 };

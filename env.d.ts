@@ -1,5 +1,1 @@
-declare namespace App {
-  interface Locals {
-    session: any;
-  }
-}
+/// <reference path="./src/env.d.ts" />

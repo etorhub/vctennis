@@ -1,0 +1,60 @@
+---
+import { actions } from "astro:actions";
+import Layout from "@/layouts/Layout.astro";
+import AppHeader from "@/components/AppHeader.astro";
+
+const { t, user } = Astro.locals;
+if (!user) return Astro.redirect("/sign-in");
+
+const result = Astro.getActionResult(actions.auth.updateProfile);
+const saved = !!result?.data?.success;
+---
+
+<Layout title={t("settings")}>
+  <AppHeader title={t("settings")} backHref="/" />
+  {saved && <div x-init={`toastMessage = ${JSON.stringify(t("profileSaved"))}`} class="sr-only" />}
+  <main class="mx-auto max-w-sm px-4 py-6">
+    <form method="POST" action={actions.auth.updateProfile} class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <label class="form-control w-full">
+        <div class="label py-1"><span class="label-text">{t("name")}</span></div>
+        <input
+          type="text"
+          name="name"
+          class="input input-bordered w-full"
+          value={user.name || ""}
+          required
+          maxlength="80"
+        />
+      </label>
+
+      <label class="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-3">
+        <input
+          type="checkbox"
+          name="showName"
+          class="checkbox checkbox-primary mt-0.5"
+          checked={user.showName !== false}
+        />
+        <span>
+          <span class="font-medium">{t("showName")}</span>
+          <span class="mt-0.5 block text-sm text-slate-500">{t("showNameHelp")}</span>
+        </span>
+      </label>
+
+      {
+        result?.error && (
+          <p class="text-sm text-error">{result.error.message}</p>
+        )
+      }
+
+      <button type="submit" class="btn btn-primary">{t("save")}</button>
+    </form>
+
+    {
+      user.role === "admin" && (
+        <a href="/admin/users" class="btn btn-outline mt-4 w-full">
+          {t("admin")}
+        </a>
+      )
+    }
+  </main>
+</Layout>

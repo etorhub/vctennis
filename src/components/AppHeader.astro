@@ -1,0 +1,57 @@
+---
+import Icon from "astro-iconify";
+
+interface Props {
+  title?: string;
+  backHref?: string;
+}
+
+const { t, user } = Astro.locals;
+const { title = t("siteName"), backHref } = Astro.props;
+---
+
+<header
+  class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80"
+>
+  <div class="mx-auto flex max-w-lg items-center gap-2 px-3 py-3">
+    {
+      backHref ? (
+        <a href={backHref} class="btn btn-ghost btn-sm btn-circle" aria-label={t("backToCalendar")}>
+          <Icon pack="lucide" name="arrow-left" height={20} width={20} />
+        </a>
+      ) : (
+        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Icon pack="lucide" name="calendar-days" height={20} width={20} />
+        </div>
+      )
+    }
+    <div class="min-w-0 flex-1">
+      <h1 class="truncate text-base font-semibold leading-tight">{title}</h1>
+    </div>
+    <nav class="flex items-center gap-1">
+      {
+        user?.role === "admin" && (
+          <a href="/admin/users" class="btn btn-ghost btn-sm" title={t("admin")}>
+            <Icon pack="lucide" name="shield" height={18} width={18} />
+          </a>
+        )
+      }
+      {
+        user ? (
+          <>
+            <a href="/settings" class="btn btn-ghost btn-sm" title={t("settings")}>
+              <Icon pack="lucide" name="user" height={18} width={18} />
+            </a>
+            <a href="/sign-out" class="btn btn-ghost btn-sm" title={t("signOut")}>
+              <Icon pack="lucide" name="log-out" height={18} width={18} />
+            </a>
+          </>
+        ) : (
+          <a href="/sign-in" class="btn btn-primary btn-sm">
+            {t("signIn")}
+          </a>
+        )
+      }
+    </nav>
+  </div>
+</header>

@@ -42,8 +42,11 @@ try {
   process.exit(1);
 }
 
-// Check if all required variables are set
-const missingVars = requiredVars.filter((varName) => !envVars[varName]);
+// Check if all required variables are set (empty / quoted-empty counts as missing)
+const missingVars = requiredVars.filter((varName) => {
+  const value = (envVars[varName] || "").replace(/^["']|["']$/g, "").trim();
+  return !value;
+});
 
 if (missingVars.length > 0) {
   console.error("\x1b[31m%s\x1b[0m", "Error: You have some missing required environment variables:");

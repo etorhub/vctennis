@@ -5,30 +5,29 @@ export default {
     extend: {
       container: {
         center: true,
-        padding: "24px",
-        maxWidth: "1000px"
+        padding: "16px",
+        maxWidth: "640px"
       }
     }
   },
-  // Change your theme at https://daisyui.com/docs/themes/.
   daisyui: {
     themes: [
       {
-        mytheme: {
-          primary: "#1f2937",
-          secondary: "#f5f5f4",
-          accent: "#6d28d9",
-          neutral: "#d1d5db",
-          "base-100": "#f3f4f6",
-          info: "#a5f3fc",
+        tennis: {
+          primary: "#16a34a",
+          secondary: "#f0fdf4",
+          accent: "#15803d",
+          neutral: "#1f2937",
+          "base-100": "#ffffff",
+          info: "#38bdf8",
           success: "#86efac",
-          warning: "#fca5a5",
-          error: "#fb7185",
-          "--rounded-btn": "99px"
+          warning: "#fbbf24",
+          error: "#ef4444",
+          "--rounded-btn": "0.75rem"
         }
       }
     ]
   },
-  plugins: [require("@tailwindcss/typography"), require("daisyui")],
+  plugins: [require("daisyui")],
   darkMode: "class"
 };

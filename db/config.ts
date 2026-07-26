@@ -1,20 +1,5 @@
 import { defineDb, defineTable, column } from "astro:db";
 
-const Posts = defineTable({
-  columns: {
-    id: column.number({ primaryKey: true }),
-    title: column.text(),
-    pubDate: column.date(),
-    description: column.text(),
-    author: column.text(),
-    imageUrl: column.text({ optional: true }),
-    imageAlt: column.text({ optional: true }),
-    tags: column.json({ optional: true }),
-    slug: column.text({ unique: true }),
-    content: column.text()
-  }
-});
-
 const User = defineTable({
   columns: {
     id: column.text({ primaryKey: true }),
@@ -22,6 +7,10 @@ const User = defineTable({
     name: column.text(),
     emailVerified: column.boolean({ default: false }),
     image: column.text({ optional: true }),
+    role: column.text({ default: "member" }),
+    showName: column.boolean({ default: true }),
+    signupIp: column.text({ optional: true }),
+    disabled: column.boolean({ default: false }),
     createdAt: column.date(),
     updatedAt: column.date()
   }
@@ -66,12 +55,22 @@ const Verification = defineTable({
   }
 });
 
+const Bookings = defineTable({
+  columns: {
+    id: column.text({ primaryKey: true }),
+    userId: column.text(),
+    startsAt: column.date(),
+    durationMin: column.number(),
+    createdAt: column.date()
+  }
+});
+
 export default defineDb({
   tables: {
-    Posts,
     User,
     Session,
     Account,
-    Verification
+    Verification,
+    Bookings
   }
 });

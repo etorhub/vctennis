@@ -1,0 +1,13 @@
+---
+import Layout from "@/layouts/Layout.astro";
+
+const { t } = Astro.locals;
+---
+
+<Layout title={t("accountDisabled")}>
+  <main class="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 text-center">
+    <h1 class="text-xl font-semibold">{t("accountDisabled")}</h1>
+    <p class="mt-2 text-slate-600">{t("errorDisabled")}</p>
+    <a href="/sign-out" class="btn btn-primary mt-6">{t("signOut")}</a>
+  </main>
+</Layout>

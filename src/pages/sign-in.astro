@@ -1,52 +1,81 @@
 ---
-import { actions } from "astro:actions";
 import Layout from "@/layouts/Layout.astro";
-import Container from "@sections/Container.astro";
-import Navbar from "@sections/Navbar.astro";
-import Footer from "@sections/Footer.astro";
+import AppHeader from "@/components/AppHeader.astro";
 
-if (Astro.locals.user) {
-  return Astro.redirect("/dashboard");
-}
-
-const result = Astro.getActionResult(actions.bknd.signIn);
-if (result?.data?.success) {
-  return Astro.redirect("/dashboard");
+const { t, user } = Astro.locals;
+if (user && !user.disabled) {
+  return Astro.redirect("/");
 }
 ---
 
-<Layout title="Sign In">
-  <Navbar title="Freedom Stack" sticky links={[{ text: "Home", href: "/" }]} />
-  {result?.error && <div x-init={`toastErrorMessage = '${result.error.message.toString()}'`} class="sr-only" />}
-  <Container align="center">
-    <div class="bg-white p-6 rounded-xl border-2 border-slate-200 flex flex-col gap-4 max-w-sm w-full">
-      <h1>Sign In</h1>
-      <form class="flex flex-col gap-4 max-w-sm w-full" method="POST" action={actions.auth.signIn}>
-        {/* Email */}
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Email</span>
-          </div>
-          <input type="email" placeholder="email@example.com" class="input input-bordered" name="email" />
-        </label>
+<Layout title={t("signIn")}>
+  <AppHeader title={t("signIn")} backHref="/" />
+  <main class="mx-auto max-w-sm px-4 py-8">
+    <div
+      class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      x-data={`{
+        email: '',
+        sent: false,
+        loading: false,
+        error: '',
+        async submit() {
+          this.loading = true;
+          this.error = '';
+          try {
+            const res = await fetch('/api/auth/sign-in/magic-link', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: this.email,
+                callbackURL: '/'
+              })
+            });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(data.message || ${JSON.stringify(t("errorGeneric"))});
+            }
+            this.sent = true;
+          } catch (e) {
+            this.error = e.message || ${JSON.stringify(t("errorGeneric"))};
+          } finally {
+            this.loading = false;
+          }
+        }
+      }`}
+    >
+      <h1 class="mb-1 text-xl font-semibold">{t("signIn")}</h1>
+      <p class="mb-6 text-sm text-slate-500">{t("tagline")}</p>
 
-        {/* Password */}
+      <div x-show="!sent">
         <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Password</span>
-            <a href="/forgot-password" class="label-text-alt link text-slate-500 hover:!text-slate-500">
-              Forgot password?
-            </a>
-          </div>
-          <input type="password" placeholder="Password" class="input input-bordered" name="password" />
+          <div class="label py-1"><span class="label-text">{t("email")}</span></div>
+          <input
+            type="email"
+            class="input input-bordered w-full"
+            x-model="email"
+            required
+            autocomplete="email"
+            placeholder="name@example.com"
+            @keydown.enter.prevent="submit()"
+          />
         </label>
+        <p class="mt-2 text-sm text-error" x-show="error" x-text="error"></p>
+        <button
+          type="button"
+          class="btn btn-primary mt-4 w-full"
+          :disabled="loading || !email"
+          @click="submit()"
+        >
+          <span x-show="!loading">{t("sendMagicLink")}</span>
+          <span x-show="loading" x-cloak>{t("loading")}</span>
+        </button>
+      </div>
 
-        <button class="mt-4 btn btn-primary" type="submit">Sign In</button>
-      </form>
-      <p class="m-0 text-slate-500">
-        Don't have an account? <a href="/sign-up" class="link text-slate-500">Create an account</a>
-      </p>
+      <div x-show="sent" x-cloak class="text-center">
+        <p class="text-lg font-medium text-primary">{t("checkInbox")}</p>
+        <p class="mt-2 text-sm text-slate-600">{t("magicLinkSent")}</p>
+        <a href="/" class="btn btn-ghost mt-6 w-full">{t("backToCalendar")}</a>
+      </div>
     </div>
-  </Container>
-  <Footer />
+  </main>
 </Layout>
