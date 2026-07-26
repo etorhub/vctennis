@@ -1,0 +1,17 @@
+---
+description: Vinya Canadell Tennis project conventions for Cursor agents
+alwaysApply: true
+---
+
+# vctennis
+
+Community tennis court booking PWA. Full agent guide: [`AGENTS.md`](AGENTS.md).
+
+## Must follow
+
+- Stack: Astro 5 SSR + Netlify, Astro DB/Turso, Better Auth (email/password + Resend), Tailwind/daisyUI `tennis`, Alpine, installable PWA (no offline data)
+- Booking knobs only in `src/lib/config.ts` (not env). Timezone helpers in `src/lib/time.ts` (`Europe/Madrid`)
+- Mutations via Astro actions; validate on the server (`src/actions/bookings.ts`). Overlaps hard-blocked
+- Do not reintroduce Freedom Stack demos (posts, bknd, marketing, React, HTMX)
+- i18n: `src/lib/i18n/ca.ts` + `en.ts`; locale from `Accept-Language` (`ca`/`es` → Catalan)
+- Human-facing docs: `README.md`. Keep `AGENTS.md` in sync when behavior changes
