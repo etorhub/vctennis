@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/guard-master-branch.sh",
+        "failClosed": false
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": ".cursor/hooks/guard-master-branch.sh",
+        "matcher": "Write|Delete|StrReplace|EditNotebook",
+        "failClosed": false
+      }
+    ]
+  }
+}

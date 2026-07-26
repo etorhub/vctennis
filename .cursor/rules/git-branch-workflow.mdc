@@ -1,0 +1,32 @@
+---
+description: Feature-branch + PR workflow for every conversation's work
+alwaysApply: true
+---
+
+# Git workflow (mandatory)
+
+Default branch is **`master`**. Land changes via PR — never commit or push to `master`.
+
+## Per conversation
+
+1. Before any implementation (code, config, or schema edits) for a new plan/task, create a **dedicated branch from up-to-date `master`**.
+2. Do **not** pile unrelated work onto another conversation's branch unless the user explicitly continues that work.
+3. Name branches: `feat/…`, `fix/…`, `chore/…`, `docs/…` (short kebab-case).
+4. When the work is ready, open a PR into `master` (only push/create PR when the user asks, or offer at the end).
+5. Do not merge the PR unless the user asks.
+
+## Exceptions
+
+- Read-only exploration / answering questions: no branch required.
+- User explicitly says to stay on `master` or continue the current branch.
+
+## Before first edit
+
+```bash
+git fetch origin
+git checkout master
+git pull --ff-only origin master
+git checkout -b feat/<short-name>
+```
+
+If the working tree is dirty with unrelated changes, stop and ask the user how to proceed.

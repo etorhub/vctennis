@@ -15,3 +15,4 @@ Community tennis court booking PWA. Full agent guide: [`AGENTS.md`](AGENTS.md).
 - Do not reintroduce Freedom Stack demos (posts, bknd, marketing, React, HTMX)
 - i18n: `src/lib/i18n/ca.ts` + `en.ts`; locale from `Accept-Language` (`ca`/`es` → Catalan)
 - Human-facing docs: `README.md`. Keep `AGENTS.md` in sync when behavior changes
+- Git: one conversation → one branch from `master`, land via PR (see `git-branch-workflow` rule)

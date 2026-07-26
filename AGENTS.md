@@ -83,6 +83,26 @@ npm run host:login
 npm run host:deploy
 ```
 
+## Git workflow (mandatory for Cursor + Claude)
+
+Default branch is **`master`**. All implementation lands via **PR → `master`**.
+
+- **One conversation → one branch.** Before the first implementation edit for a new plan/task, create a dedicated branch from up-to-date `master` (`feat/…`, `fix/…`, `chore/…`, `docs/…`).
+- Do **not** commit or push to `master`.
+- Do **not** pile unrelated work onto another conversation's branch unless the user explicitly continues that work.
+- Read-only exploration needs no branch.
+- Push / open a PR only when the user asks (or offer when ready). Do not merge unless asked.
+- If the tree is dirty with unrelated changes, stop and ask.
+
+```bash
+git fetch origin
+git checkout master
+git pull --ff-only origin master
+git checkout -b feat/<short-name>
+```
+
+Enforcement: Cursor rules + hooks in [`.cursor/`](.cursor/); Claude Code via [`CLAUDE.md`](CLAUDE.md) + [`.claude/`](.claude/).
+
 ## Conventions
 
 - Mobile-first UI; Google-agenda style calendar
