@@ -31,7 +31,8 @@ textarea {
 
 .agenda-grid {
   position: relative;
-  height: calc(var(--agenda-hour-height) * 12); /* 9–21 = 12 hours */
+  overflow: hidden;
+  height: calc(var(--agenda-hour-height) * var(--agenda-hours, 12));
 }
 
 .agenda-hour-line {
@@ -41,12 +42,12 @@ textarea {
 
 .agenda-booking {
   @apply absolute left-14 right-2 rounded-lg px-2 py-1 text-white shadow-sm overflow-hidden;
-  background: #16a34a;
+  background: #64748b;
   min-height: 28px;
 }
 
 .agenda-booking.mine {
-  background: #15803d;
+  background: #16a34a;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 

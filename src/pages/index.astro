@@ -52,6 +52,8 @@ const userMap = new Map(users.map((u) => [u.id, u]));
 
 const hours = hourLabels();
 const hourHeight = 64;
+const nowParts = getZonedParts(new Date());
+const todayKey = nowParts.dateKey;
 
 type ViewBooking = {
   id: string;
@@ -64,6 +66,7 @@ type ViewBooking = {
   height: number;
   timeLabel: string;
   dateKey: string;
+  endMinutesFromOpen: number;
 };
 
 const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
@@ -87,7 +90,28 @@ const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
     top,
     height,
     timeLabel: `${formatTime(b.startsAt, locale)} – ${formatTime(end, locale)}`,
-    dateKey: parts.dateKey
+    dateKey: parts.dateKey,
+    endMinutesFromOpen: minutesFromOpen + b.durationMin
+  };
+});
+
+function hiddenPastHoursForDay(dateKey: string): number {
+  if (dateKey !== todayKey) return 0;
+  if (nowParts.hour < OPEN_HOUR) return 0;
+  if (nowParts.hour >= CLOSE_HOUR) return CLOSE_HOUR - OPEN_HOUR;
+  return nowParts.hour - OPEN_HOUR;
+}
+
+const dayViews = days.map((day, index) => {
+  const dayParts = getZonedParts(day);
+  const hiddenPastHours = hiddenPastHoursForDay(dayParts.dateKey);
+  const title = formatDayHeader(day, locale, { today: t("today"), tomorrow: t("tomorrow") });
+  return {
+    index,
+    dateKey: dayParts.dateKey,
+    title,
+    hiddenPastHours,
+    bookings: viewBookings.filter((b) => b.dateKey === dayParts.dateKey)
   };
 });
 ---
@@ -102,33 +126,149 @@ const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
     )
   }
 
-  <main class="mx-auto max-w-lg pb-28">
+  <main
+    class="mx-auto max-w-lg pb-28"
+    x-data={`{ dayIndex: 0, dayCount: ${dayViews.length} }`}
+  >
+    <div
+      class="sticky top-[57px] z-10 flex items-center gap-1 border-b border-slate-100 bg-slate-50/95 px-2 py-2 backdrop-blur"
+    >
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm btn-circle"
+        aria-label={t("previousDay")}
+        :disabled="dayIndex === 0"
+        @click="dayIndex = Math.max(0, dayIndex - 1)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><path d="m15 18-6-6 6-6"></path></svg
+        >
+      </button>
+      <div class="min-w-0 flex-1 text-center">
+        {
+          dayViews.map((day) => (
+            <h2
+              class="text-sm font-semibold capitalize text-slate-700"
+              x-show={`dayIndex === ${day.index}`}
+              x-cloak={day.index !== 0 ? true : undefined}
+            >
+              {day.title}
+            </h2>
+          ))
+        }
+      </div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm btn-circle"
+        aria-label={t("nextDay")}
+        :disabled="dayIndex === dayCount - 1"
+        @click="dayIndex = Math.min(dayCount - 1, dayIndex + 1)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><path d="m9 18 6-6-6-6"></path></svg
+        >
+      </button>
+    </div>
+
     {
-      days.map((day) => {
-        const dayParts = getZonedParts(day);
-        const dayBookings = viewBookings.filter((b) => b.dateKey === dayParts.dateKey);
+      dayViews.map((day) => {
+        const offsetPx = day.hiddenPastHours * hourHeight;
+        const fullHours = hours.length;
+        const collapsedHours = fullHours - day.hiddenPastHours;
+        const startMinutesWhenCollapsed = day.hiddenPastHours * 60;
+        const initialHours = day.hiddenPastHours > 0 ? collapsedHours : fullHours;
+
         return (
-          <section class="agenda-day border-b border-slate-100" id={`day-${dayParts.dateKey}`}>
-            <div class="sticky top-[57px] z-10 bg-slate-50/95 px-4 py-2 backdrop-blur">
-              <h2 class="text-sm font-semibold capitalize text-slate-700">
-                {formatDayHeader(day, locale, { today: t("today"), tomorrow: t("tomorrow") })}
-              </h2>
-            </div>
-            <div class="relative px-2 pb-4">
-              <div class="agenda-grid">
-                {hours.map((h) => (
-                  <div class="agenda-hour-line relative">
-                    <span class="absolute left-2 top-0 -translate-y-1/2 text-xs text-slate-400">
-                      {String(h).padStart(2, "0")}:00
-                    </span>
-                  </div>
-                ))}
-                {dayBookings.map((b) =>
-                  b.canEdit ? (
+          <section
+            class="agenda-day"
+            id={`day-${day.dateKey}`}
+            x-show={`dayIndex === ${day.index}`}
+            x-cloak={day.index !== 0 ? true : undefined}
+          >
+            <div
+              class="relative px-2 pb-4 pt-2"
+              x-data={`{ showPastHours: false, hiddenPastHours: ${day.hiddenPastHours}, hourHeight: ${hourHeight}, fullHours: ${fullHours}, collapsedHours: ${collapsedHours} }`}
+            >
+              {day.hiddenPastHours > 0 && (
+                <div class="mb-2 px-2" x-show="!showPastHours">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs w-full text-slate-500"
+                    @click="showPastHours = true"
+                  >
+                    {t("showEarlierHours")}
+                  </button>
+                </div>
+              )}
+              <div
+                class="agenda-grid"
+                style={`--agenda-hours: ${initialHours}`}
+                x-bind:style={`{ '--agenda-hours': showPastHours || hiddenPastHours === 0 ? fullHours : collapsedHours }`}
+              >
+                {hours.map((h, hourIndex) => {
+                  const visibleWhenCollapsed = hourIndex >= day.hiddenPastHours;
+                  return (
+                    <div
+                      class="agenda-hour-line relative"
+                      x-show={
+                        day.hiddenPastHours > 0
+                          ? `showPastHours || ${hourIndex} >= hiddenPastHours`
+                          : undefined
+                      }
+                      style={
+                        day.hiddenPastHours > 0 && !visibleWhenCollapsed
+                          ? "display: none"
+                          : undefined
+                      }
+                    >
+                      <span class="absolute left-2 top-0 -translate-y-1/2 text-xs text-slate-400">
+                        {String(h).padStart(2, "0")}:00
+                      </span>
+                    </div>
+                  );
+                })}
+                {day.bookings.map((b) => {
+                  const visibleWhenCollapsed = b.endMinutesFromOpen > startMinutesWhenCollapsed;
+                  const collapsedTop = b.top - offsetPx;
+                  const initialTop = day.hiddenPastHours > 0 ? collapsedTop : b.top;
+                  const initialDisplay =
+                    day.hiddenPastHours > 0 && !visibleWhenCollapsed ? "none" : undefined;
+                  const styleParts = [`top: ${initialTop}px`, `height: ${b.height}px`];
+                  if (initialDisplay) styleParts.push(`display: ${initialDisplay}`);
+                  const bookingStyle = styleParts.join("; ");
+                  const bookingBind =
+                    day.hiddenPastHours > 0
+                      ? `{
+                          display: (showPastHours || ${visibleWhenCollapsed}) ? null : 'none',
+                          top: (showPastHours ? ${b.top} : ${collapsedTop}) + 'px',
+                          height: '${b.height}px'
+                        }`
+                      : undefined;
+
+                  return b.canEdit ? (
                     <button
                       type="button"
                       class:list={["agenda-booking text-left", { mine: b.mine }]}
-                      style={`top: ${b.top}px; height: ${b.height}px;`}
+                      style={bookingStyle}
+                      x-bind:style={bookingBind}
                       data-id={b.id}
                       data-starts={b.startsAtIso}
                       data-duration={b.durationMin}
@@ -140,16 +280,17 @@ const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
                   ) : (
                     <div
                       class="agenda-booking"
-                      style={`top: ${b.top}px; height: ${b.height}px;`}
+                      style={bookingStyle}
+                      x-bind:style={bookingBind}
                     >
                       <div class="text-xs font-semibold leading-tight">{b.timeLabel}</div>
                       <div class="truncate text-xs opacity-95">{b.label}</div>
                     </div>
-                  )
-                )}
+                  );
+                })}
               </div>
-              {dayBookings.length === 0 && (
-                <p class="pointer-events-none absolute inset-x-16 top-8 text-center text-sm text-slate-400">
+              {day.bookings.length === 0 && (
+                <p class="pointer-events-none absolute inset-x-16 top-10 text-center text-sm text-slate-400">
                   {t("noBookings")}
                 </p>
               )}
