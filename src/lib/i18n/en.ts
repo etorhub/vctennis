@@ -83,7 +83,18 @@ export const en = {
   accountDisabled: "This account is disabled.",
   loading: "Loading…",
   privacy: "Privacy",
-  myBookings: "My bookings"
+  myBookings: "My bookings",
+  rules: "Rules",
+  rulesHoursTitle: "Opening hours",
+  rulesHoursBody: "The court is open from {open}:00 to {close}:00 (Europe/Madrid).",
+  rulesBookingTitle: "Booking",
+  rulesBookingBody:
+    "You can book within a {days}-day window (today and the next {ahead} days). Up to {max} active future bookings per person. Slots are {durations} minutes and start on the hour or half hour. One court — overlapping bookings are not allowed.",
+  rulesEtiquetteTitle: "Etiquette",
+  rulesEtiquetteShoes: "Flat shoes only — no heels.",
+  rulesEtiquetteOnlyTennis: "Tennis only — no footballs, bikes, or pets on the court.",
+  rulesAccessTitle: "Access",
+  rulesAccessBody: "This is the community court at Vinya Canadell. Ask a site admin for access details."
 };
 
 export type MessageKey = keyof typeof en;

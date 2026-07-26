@@ -29,6 +29,9 @@ const { title = t("siteName"), backHref } = Astro.props;
       <h1 class="truncate text-base font-semibold leading-tight">{title}</h1>
     </div>
     <nav class="flex items-center gap-1">
+      <a href="/rules" class="btn btn-ghost btn-sm" title={t("rules")} aria-label={t("rules")}>
+        <Icon pack="lucide" name="circle-help" height={18} width={18} />
+      </a>
       {
         user?.role === "admin" && (
           <a href="/admin/users" class="btn btn-ghost btn-sm" title={t("admin")}>
