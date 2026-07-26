@@ -1,4 +1,5 @@
 import { defineMiddleware } from "astro:middleware";
+import { db, eq, User } from "astro:db";
 import { auth } from "@/lib/auth";
 import { createT, detectLocale } from "@/lib/i18n";
 
@@ -40,7 +41,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (path.startsWith("/admin")) {
     if (!user) return context.redirect("/sign-in");
-    if (user.role !== "admin") return context.redirect("/");
+    // Role can be stale in Better Auth cookie cache after /setup — trust the DB.
+    const [row] = await db
+      .select({ role: User.role })
+      .from(User)
+      .where(eq(User.id, user.id))
+      .limit(1);
+    const role = row?.role ?? user.role;
+    user.role = role;
+    if (role !== "admin") return context.redirect("/");
   }
 
   if (path === "/settings" || path === "/setup") {

@@ -6,14 +6,16 @@ import { db, eq, User } from "astro:db";
 
 const { t, user } = Astro.locals;
 
-const admins = await db.select().from(User).where(eq(User.role, "admin")).limit(1);
-if (admins.length > 0) {
-  return new Response(null, { status: 404, statusText: "Not Found" });
-}
-
+// Check action result before the "admin exists" gate: the becomeAdmin
+// handler creates an admin, so checking the DB first would 404 the success redirect.
 const result = Astro.getActionResult(actions.auth.becomeAdmin);
 if (result?.data?.success) {
   return Astro.redirect("/admin/users");
+}
+
+const admins = await db.select().from(User).where(eq(User.role, "admin")).limit(1);
+if (admins.length > 0) {
+  return Astro.redirect("/");
 }
 ---
 
