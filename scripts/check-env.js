@@ -1,60 +1,63 @@
-import { readFileSync } from "fs";
+import { existsSync, readFileSync, copyFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const root = join(__dirname, "..");
+const envPath = join(root, ".env");
+const envExamplePath = join(root, ".env.example");
+const isCI = Boolean(process.env.CI || process.env.NETLIFY);
 
-// Read .env.example to get required variables
-const envExample = readFileSync(join(__dirname, "../.env.example"), "utf8");
+const envExample = readFileSync(envExamplePath, "utf8");
 const requiredVars = envExample
   .split("\n")
   .filter((line) => line && !line.startsWith("#"))
   .map((line) => line.split("=")[0]);
 
-// Read .env file
-let envVars = {};
-try {
-  const envFile = readFileSync(join(__dirname, "../.env"), "utf8");
-  envVars = Object.fromEntries(
-    envFile
+function parseEnvFile(content) {
+  return Object.fromEntries(
+    content
       .split("\n")
       .filter((line) => line && !line.startsWith("#"))
-      .map((line) => line.split("=").map((part) => part.trim()))
+      .map((line) => {
+        const eq = line.indexOf("=");
+        if (eq === -1) return [line.trim(), ""];
+        return [line.slice(0, eq).trim(), line.slice(eq + 1).trim()];
+      })
   );
-} catch (error) {
+}
+
+function normalize(value) {
+  return (value || "").replace(/^["']|["']$/g, "").trim();
+}
+
+let fileEnv = {};
+if (existsSync(envPath)) {
+  fileEnv = parseEnvFile(readFileSync(envPath, "utf8"));
+} else if (!isCI) {
   console.error("\x1b[33m%s\x1b[0m", "No .env file found. Creating one from .env.example...");
   try {
-    const { execSync } = require("child_process");
-    execSync("cp .env.example .env");
+    copyFileSync(envExamplePath, envPath);
     console.log("\x1b[32m%s\x1b[0m", "Created .env file from .env.example");
-    const exampleEnv = readFileSync(join(__dirname, "../.env.example"), "utf8");
-    envVars = Object.fromEntries(
-      exampleEnv
-        .split("\n")
-        .filter((line) => line && !line.startsWith("#"))
-        .map((line) => line.split("=").map((part) => part.trim()))
-    );
-  } catch (error) {
+  } catch {
     console.error("\x1b[31m%s\x1b[0m", "Error: Failed to create .env file!");
     process.exit(1);
   }
   process.exit(1);
 }
 
-// Check if all required variables are set (empty / quoted-empty counts as missing)
+// Prefer process.env (Netlify/CI), fall back to .env for local dev
 const missingVars = requiredVars.filter((varName) => {
-  const value = (envVars[varName] || "").replace(/^["']|["']$/g, "").trim();
+  const value = normalize(process.env[varName] ?? fileEnv[varName]);
   return !value;
 });
 
 if (missingVars.length > 0) {
   console.error("\x1b[31m%s\x1b[0m", "Error: You have some missing required environment variables:");
 
-  // Read .env.example again to get comments
   const envExampleLines = envExample.split("\n");
   const varComments = new Map();
-
   let currentComment = "";
   envExampleLines.forEach((line) => {
     if (line.startsWith("#")) {
@@ -73,6 +76,22 @@ if (missingVars.length > 0) {
     }
   });
 
-  console.error("\n\x1b[37m%s\x1b[0m", "Please set these variables in your .env file before running the dev server.");
+  if (missingVars.includes("ASTRO_DB_REMOTE_URL") || missingVars.includes("ASTRO_DB_APP_TOKEN")) {
+    console.error(
+      "\n\x1b[37m%s\x1b[0m",
+      "Without ASTRO_DB_REMOTE_URL / ASTRO_DB_APP_TOKEN, `astro build --remote` falls back to discontinued Astro Studio and fails looking for ASTRO_STUDIO_APP_TOKEN."
+    );
+    console.error(
+      "\x1b[37m%s\x1b[0m",
+      "Set your Turso values in Netlify → Site configuration → Environment variables (or run npm run db:setup locally)."
+    );
+  }
+
+  console.error(
+    "\n\x1b[37m%s\x1b[0m",
+    isCI
+      ? "Set these variables in your host's environment (Netlify site env vars) and redeploy."
+      : "Please set these variables in your .env file before running the dev server."
+  );
   process.exit(1);
 }
