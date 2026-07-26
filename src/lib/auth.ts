@@ -1,5 +1,4 @@
 import { betterAuth } from "better-auth";
-import { magicLink } from "better-auth/plugins";
 import { Account, db, Session, User, Verification } from "astro:db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { Resend } from "resend";
@@ -12,6 +11,25 @@ export let pendingSignupIp: string | null = null;
 
 export function setPendingSignupIp(ip: string | null) {
   pendingSignupIp = ip;
+}
+
+async function sendAuthEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  const from =
+    import.meta.env.RESEND_FROM_EMAIL || "Vinya Canadell Tennis <onboarding@resend.dev>";
+  const { error } = await resend.emails.send({
+    from,
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html
+  });
+  if (error) {
+    console.error("Resend error:", error);
+    throw new Error("Failed to send email");
+  }
 }
 
 export const auth = betterAuth({
@@ -73,34 +91,47 @@ export const auth = betterAuth({
       }
     }
   },
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+    minPasswordLength: 8,
+    sendResetPassword: async ({ user, token }) => {
+      const base = import.meta.env.BETTER_AUTH_URL.replace(/\/$/, "");
+      const url = `${base}/reset-password?token=${encodeURIComponent(token)}`;
+      await sendAuthEmail({
+        to: user.email,
+        subject: `${SITE_NAME} — reset password`,
+        html: `
+          <p>Reset your password for ${SITE_NAME}:</p>
+          <p><a href="${url}">${url}</a></p>
+          <p>This link expires soon. If you did not request it, you can ignore this email.</p>
+        `
+      });
+    }
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendAuthEmail({
+        to: user.email,
+        subject: `${SITE_NAME} — verify your email`,
+        html: `
+          <p>Verify your email to activate your ${SITE_NAME} account:</p>
+          <p><a href="${url}">${url}</a></p>
+          <p>This link expires soon. If you did not create an account, you can ignore this email.</p>
+        `
+      });
+    }
+  },
   session: {
+    expiresIn: 60 * 60 * 24 * 60, // 60 days
+    updateAge: 60 * 60 * 24, // sliding refresh once per day
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60
     }
-  },
-  plugins: [
-    magicLink({
-      sendMagicLink: async ({ email, url }) => {
-        const from =
-          import.meta.env.RESEND_FROM_EMAIL || "Vinya Canadell Tennis <onboarding@resend.dev>";
-        const { error } = await resend.emails.send({
-          from,
-          to: email,
-          subject: `${SITE_NAME} — sign in`,
-          html: `
-            <p>Click the link below to sign in to ${SITE_NAME}:</p>
-            <p><a href="${url}">${url}</a></p>
-            <p>This link expires soon. If you did not request it, you can ignore this email.</p>
-          `
-        });
-        if (error) {
-          console.error("Resend error:", error);
-          throw new Error("Failed to send magic link email");
-        }
-      }
-    })
-  ]
+  }
 });
 
 export type SessionUser = {

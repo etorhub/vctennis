@@ -6,7 +6,7 @@ Community tennis court booking PWA for **Vinya Canadell**.
 
 - **Astro 5** (SSR) + **Netlify** adapter
 - **Astro DB / Turso** (LibSQL)
-- **Better Auth** with **magic link** emails via **Resend**
+- **Better Auth** with **email/password** + email verification via **Resend**
 - **Tailwind CSS** + **daisyUI** (`tennis` theme)
 - **Alpine.js** for bottom sheets / client UI
 - **PWA**: installable (`manifest.webmanifest` + minimal `sw.js`), no offline data
@@ -27,7 +27,9 @@ Server-side validation is in [`src/actions/bookings.ts`](src/actions/bookings.ts
 
 ## Auth & roles
 
-- Open registration via magic link (`/sign-in` → Resend email)
+- Open registration via email/password (`/sign-in` → verify email via Resend link)
+- Login with email/password; optional “keep me signed in” (`rememberMe`, long-lived session cookie)
+- Password reset via email link (`/reset-password`)
 - Roles: `member` | `admin` on `User.role`
 - First admin: visit `/setup` while signed in when **no admin exists**
 - Signup IP stored on `User.signupIp`
@@ -45,7 +47,8 @@ Server-side validation is in [`src/actions/bookings.ts`](src/actions/bookings.ts
 | Path | Access | Purpose |
 |---|---|---|
 | `/` | Public | Day agenda (today + 2) |
-| `/sign-in` | Public | Magic link |
+| `/sign-in` | Public | Sign in / sign up |
+| `/reset-password` | Public | Set new password from email link |
 | `/settings` | Auth | Name + showName |
 | `/setup` | Auth, once | Become first admin |
 | `/admin/users` | Admin | User management |

@@ -6,6 +6,12 @@ const { t, user } = Astro.locals;
 if (user && !user.disabled) {
   return Astro.redirect("/");
 }
+
+const messages = {
+  errorGeneric: t("errorGeneric"),
+  passwordMismatch: t("passwordMismatch"),
+  passwordTooShort: t("passwordTooShort")
+};
 ---
 
 <Layout title={t("signIn")}>
@@ -14,39 +20,132 @@ if (user && !user.disabled) {
     <div
       class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
       x-data={`{
+        mode: 'signIn',
         email: '',
+        password: '',
+        confirmPassword: '',
+        rememberMe: true,
         sent: false,
+        sentKind: '',
         loading: false,
         error: '',
-        async submit() {
+        messages: ${JSON.stringify(messages)},
+        async parseError(res) {
+          const data = await res.json().catch(() => ({}));
+          return data.message || data.error?.message || this.messages.errorGeneric;
+        },
+        async signIn() {
           this.loading = true;
           this.error = '';
           try {
-            const res = await fetch('/api/auth/sign-in/magic-link', {
+            const res = await fetch('/api/auth/sign-in/email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                email: this.email,
+                password: this.password,
+                rememberMe: this.rememberMe,
+                callbackURL: '/'
+              })
+            });
+            if (!res.ok) throw new Error(await this.parseError(res));
+            window.location.href = '/';
+          } catch (e) {
+            this.error = e.message || this.messages.errorGeneric;
+          } finally {
+            this.loading = false;
+          }
+        },
+        async signUp() {
+          this.loading = true;
+          this.error = '';
+          try {
+            if (this.password.length < 8) {
+              throw new Error(this.messages.passwordTooShort);
+            }
+            if (this.password !== this.confirmPassword) {
+              throw new Error(this.messages.passwordMismatch);
+            }
+            const name = this.email.includes('@')
+              ? this.email.split('@')[0]
+              : this.email;
+            const res = await fetch('/api/auth/sign-up/email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                email: this.email,
+                password: this.password,
+                name,
+                callbackURL: '/'
+              })
+            });
+            if (!res.ok) throw new Error(await this.parseError(res));
+            this.sent = true;
+            this.sentKind = 'verify';
+          } catch (e) {
+            this.error = e.message || this.messages.errorGeneric;
+          } finally {
+            this.loading = false;
+          }
+        },
+        async forgot() {
+          this.loading = true;
+          this.error = '';
+          try {
+            const res = await fetch('/api/auth/forget-password', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 email: this.email,
-                callbackURL: '/'
+                redirectTo: '/reset-password'
               })
             });
-            if (!res.ok) {
-              const data = await res.json().catch(() => ({}));
-              throw new Error(data.message || ${JSON.stringify(t("errorGeneric"))});
-            }
+            if (!res.ok) throw new Error(await this.parseError(res));
             this.sent = true;
+            this.sentKind = 'reset';
           } catch (e) {
-            this.error = e.message || ${JSON.stringify(t("errorGeneric"))};
+            this.error = e.message || this.messages.errorGeneric;
           } finally {
             this.loading = false;
           }
+        },
+        setMode(next) {
+          this.mode = next;
+          this.error = '';
+          this.sent = false;
+          this.sentKind = '';
+          this.password = '';
+          this.confirmPassword = '';
         }
       }`}
     >
-      <h1 class="mb-1 text-xl font-semibold">{t("signIn")}</h1>
-      <p class="mb-6 text-sm text-slate-500">{t("tagline")}</p>
-
       <div x-show="!sent">
+        <div class="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1" x-show="mode !== 'forgot'">
+          <button
+            type="button"
+            class="btn btn-sm border-0"
+            :class="mode === 'signIn' ? 'btn-primary' : 'btn-ghost'"
+            @click="setMode('signIn')"
+          >
+            {t("signIn")}
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm border-0"
+            :class="mode === 'signUp' ? 'btn-primary' : 'btn-ghost'"
+            @click="setMode('signUp')"
+          >
+            {t("signUp")}
+          </button>
+        </div>
+
+        <h1 class="mb-1 text-xl font-semibold" x-show="mode === 'signIn'">{t("signIn")}</h1>
+        <h1 class="mb-1 text-xl font-semibold" x-show="mode === 'signUp'" x-cloak>{t("signUp")}</h1>
+        <h1 class="mb-1 text-xl font-semibold" x-show="mode === 'forgot'" x-cloak>{t("forgotPassword")}</h1>
+        <p class="mb-6 text-sm text-slate-500">{t("tagline")}</p>
+
         <label class="form-control w-full">
           <div class="label py-1"><span class="label-text">{t("email")}</span></div>
           <input
@@ -56,25 +155,103 @@ if (user && !user.disabled) {
             required
             autocomplete="email"
             placeholder="name@example.com"
-            @keydown.enter.prevent="submit()"
           />
         </label>
+
+        <label class="form-control mt-3 w-full" x-show="mode !== 'forgot'">
+          <div class="label py-1"><span class="label-text">{t("password")}</span></div>
+          <input
+            type="password"
+            class="input input-bordered w-full"
+            x-model="password"
+            required
+            minlength="8"
+            :autocomplete="mode === 'signUp' ? 'new-password' : 'current-password'"
+          />
+        </label>
+
+        <label class="form-control mt-3 w-full" x-show="mode === 'signUp'" x-cloak>
+          <div class="label py-1"><span class="label-text">{t("confirmPassword")}</span></div>
+          <input
+            type="password"
+            class="input input-bordered w-full"
+            x-model="confirmPassword"
+            required
+            minlength="8"
+            autocomplete="new-password"
+          />
+        </label>
+
+        <label class="mt-4 flex cursor-pointer items-center gap-2" x-show="mode === 'signIn'" x-cloak>
+          <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" x-model="rememberMe" />
+          <span class="text-sm">{t("rememberMe")}</span>
+        </label>
+
         <p class="mt-2 text-sm text-error" x-show="error" x-text="error"></p>
+
         <button
           type="button"
           class="btn btn-primary mt-4 w-full"
-          :disabled="loading || !email"
-          @click="submit()"
+          x-show="mode === 'signIn'"
+          :disabled="loading || !email || !password"
+          @click="signIn()"
         >
-          <span x-show="!loading">{t("sendMagicLink")}</span>
+          <span x-show="!loading">{t("signIn")}</span>
           <span x-show="loading" x-cloak>{t("loading")}</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary mt-4 w-full"
+          x-show="mode === 'signUp'"
+          x-cloak
+          :disabled="loading || !email || !password || !confirmPassword"
+          @click="signUp()"
+        >
+          <span x-show="!loading">{t("signUp")}</span>
+          <span x-show="loading" x-cloak>{t("loading")}</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary mt-4 w-full"
+          x-show="mode === 'forgot'"
+          x-cloak
+          :disabled="loading || !email"
+          @click="forgot()"
+        >
+          <span x-show="!loading">{t("sendResetLink")}</span>
+          <span x-show="loading" x-cloak>{t("loading")}</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-link mt-2 w-full text-sm"
+          x-show="mode === 'signIn'"
+          @click="setMode('forgot')"
+        >
+          {t("forgotPassword")}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-ghost mt-2 w-full"
+          x-show="mode === 'forgot'"
+          x-cloak
+          @click="setMode('signIn')"
+        >
+          {t("backToSignIn")}
         </button>
       </div>
 
       <div x-show="sent" x-cloak class="text-center">
         <p class="text-lg font-medium text-primary">{t("checkInbox")}</p>
-        <p class="mt-2 text-sm text-slate-600">{t("magicLinkSent")}</p>
-        <a href="/" class="btn btn-ghost mt-6 w-full">{t("backToCalendar")}</a>
+        <p class="mt-2 text-sm text-slate-600" x-show="sentKind === 'verify'">{t("checkInboxVerify")}</p>
+        <p class="mt-2 text-sm text-slate-600" x-show="sentKind === 'reset'">{t("resetLinkSent")}</p>
+        <button type="button" class="btn btn-ghost mt-6 w-full" @click="setMode('signIn')">
+          {t("backToSignIn")}
+        </button>
+        <a href="/" class="btn btn-ghost mt-2 w-full">{t("backToCalendar")}</a>
       </div>
     </div>
   </main>
