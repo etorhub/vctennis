@@ -1,5 +1,5 @@
 /** Booking rules — change here, not via env vars. */
-export const OPEN_HOUR = 9;
+export const OPEN_HOUR = 10;
 export const CLOSE_HOUR = 21;
 export const BOOK_AHEAD_DAYS = 3;
 export const MAX_ACTIVE_BOOKINGS = 3;

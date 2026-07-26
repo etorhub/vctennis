@@ -85,5 +85,16 @@ export const ca: Dictionary = {
   accountDisabled: "Aquest compte està desactivat.",
   loading: "Carregant…",
   privacy: "Privacitat",
-  myBookings: "Les meves reserves"
+  myBookings: "Les meves reserves",
+  rules: "Normes",
+  rulesHoursTitle: "Horari",
+  rulesHoursBody: "La pista és oberta de {open}:00 a {close}:00 (Europe/Madrid).",
+  rulesBookingTitle: "Reserves",
+  rulesBookingBody:
+    "Pots reservar dins d'una finestra de {days} dies (avui i els {ahead} dies següents). Màxim {max} reserves futures actives per persona. Les franges són de {durations} minuts i comencen en punt o a i mitja. Una sola pista — no es permeten solapaments.",
+  rulesEtiquetteTitle: "Etiqueta",
+  rulesEtiquetteShoes: "Només sabates planes — sense talons.",
+  rulesEtiquetteOnlyTennis: "Només tennis — a la pista no hi caben pilotes de futbol, bicicletes ni animals.",
+  rulesAccessTitle: "Accés",
+  rulesAccessBody: "És la pista comunitària de Vinya Canadell. Demana els detalls d'accés a un admin del lloc."
 };

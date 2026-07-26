@@ -49,9 +49,13 @@ const saved = !!result?.data?.success;
       <button type="submit" class="btn btn-primary">{t("save")}</button>
     </form>
 
+    <a href="/rules" class="btn btn-ghost mt-4 w-full">
+      {t("rules")}
+    </a>
+
     {
       user.role === "admin" && (
-        <a href="/admin/users" class="btn btn-outline mt-4 w-full">
+        <a href="/admin/users" class="btn btn-outline mt-2 w-full">
           {t("admin")}
         </a>
       )
