@@ -9,13 +9,7 @@ import {
 } from "./config";
 
 /** Instant representing local wall-clock time in Europe/Madrid. */
-export function zonedDate(
-  year: number,
-  month: number,
-  day: number,
-  hour = 0,
-  minute = 0
-): Date {
+export function zonedDate(year: number, month: number, day: number, hour = 0, minute = 0): Date {
   const iso = `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}T${pad(hour, 2)}:${pad(minute, 2)}:00`;
   // Interpret as Madrid local via Intl offset lookup
   const asUtc = new Date(`${iso}Z`);
@@ -40,7 +34,10 @@ export function getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
     hour12: false
   });
   const parts = Object.fromEntries(
-    dtf.formatToParts(date).filter((p) => p.type !== "literal").map((p) => [p.type, p.value])
+    dtf
+      .formatToParts(date)
+      .filter((p) => p.type !== "literal")
+      .map((p) => [p.type, p.value])
   );
   const asUtc = Date.UTC(
     Number(parts.year),
@@ -65,7 +62,10 @@ export function getZonedParts(date: Date) {
     weekday: "short"
   });
   const parts = Object.fromEntries(
-    dtf.formatToParts(date).filter((p) => p.type !== "literal").map((p) => [p.type, p.value])
+    dtf
+      .formatToParts(date)
+      .filter((p) => p.type !== "literal")
+      .map((p) => [p.type, p.value])
   );
   const hour = Number(parts.hour) === 24 ? 0 : Number(parts.hour);
   return {
@@ -106,16 +106,20 @@ export function formatTime(date: Date, locale: string): string {
   }).format(date);
 }
 
-export function formatDayHeader(date: Date, locale: string, labels: { today: string; tomorrow: string }): string {
-  const today = startOfZonedDay();
-  const tomorrow = addZonedDays(today, 1);
-  const dayStart = startOfZonedDay(date);
-  const dateFmt = new Intl.DateTimeFormat(locale === "ca" ? "ca-ES" : "en-GB", {
+export function formatFullDate(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale === "ca" ? "ca-ES" : "en-GB", {
     timeZone: TIMEZONE,
     weekday: "long",
     day: "numeric",
     month: "long"
   }).format(date);
+}
+
+export function formatDayHeader(date: Date, locale: string, labels: { today: string; tomorrow: string }): string {
+  const today = startOfZonedDay();
+  const tomorrow = addZonedDays(today, 1);
+  const dayStart = startOfZonedDay(date);
+  const dateFmt = formatFullDate(date, locale);
 
   if (dayStart.getTime() === today.getTime()) return `${labels.today} · ${dateFmt}`;
   if (dayStart.getTime() === tomorrow.getTime()) return `${labels.tomorrow} · ${dateFmt}`;
@@ -153,12 +157,7 @@ export function isFuture(startsAt: Date, now = new Date()): boolean {
   return startsAt.getTime() > now.getTime();
 }
 
-export function rangesOverlap(
-  aStart: Date,
-  aDuration: number,
-  bStart: Date,
-  bDuration: number
-): boolean {
+export function rangesOverlap(aStart: Date, aDuration: number, bStart: Date, bDuration: number): boolean {
   const aEnd = bookingEnd(aStart, aDuration).getTime();
   const bEnd = bookingEnd(bStart, bDuration).getTime();
   return aStart.getTime() < bEnd && bStart.getTime() < aEnd;

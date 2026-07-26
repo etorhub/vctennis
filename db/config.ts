@@ -11,6 +11,7 @@ const User = defineTable({
     showName: column.boolean({ default: true }),
     signupIp: column.text({ optional: true }),
     disabled: column.boolean({ default: false }),
+    locale: column.text({ optional: true, default: "en" }),
     createdAt: column.date(),
     updatedAt: column.date()
   }
@@ -62,7 +63,8 @@ const Bookings = defineTable({
     userId: column.text(),
     startsAt: column.date(),
     durationMin: column.number(),
-    createdAt: column.date()
+    createdAt: column.date(),
+    reminderSentAt: column.date({ optional: true })
   }
 });
 

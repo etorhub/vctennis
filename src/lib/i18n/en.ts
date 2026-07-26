@@ -94,7 +94,11 @@ export const en = {
   rulesEtiquetteShoes: "Flat shoes only — no heels.",
   rulesEtiquetteOnlyTennis: "Tennis only — no footballs, bikes, or pets on the court.",
   rulesAccessTitle: "Access",
-  rulesAccessBody: "This is the community court at Vinya Canadell. Ask a site admin for access details."
+  rulesAccessBody: "This is the community court at Vinya Canadell. Ask a site admin for access details.",
+  emailBookingConfirmedSubject: "Booking confirmed",
+  emailBookingConfirmedBody: "Your court is booked for {date} at {time} ({duration}). See you on court!",
+  emailReminderSubject: "Upcoming booking reminder",
+  emailReminderBody: "Reminder: your court booking starts {date} at {time} ({duration})."
 };
 
 export type MessageKey = keyof typeof en;

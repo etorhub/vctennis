@@ -96,5 +96,10 @@ export const ca: Dictionary = {
   rulesEtiquetteShoes: "Només sabates planes — sense talons.",
   rulesEtiquetteOnlyTennis: "Només tennis — a la pista no hi caben pilotes de futbol, bicicletes ni animals.",
   rulesAccessTitle: "Accés",
-  rulesAccessBody: "És la pista comunitària de Vinya Canadell. Demana els detalls d'accés a un admin del lloc."
+  rulesAccessBody: "És la pista comunitària de Vinya Canadell. Demana els detalls d'accés a un admin del lloc.",
+  emailBookingConfirmedSubject: "Reserva confirmada",
+  emailBookingConfirmedBody:
+    "La teva pista està reservada per al {date} a les {time} ({duration}). Ens veiem a la pista!",
+  emailReminderSubject: "Recordatori de reserva propera",
+  emailReminderBody: "Recordatori: la teva reserva de pista comença el {date} a les {time} ({duration})."
 };

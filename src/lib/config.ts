@@ -8,5 +8,7 @@ export const ALLOWED_DURATIONS = [30, 60] as const;
 export const TIMEZONE = "Europe/Madrid";
 export const SITE_NAME = "Vinya Canadell Tennis";
 export const THEME_COLOR = "#16a34a";
+/** Hours before a booking's start time to send the reminder email. */
+export const REMINDER_OFFSET_HOURS = 2;
 
 export type AllowedDuration = (typeof ALLOWED_DURATIONS)[number];

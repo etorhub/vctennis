@@ -1,7 +1,9 @@
 import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro:schema";
 import { db, Bookings, eq, and, gt } from "astro:db";
+import { buildBookingEmail } from "@/lib/bookingEmail";
 import { MAX_ACTIVE_BOOKINGS } from "@/lib/config";
+import { sendEmail } from "@/lib/email";
 import {
   isAlignedSlot,
   isAllowedDuration,
@@ -85,6 +87,19 @@ export const bookings = {
         createdAt: new Date()
       });
 
+      try {
+        const { subject, html } = buildBookingEmail(
+          "confirmed",
+          context.locals.t,
+          context.locals.locale,
+          startsAt,
+          input.durationMin
+        );
+        await sendEmail({ to: user.email, subject, html });
+      } catch (err) {
+        console.error("Failed to send booking confirmation email:", err);
+      }
+
       return { success: true, id };
     }
   }),
@@ -122,7 +137,7 @@ export const bookings = {
 
       await db
         .update(Bookings)
-        .set({ startsAt, durationMin: input.durationMin })
+        .set({ startsAt, durationMin: input.durationMin, reminderSentAt: null })
         .where(eq(Bookings.id, booking.id));
 
       return { success: true };

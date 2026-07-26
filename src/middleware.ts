@@ -1,7 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
 import { db, eq, User } from "astro:db";
 import { auth } from "@/lib/auth";
-import { createT, detectLocale } from "@/lib/i18n";
+import { createT, detectLocale, type Locale } from "@/lib/i18n";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const locale = detectLocale(context.request.headers.get("accept-language"));
@@ -23,6 +23,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         showName: (session.user as { showName?: boolean }).showName ?? true,
         signupIp: (session.user as { signupIp?: string | null }).signupIp ?? null,
         disabled: (session.user as { disabled?: boolean }).disabled ?? false,
+        locale: ((session.user as { locale?: string }).locale === "ca" ? "ca" : "en") as Locale,
         image: session.user.image,
         emailVerified: session.user.emailVerified,
         createdAt: session.user.createdAt,
