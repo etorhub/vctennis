@@ -127,12 +127,13 @@ const dayViews = days.map((day, index) => {
   }
 
   <main
-    class="mx-auto w-full max-w-lg pb-28 md:max-w-2xl lg:max-w-6xl"
+    class="pb-28 lg:min-h-[calc(100dvh-3.5rem)] lg:bg-slate-50"
     x-data={`{ dayIndex: 0, dayCount: ${dayViews.length} }`}
   >
-    <div
-      class="sticky top-[57px] z-10 flex items-center gap-1 border-b border-slate-100 bg-slate-50/95 px-2 py-2 backdrop-blur lg:hidden"
-    >
+    <div class="mx-auto w-full max-w-lg md:max-w-2xl lg:max-w-7xl">
+      <div
+        class="sticky top-[57px] z-10 flex items-center gap-1 border-b border-slate-100 bg-slate-50/95 px-2 py-2 backdrop-blur lg:hidden"
+      >
       <button
         type="button"
         class="btn btn-ghost btn-sm btn-circle"
@@ -189,7 +190,7 @@ const dayViews = days.map((day, index) => {
     </div>
 
     <div
-      class="agenda-days lg:grid lg:gap-3 lg:px-2 lg:pt-3"
+      class="agenda-days lg:grid lg:gap-3 lg:px-3 lg:pb-4 lg:pt-3"
       style={`--day-cols: ${dayViews.length}`}
     >
     {
@@ -308,6 +309,7 @@ const dayViews = days.map((day, index) => {
         );
       })
     }
+    </div>
     </div>
   </main>
 
