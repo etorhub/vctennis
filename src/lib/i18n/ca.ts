@@ -97,6 +97,21 @@ export const ca: Dictionary = {
   rulesEtiquetteOnlyTennis: "Només tennis — a la pista no hi caben pilotes de futbol, bicicletes ni animals.",
   rulesAccessTitle: "Accés",
   rulesAccessBody: "És la pista comunitària de Vinya Canadell. Demana els detalls d'accés a un admin del lloc.",
+  privacyAccountTitle: "Dades del compte",
+  privacyAccountBody:
+    "Guardem el teu correu, nom visible, rol i estat de verificació del correu per gestionar l'inici de sessió i l'accés a la pista.",
+  privacySignupIpTitle: "Adreça IP de registre",
+  privacySignupIpBody:
+    "Registrem l'adreça IP utilitzada en donar-te d'alta perquè els admins puguin detectar i prevenir usos abusius del sistema de reserves.",
+  privacyBookingsTitle: "Historial de reserves",
+  privacyBookingsBody:
+    "Les teves reserves (data, hora i durada) es conserven perquè el calendari i el teu historial de reserves es mantinguin correctes al llarg del temps.",
+  privacyShowNameTitle: "Visibilitat del nom al calendari",
+  privacyShowNameBody:
+    "Per defecte el teu nom apareix al costat de les teves reserves al calendari compartit. Ho pots desactivar a Configuració — quan està amagat, les teves reserves es mostren com a \"Reservat\" a la resta de membres en lloc del teu nom.",
+  privacyDeletionTitle: "Eliminar el teu compte",
+  privacyDeletionBody:
+    "Actualment no hi ha una opció d'autoservei per eliminar el compte. Per demanar que s'eliminin el teu compte i les teves dades, contacta amb un admin del lloc.",
   emailBookingConfirmedSubject: "Reserva confirmada",
   emailBookingConfirmedBody:
     "La teva pista està reservada per al {date} a les {time} ({duration}). Ens veiem a la pista!",
