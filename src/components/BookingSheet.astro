@@ -39,7 +39,7 @@ const deleteAction = actions.bookings.delete;
       create: ${JSON.stringify(t("bookCourt"))}
     },
     init() {
-      window.addEventListener('open-booking-sheet', (e) => {
+      const onOpenBookingSheet = (e) => {
         const d = e.detail || {};
         if (!this.signedIn) {
           window.location.href = '/sign-in';
@@ -51,7 +51,9 @@ const deleteAction = actions.bookings.delete;
         this.durationMin = d.durationMin || 60;
         this.open = true;
         document.body.style.overflow = 'hidden';
-      });
+      };
+      window.addEventListener('open-booking-sheet', onOpenBookingSheet);
+      Alpine.onElRemoved(this.$el, () => window.removeEventListener('open-booking-sheet', onOpenBookingSheet));
     },
     close() {
       this.open = false;

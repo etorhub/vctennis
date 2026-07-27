@@ -48,9 +48,16 @@ const { title = t("siteName"), backHref } = Astro.props;
             <a href="/settings" class="btn btn-ghost btn-sm" title={t("settings")}>
               <Icon pack="lucide" name="user" height={18} width={18} />
             </a>
-            <a href="/sign-out" class="btn btn-ghost btn-sm" title={t("signOut")}>
-              <Icon pack="lucide" name="log-out" height={18} width={18} />
-            </a>
+            <form method="POST" action="/sign-out">
+              <button
+                type="submit"
+                class="btn btn-ghost btn-sm"
+                title={t("signOut")}
+                aria-label={t("signOut")}
+              >
+                <Icon pack="lucide" name="log-out" height={18} width={18} />
+              </button>
+            </form>
           </>
         ) : (
           <a href="/sign-in" class="btn btn-primary btn-sm">

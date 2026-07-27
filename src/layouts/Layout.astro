@@ -1,6 +1,7 @@
 ---
 import { SEO } from "astro-seo";
 import Icon from "astro-iconify";
+import { ClientRouter } from "astro:transitions";
 import "@/global.css";
 import { SITE_NAME, THEME_COLOR } from "@/lib/config";
 
@@ -48,13 +49,28 @@ const fullTitle = title === SITE_NAME || title === t("siteName") ? title : `${ti
         optional: { description }
       }}
     />
+    <ClientRouter />
     <slot name="head" />
   </head>
   <body class={`min-h-dvh w-full ${bodyClasses}`}>
     <div
+      x-data="navProgress"
+      x-show="active"
+      x-cloak
+      transition:persist="nav-progress"
+      class="fixed inset-x-0 top-0 z-[70] h-0.5"
+      aria-hidden="true"
+    >
+      <div
+        class="h-full bg-primary transition-[width] duration-200 ease-out"
+        x-bind:style="{ width: progress + '%' }"
+      ></div>
+    </div>
+    <div
       x-cloak
       x-show="toastMessage"
       x-transition
+      transition:persist="toast-success"
       class="z-[60] toast toast-top toast-center w-full max-w-sm"
     >
       <div role="alert" class="alert alert-success shadow-lg">
@@ -74,6 +90,7 @@ const fullTitle = title === SITE_NAME || title === t("siteName") ? title : `${ti
       x-cloak
       x-show="toastErrorMessage"
       x-transition
+      transition:persist="toast-error"
       class="z-[60] toast toast-top toast-center w-full max-w-sm"
     >
       <div role="alert" class="alert alert-error shadow-lg">
@@ -97,6 +114,7 @@ const fullTitle = title === SITE_NAME || title === t("siteName") ? title : `${ti
       x-cloak
       x-show="visible"
       x-transition
+      transition:persist="pwa-install"
       class="fixed inset-x-0 bottom-0 z-[35] border-t border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-white/90"
       style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px))"
       role="dialog"

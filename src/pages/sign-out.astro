@@ -1,9 +1,13 @@
 ---
 import { auth } from "@/lib/auth";
 
-await auth.api.signOut({
-  headers: Astro.request.headers
-});
+// Only sign out on an actual POST submit — a bare GET (e.g. link prefetch,
+// browser preload, middle-click) must be a harmless no-op.
+if (Astro.request.method === "POST") {
+  await auth.api.signOut({
+    headers: Astro.request.headers
+  });
+}
 
 return Astro.redirect("/");
 ---
