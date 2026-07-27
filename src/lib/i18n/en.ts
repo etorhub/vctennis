@@ -55,6 +55,7 @@ export const en = {
   errorPast: "You can only change future bookings.",
   errorOutsideHours: "Bookings must be within opening hours.",
   errorTooFar: "You can only book a few days ahead.",
+  errorCutoff: "Too close to the start time to cancel or reschedule. Contact an admin if you need help.",
   errorSlot: "Start time must be on the half hour.",
   errorUnauthorized: "You must sign in first.",
   errorForbidden: "You don't have permission to do that.",
@@ -93,7 +94,7 @@ export const en = {
   rulesHoursBody: "The court is open from {open}:00 to {close}:00 (Europe/Madrid).",
   rulesBookingTitle: "Booking",
   rulesBookingBody:
-    "You can book within a {days}-day window (today and the next {ahead} days). Up to {max} active future bookings per person. Slots are {durations} minutes and start on the hour or half hour. One court — overlapping bookings are not allowed.",
+    "You can book within a {days}-day window (today and the next {ahead} days). Up to {max} active future bookings per person. Slots are {durations} minutes and start on the hour or half hour. One court — overlapping bookings are not allowed. Cancellations and reschedules must happen at least {cutoff} minutes before the booking starts.",
   rulesEtiquetteTitle: "Etiquette",
   rulesEtiquetteShoes: "Flat shoes only — no heels.",
   rulesEtiquetteOnlyTennis: "Tennis only — no footballs, bikes, or pets on the court.",

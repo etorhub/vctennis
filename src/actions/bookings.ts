@@ -9,6 +9,7 @@ import {
   isAllowedDuration,
   isFuture,
   isWithinBookAhead,
+  isWithinCancelCutoff,
   isWithinOpenHours,
   rangesOverlap
 } from "@/lib/time";
@@ -127,6 +128,9 @@ export const bookings = {
       if (!isFuture(booking.startsAt) && !isAdmin) {
         throw new ActionError({ code: "BAD_REQUEST", message: "errorPast" });
       }
+      if (!isAdmin && isWithinCancelCutoff(booking.startsAt)) {
+        throw new ActionError({ code: "BAD_REQUEST", message: "errorCutoff" });
+      }
 
       const startsAt = new Date(input.startsAt);
       if (Number.isNaN(startsAt.getTime())) {
@@ -164,6 +168,9 @@ export const bookings = {
       }
       if (!isFuture(booking.startsAt) && !isAdmin) {
         throw new ActionError({ code: "BAD_REQUEST", message: "errorPast" });
+      }
+      if (!isAdmin && isWithinCancelCutoff(booking.startsAt)) {
+        throw new ActionError({ code: "BAD_REQUEST", message: "errorCutoff" });
       }
 
       await db.delete(Bookings).where(eq(Bookings.id, booking.id));
