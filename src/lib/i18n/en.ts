@@ -95,8 +95,11 @@ export const en = {
   rulesBookingBody:
     "You can book within a {days}-day window (today and the next {ahead} days). Up to {max} active future bookings per person. Slots are {durations} minutes and start on the hour or half hour. One court — overlapping bookings are not allowed.",
   rulesEtiquetteTitle: "Etiquette",
-  rulesEtiquetteShoes: "Flat shoes only — no heels.",
-  rulesEtiquetteOnlyTennis: "Tennis only — no footballs, bikes, or pets on the court.",
+  rulesEtiquetteIntro: "Tennis only on the court.",
+  rulesEtiquetteShoes: "Flat shoes only — no heels",
+  rulesEtiquetteNoBalls: "No footballs",
+  rulesEtiquetteNoBikes: "No bikes",
+  rulesEtiquetteNoPets: "No pets",
   rulesAccessTitle: "Access",
   rulesAccessBody: "This is the community court at Vinya Canadell. Ask a site admin for access details.",
   privacyAccountTitle: "Account data",
