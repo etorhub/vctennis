@@ -15,6 +15,10 @@ export default defineConfig({
   ],
   output: "server",
   adapter: netlify(),
+  prefetch: {
+    defaultStrategy: "hover",
+    prefetchAll: true
+  },
   server: {
     host: true // expose on LAN during `astro dev`
   }

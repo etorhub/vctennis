@@ -45,12 +45,13 @@ const last = days[days.length - 1];
 const lp = getZonedParts(last);
 const rangeEnd = zonedDate(lp.year, lp.month, lp.day, CLOSE_HOUR, 0);
 
-const bookingsRaw = await db
-  .select()
-  .from(Bookings)
-  .where(and(gte(Bookings.startsAt, rangeStart), lte(Bookings.startsAt, rangeEnd)));
-
-const users = await db.select().from(User);
+const [bookingsRaw, users] = await Promise.all([
+  db
+    .select()
+    .from(Bookings)
+    .where(and(gte(Bookings.startsAt, rangeStart), lte(Bookings.startsAt, rangeEnd))),
+  db.select().from(User)
+]);
 const userMap = new Map(users.map((u) => [u.id, u]));
 
 const hours = hourLabels();

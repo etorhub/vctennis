@@ -7,9 +7,11 @@ import { bookingEnd, formatTime, getZonedParts } from "@/lib/time";
 
 const { t, locale } = Astro.locals;
 
-const bookingRows = await db.select().from(BookingsTable);
+const [bookingRows, users] = await Promise.all([
+  db.select().from(BookingsTable),
+  db.select().from(User)
+]);
 bookingRows.sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime());
-const users = await db.select().from(User);
 const userMap = new Map(users.map((u) => [u.id, u]));
 ---
 
