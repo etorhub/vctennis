@@ -1,13 +1,19 @@
 // Local Netlify build plugin: after a production deploy goes live, hit a
-// few key routes and fail the deploy loudly if the site is actually down.
+// few key routes and fail loudly if the site is actually down.
 //
 // Why: on 2026-07-26, a Netlify deploy showed "Published" while every page
 // was 500ing (an unguarded DB call in middleware threw on every request).
 // A green build/deploy told us nothing about whether the site worked, so
-// nobody knew until a user reported it. This plugin closes that gap.
+// nobody knew until a user reported it.
+//
+// onSuccess runs AFTER the deploy is already live, so failBuild alone cannot
+// restore traffic. On smoke failure we call Netlify's site rollback API to
+// republish the previous production deploy, then fail the build so the bad
+// deploy is obvious in the dashboard.
 const CHECK_PATHS = ["/", "/sign-in", "/rules"];
 const RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
+const NETLIFY_API = "https://api.netlify.com/api/v1";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -25,6 +31,20 @@ async function checkPath(baseUrl, path) {
     if (attempt < RETRIES) await sleep(RETRY_DELAY_MS);
   }
   return { path, ok: false, status: lastError };
+}
+
+async function rollbackProduction(siteId, token) {
+  const res = await fetch(`${NETLIFY_API}/sites/${siteId}/rollback`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Netlify rollback failed: HTTP ${res.status}${body ? ` — ${body}` : ""}`);
+  }
 }
 
 module.exports.onSuccess = async ({ utils }) => {
@@ -46,10 +66,47 @@ module.exports.onSuccess = async ({ utils }) => {
     console.log(`smoke-test: ${r.path} -> ${r.ok ? `OK (${r.status})` : `FAILED (${r.status})`}`);
   }
 
-  if (failures.length > 0) {
+  if (failures.length === 0) return;
+
+  const failedPaths = failures.map((f) => f.path).join(", ");
+  const siteId = process.env.SITE_ID;
+  const token = process.env.NETLIFY_AUTH_TOKEN;
+
+  if (!token) {
     utils.build.failBuild(
-      `Production is live but returning server errors on: ${failures.map((f) => f.path).join(", ")}. ` +
-        "Check function logs in the Netlify dashboard and your Turso/env configuration."
+      `Production is live but returning server errors on: ${failedPaths}. ` +
+        "Auto-rollback skipped: set NETLIFY_AUTH_TOKEN in Netlify site env vars " +
+        "(personal access token with deploy permissions), then restore the previous " +
+        "deploy manually in the Netlify dashboard. Check function logs and Turso/env configuration."
     );
+    return;
   }
+
+  if (!siteId) {
+    utils.build.failBuild(
+      `Production is live but returning server errors on: ${failedPaths}. ` +
+        "Auto-rollback skipped: SITE_ID is missing from the build environment. " +
+        "Restore the previous deploy manually in the Netlify dashboard."
+    );
+    return;
+  }
+
+  try {
+    console.log(`smoke-test: rolling back site ${siteId} to previous production deploy…`);
+    await rollbackProduction(siteId, token);
+    console.log("smoke-test: rollback requested successfully.");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    utils.build.failBuild(
+      `Production is live but returning server errors on: ${failedPaths}. ` +
+        `Auto-rollback failed (${message}). Restore the previous deploy manually in the Netlify dashboard.`
+    );
+    return;
+  }
+
+  utils.build.failBuild(
+    `Production returned server errors on: ${failedPaths}. ` +
+      "Rolled back to the previous production deploy. " +
+      "Check function logs in the Netlify dashboard and your Turso/env configuration."
+  );
 };

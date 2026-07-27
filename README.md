@@ -67,8 +67,11 @@ Copy [`.env.example`](.env.example). Required:
 | `RESEND_API_KEY` | Verification + password-reset emails |
 | `ASTRO_DB_REMOTE_URL` | Turso URL (remote / production) |
 | `ASTRO_DB_APP_TOKEN` | Turso token (remote / production) |
+| `CRON_SECRET` | Bearer for `/api/cron/send-reminders` |
 
 Optional: `RESEND_FROM_EMAIL` (defaults to Resend onboarding sender).
+
+On Netlify production only: set `NETLIFY_AUTH_TOKEN` (personal access token with deploy permissions) so the post-deploy smoke plugin can auto-rollback if key routes return 5xx.
 
 Booking knobs (hours, book-ahead, durations) live in [`src/lib/config.ts`](src/lib/config.ts), not env vars.
 
@@ -78,19 +81,27 @@ Booking knobs (hours, book-ahead, durations) live in [`src/lib/config.ts`](src/l
 |---|---|
 | `npm run dev:local` | Dev server + local SQLite file (`.data/`) |
 | `npm run build:local` | Typecheck + build with local DB |
+| `npm run verify:dist` | Assert Netlify SSR artifacts exist after a build |
+| `npm run ci` | `build:local` + `verify:dist` (same as GitHub Actions) |
 | `npm run dev` | Dev server + Turso (`--remote`) |
 | `npm run build` | Typecheck + build for Netlify (`--remote`) |
 | `npm run db:setup` | Create Turso DB and write credentials |
 | `npm run db:update-schemas` | Push Astro DB schema to Turso |
 | `npm run host:login` | Netlify CLI login |
-| `npm run host:deploy` | Production deploy via Netlify CLI |
+| `npm run host:deploy` | Build + production deploy via Netlify CLI (runs smoke plugin) |
+
+## CI / deploy safety
+
+GitHub Actions (`.github/workflows/ci.yml`) runs `npm run ci` on pull requests and pushes to `main`/`master` (typecheck, local SSR build, dist artifact checks). Require that check in GitHub branch protection on `main` so broken builds cannot merge.
+
+Netlify production deploys run a smoke plugin (`netlify/plugins/smoke-test`) that hits `/`, `/sign-in`, and `/rules` after publish. On 5xx it rolls back to the previous production deploy (needs `NETLIFY_AUTH_TOKEN`) and fails the deploy in the dashboard.
 
 ## Deploy (Netlify)
 
 1. Link the site (`npx netlify link` or the Netlify UI).
-2. Set the env vars above; use your production URL for `BETTER_AUTH_URL`.
+2. Set the env vars above; use your production URL for `BETTER_AUTH_URL`. Also set `NETLIFY_AUTH_TOKEN` for auto-rollback.
 3. Push schema once: `npm run db:update-schemas`.
-4. Deploy: `npm run host:deploy` (or Netlify Git continuous deploy with build command `npm run build`).
+4. Deploy: `npm run host:deploy` (or Netlify Git continuous deploy; `netlify.toml` runs `astro db push --remote` then `npm run build`).
 
 ## Project layout
 

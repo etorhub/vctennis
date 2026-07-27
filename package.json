@@ -12,11 +12,13 @@
     "start": "npm run check:env && astro dev --host --remote",
     "build": "npm run check:env && astro check && astro build --remote",
     "build:local": "ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro check && ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro build",
+    "verify:dist": "node scripts/verify-dist.js",
+    "ci": "npm run build:local && npm run verify:dist",
     "preview": "astro preview",
     "format": "prettier -w .",
     "db:setup": "node scripts/setup-turso.js",
     "db:update-schemas": "astro db push --remote",
-    "host:deploy": "npx netlify deploy --prod",
+    "host:deploy": "npx netlify deploy --build --prod",
     "host:login": "npx netlify login"
   },
   "dependencies": {
