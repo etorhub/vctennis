@@ -9,10 +9,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.t = createT(locale);
 
   // Bypass cookie cache so role/disabled changes (e.g. /setup) are visible immediately.
-  const session = await auth.api.getSession({
-    headers: context.request.headers,
-    query: { disableCookieCache: true }
-  });
+  // A DB/auth outage here must not take the whole site down (see incident 2026-07-26):
+  // degrade to a logged-out request instead of throwing, so public pages keep working.
+  let session: Awaited<ReturnType<typeof auth.api.getSession>> | null = null;
+  try {
+    session = await auth.api.getSession({
+      headers: context.request.headers,
+      query: { disableCookieCache: true }
+    });
+  } catch (err) {
+    console.error("middleware: auth.api.getSession failed", err);
+  }
 
   const user = session?.user
     ? {
@@ -32,15 +39,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
     : null;
 
   // Authoritative role/disabled from DB (session can lag after direct updates).
+  // Same failure mode as above: fall back to the session's own values rather than 500ing.
   if (user) {
-    const [row] = await db
-      .select({ role: User.role, disabled: User.disabled })
-      .from(User)
-      .where(eq(User.id, user.id))
-      .limit(1);
-    if (row) {
-      user.role = row.role ?? "member";
-      user.disabled = row.disabled ?? false;
+    try {
+      const [row] = await db
+        .select({ role: User.role, disabled: User.disabled })
+        .from(User)
+        .where(eq(User.id, user.id))
+        .limit(1);
+      if (row) {
+        user.role = row.role ?? "member";
+        user.disabled = row.disabled ?? false;
+      }
+    } catch (err) {
+      console.error("middleware: role/disabled DB lookup failed", err);
     }
   }
 
