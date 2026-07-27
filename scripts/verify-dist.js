@@ -16,6 +16,8 @@ const requiredFiles = [
   "dist/_redirects",
   "dist/manifest.webmanifest",
   "dist/sw.js",
+  "dist/icons/icon-192.png",
+  "dist/icons/icon-512.png",
   ".netlify/v1/functions/ssr/ssr.mjs",
   ".netlify/build/entry.mjs",
   ".netlify/build/pages/index.astro.mjs"

@@ -92,6 +92,46 @@ const fullTitle = title === SITE_NAME || title === t("siteName") ? title : `${ti
 
     <slot />
 
+    <div
+      x-data="pwaInstall"
+      x-cloak
+      x-show="visible"
+      x-transition
+      class="fixed inset-x-0 bottom-0 z-[35] border-t border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-white/90"
+      style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px))"
+      role="dialog"
+      aria-label={t("installApp")}
+    >
+      <div class="mx-auto flex w-full max-w-lg items-start gap-3 md:max-w-2xl lg:max-w-7xl">
+        <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Icon pack="lucide" name="download" height={18} width={18} />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold leading-tight">{t("installApp")}</p>
+          <p class="mt-0.5 text-xs text-slate-600" x-show="canInstall" x-cloak>
+            {t("installAppHint")}
+          </p>
+          <p class="mt-0.5 text-xs text-slate-600" x-show="showIos" x-cloak>
+            {t("installAppIosHint")}
+          </p>
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              x-show="canInstall"
+              x-cloak
+              @click="install()"
+            >
+              {t("install")}
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" @click="dismiss()">
+              {t("notNow")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script is:inline>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
