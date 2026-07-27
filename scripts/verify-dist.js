@@ -9,13 +9,16 @@ import { fileURLToPath } from "url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
+// Artifacts emitted by `astro build` with @astrojs/netlify.
+// Note: `.netlify/functions/manifest.json` is only created by Netlify CLI
+// packaging, not by a plain adapter build — do not require it in CI.
 const requiredFiles = [
   "dist/_redirects",
   "dist/manifest.webmanifest",
   "dist/sw.js",
   ".netlify/v1/functions/ssr/ssr.mjs",
   ".netlify/build/entry.mjs",
-  ".netlify/functions/manifest.json"
+  ".netlify/build/pages/index.astro.mjs"
 ];
 
 const requiredDirs = ["dist/_astro", ".netlify/v1/functions/ssr"];
