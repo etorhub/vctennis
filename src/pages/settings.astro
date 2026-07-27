@@ -5,6 +5,12 @@ import AppHeader from "@/components/AppHeader.astro";
 import type { MessageKey } from "@/lib/i18n";
 
 const { t, user } = Astro.locals;
+
+const deleteResult = Astro.getActionResult(actions.auth.deleteAccount);
+if (deleteResult?.data?.success) {
+  return Astro.redirect("/");
+}
+
 if (!user) return Astro.redirect("/sign-in");
 
 const result = Astro.getActionResult(actions.auth.updateProfile);
@@ -18,6 +24,14 @@ const passwordError = passwordErrorKey
     ? t(passwordErrorKey)
     : t("errorGeneric")
   : undefined;
+
+const deleteErr = deleteResult?.error?.message;
+const deleteErrorMessage = deleteErr
+  ? (() => {
+      const key = deleteErr as MessageKey;
+      return t(key) !== String(key) ? t(key) : t("errorGeneric");
+    })()
+  : "";
 ---
 
 <Layout title={t("settings")}>
@@ -111,7 +125,43 @@ const passwordError = passwordErrorKey
       <button type="submit" class="btn btn-primary">{t("changePassword")}</button>
     </form>
 
-    <a href="/rules" class="btn btn-ghost mt-4 w-full">
+    <section class="mt-6 rounded-2xl border border-error/30 bg-white p-6 shadow-sm">
+      <h2 class="text-base font-semibold text-error">{t("deleteAccount")}</h2>
+      <p class="mt-2 text-sm leading-relaxed text-slate-600">{t("deleteAccountHelp")}</p>
+      <form
+        method="POST"
+        action={actions.auth.deleteAccount}
+        class="mt-4 flex flex-col gap-3"
+        onsubmit={`return confirm(${JSON.stringify(t("confirmDeleteAccount"))})`}
+      >
+        <label class="form-control w-full">
+          <div class="label py-1"><span class="label-text">{t("confirmEmail")}</span></div>
+          <input
+            type="email"
+            name="confirmEmail"
+            class="input input-bordered w-full"
+            autocomplete="email"
+            required
+            maxlength="320"
+            placeholder={user.email}
+          />
+        </label>
+        {
+          deleteErrorMessage && (
+            <p class="text-sm text-error" role="alert">
+              {deleteErrorMessage}
+            </p>
+          )
+        }
+        <button type="submit" class="btn btn-error btn-outline w-full">{t("deleteAccount")}</button>
+      </form>
+    </section>
+
+    <a href="/privacy" class="btn btn-ghost mt-4 w-full">
+      {t("privacy")}
+    </a>
+
+    <a href="/rules" class="btn btn-ghost mt-2 w-full">
       {t("rules")}
     </a>
 

@@ -23,7 +23,7 @@ Public day agenda, email/password accounts with verification, and admin tools �
 - Book 30 or 60 minutes on `:00` / `:30` slots (10:00–21:00)
 - Max 3 active future bookings per member; overlaps hard-blocked
 - Open signup with email verification and password reset (Resend)
-- Privacy: members can hide their name → shown as **Reserved**
+- Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion on `/settings` (see `/privacy`)
 - Roles: `member` / `admin` (first admin via `/setup`)
 - Installable PWA (no offline booking data)
 - Catalan / English from `Accept-Language`

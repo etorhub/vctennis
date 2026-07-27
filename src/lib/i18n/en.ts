@@ -59,6 +59,8 @@ export const en = {
   errorUnauthorized: "You must sign in first.",
   errorForbidden: "You don't have permission to do that.",
   errorDisabled: "Your account has been disabled.",
+  errorEmailMismatch: "Type your account email to confirm deletion.",
+  errorLastAdmin: "You are the only admin. Promote another member first.",
   admin: "Admin",
   users: "Users",
   bookings: "Bookings",
@@ -87,6 +89,11 @@ export const en = {
   accountDisabled: "This account is disabled.",
   loading: "Loading…",
   privacy: "Privacy",
+  deleteAccount: "Delete my account",
+  deleteAccountHelp:
+    "This permanently removes your account and all of your bookings. Type your email to confirm.",
+  confirmDeleteAccount: "Delete your account and all bookings? This cannot be undone.",
+  confirmEmail: "Type your email to confirm",
   myBookings: "My bookings",
   rules: "Rules",
   rulesHoursTitle: "Opening hours",
@@ -107,13 +114,13 @@ export const en = {
     "We record the IP address used at signup to help admins detect and prevent abuse of the booking system.",
   privacyBookingsTitle: "Booking history",
   privacyBookingsBody:
-    "Your bookings (date, time, and duration) are kept so the calendar and your booking history stay accurate over time.",
+    "Your bookings (date, time, and duration) are kept so the calendar and your booking history stay accurate over time. Deleting your account also deletes all of your bookings and frees those times.",
   privacyShowNameTitle: "Name visibility on the calendar",
   privacyShowNameBody:
     "By default your name is shown next to your bookings on the shared calendar. You can turn this off in Settings — when hidden, your bookings appear as \"Reserved\" to other members instead of your name.",
   privacyDeletionTitle: "Deleting your account",
   privacyDeletionBody:
-    "There is currently no self-service account deletion. To have your account and data removed, contact a site admin.",
+    "Signed-in members can permanently delete their account under Settings → Delete my account (type your email to confirm). This removes your account data and bookings. The last admin cannot leave until another admin exists.",
   emailBookingConfirmedSubject: "Booking confirmed",
   emailBookingConfirmedBody: "Your court is booked for {date} at {time} ({duration}). See you on court!",
   emailReminderSubject: "Upcoming booking reminder",

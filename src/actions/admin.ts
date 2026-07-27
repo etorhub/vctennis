@@ -1,6 +1,7 @@
 import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro:schema";
 import { db, Bookings, eq, User } from "astro:db";
+import { deleteUserCascade } from "@/lib/users";
 
 async function requireAdmin(context: { locals: App.Locals }) {
   const user = context.locals.user;
@@ -77,8 +78,7 @@ export const admin = {
           message: "You cannot delete yourself."
         });
       }
-      await db.delete(Bookings).where(eq(Bookings.userId, input.userId));
-      await db.delete(User).where(eq(User.id, input.userId));
+      await deleteUserCascade(input.userId);
       return { success: true };
     }
   }),

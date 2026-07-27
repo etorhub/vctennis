@@ -61,6 +61,8 @@ export const ca: Dictionary = {
   errorUnauthorized: "Has d'iniciar sessió primer.",
   errorForbidden: "No tens permís per fer això.",
   errorDisabled: "El teu compte ha estat desactivat.",
+  errorEmailMismatch: "Escriu el correu del teu compte per confirmar l'eliminació.",
+  errorLastAdmin: "Ets l'únic admin. Primer promou un altre membre.",
   admin: "Administració",
   users: "Usuaris",
   bookings: "Reserves",
@@ -89,6 +91,11 @@ export const ca: Dictionary = {
   accountDisabled: "Aquest compte està desactivat.",
   loading: "Carregant…",
   privacy: "Privacitat",
+  deleteAccount: "Eliminar el meu compte",
+  deleteAccountHelp:
+    "Això elimina permanentment el teu compte i totes les teves reserves. Escriu el teu correu per confirmar.",
+  confirmDeleteAccount: "Eliminar el compte i totes les reserves? Aquesta acció no es pot desfer.",
+  confirmEmail: "Escriu el teu correu per confirmar",
   myBookings: "Les meves reserves",
   rules: "Normes",
   rulesHoursTitle: "Horari",
@@ -109,13 +116,13 @@ export const ca: Dictionary = {
     "Registrem l'adreça IP utilitzada en donar-te d'alta perquè els admins puguin detectar i prevenir usos abusius del sistema de reserves.",
   privacyBookingsTitle: "Historial de reserves",
   privacyBookingsBody:
-    "Les teves reserves (data, hora i durada) es conserven perquè el calendari i el teu historial de reserves es mantinguin correctes al llarg del temps.",
+    "Les teves reserves (data, hora i durada) es conserven perquè el calendari i el teu historial de reserves es mantinguin correctes al llarg del temps. Eliminar el compte també elimina totes les teves reserves i allibera aquestes hores.",
   privacyShowNameTitle: "Visibilitat del nom al calendari",
   privacyShowNameBody:
     "Per defecte el teu nom apareix al costat de les teves reserves al calendari compartit. Ho pots desactivar a Configuració — quan està amagat, les teves reserves es mostren com a \"Reservat\" a la resta de membres en lloc del teu nom.",
   privacyDeletionTitle: "Eliminar el teu compte",
   privacyDeletionBody:
-    "Actualment no hi ha una opció d'autoservei per eliminar el compte. Per demanar que s'eliminin el teu compte i les teves dades, contacta amb un admin del lloc.",
+    "Els membres amb sessió iniciada poden eliminar permanentment el compte a Configuració → Eliminar el meu compte (cal escriure el correu per confirmar). Això elimina les dades del compte i les reserves. L'últim admin no pot marxar fins que n'hi hagi un altre.",
   emailBookingConfirmedSubject: "Reserva confirmada",
   emailBookingConfirmedBody:
     "La teva pista està reservada per al {date} a les {time} ({duration}). Ens veiem a la pista!",

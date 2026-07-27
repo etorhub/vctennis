@@ -2,6 +2,7 @@ import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro:schema";
 import { auth as betterAuth } from "@/lib/auth";
 import { APIError } from "better-auth/api";
+import { deleteUserCascade } from "@/lib/users";
 import { db, eq, User } from "astro:db";
 
 export const auth = {
@@ -83,6 +84,49 @@ export const auth = {
         }
         throw err;
       }
+
+      return { success: true };
+    }
+  }),
+
+  deleteAccount: defineAction({
+    accept: "form",
+    input: z.object({
+      confirmEmail: z.string().min(1).max(320)
+    }),
+    handler: async (input, context) => {
+      const user = context.locals.user;
+      if (!user) {
+        throw new ActionError({ code: "UNAUTHORIZED", message: "errorUnauthorized" });
+      }
+      if (user.disabled) {
+        throw new ActionError({ code: "FORBIDDEN", message: "errorDisabled" });
+      }
+
+      const confirmEmail = input.confirmEmail.trim().toLowerCase();
+      if (confirmEmail !== user.email.trim().toLowerCase()) {
+        throw new ActionError({ code: "BAD_REQUEST", message: "errorEmailMismatch" });
+      }
+
+      const [row] = await db
+        .select({ role: User.role })
+        .from(User)
+        .where(eq(User.id, user.id))
+        .limit(1);
+      const role = row?.role ?? user.role;
+
+      if (role === "admin") {
+        const admins = await db.select({ id: User.id }).from(User).where(eq(User.role, "admin")).limit(2);
+        if (admins.length <= 1) {
+          throw new ActionError({ code: "BAD_REQUEST", message: "errorLastAdmin" });
+        }
+      }
+
+      await betterAuth.api.signOut({
+        headers: context.request.headers
+      });
+
+      await deleteUserCascade(user.id);
 
       return { success: true };
     }
