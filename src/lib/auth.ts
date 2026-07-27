@@ -1,9 +1,10 @@
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { Account, db, Session, User, Verification } from "astro:db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { SITE_NAME } from "./config";
-import { sendEmail } from "./email";
-import type { Locale } from "./i18n";
+import { EmailSendError, sendEmail } from "./email";
+import { createT, type Locale } from "./i18n";
 
 /** Set per-request in the auth API route so databaseHooks can read it. */
 export let pendingSignupIp: string | null = null;
@@ -17,6 +18,21 @@ export let pendingSignupLocale: Locale = "en";
 
 export function setPendingSignupLocale(locale: Locale) {
   pendingSignupLocale = locale;
+}
+
+async function sendAuthEmail(opts: { to: string; subject: string; html: string }) {
+  try {
+    await sendEmail(opts);
+  } catch (err) {
+    if (err instanceof EmailSendError) {
+      console.error("Auth email failed:", err.message, err.resendError);
+    } else {
+      console.error("Auth email failed:", err);
+    }
+    throw new APIError("BAD_REQUEST", {
+      message: createT(pendingSignupLocale)("errorEmailSend")
+    });
+  }
 }
 
 export const auth = betterAuth({
@@ -92,7 +108,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, token }) => {
       const base = import.meta.env.BETTER_AUTH_URL.replace(/\/$/, "");
       const url = `${base}/reset-password?token=${encodeURIComponent(token)}`;
-      await sendEmail({
+      await sendAuthEmail({
         to: user.email,
         subject: `${SITE_NAME} — reset password`,
         html: `
@@ -107,7 +123,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({
+      await sendAuthEmail({
         to: user.email,
         subject: `${SITE_NAME} — verify your email`,
         html: `

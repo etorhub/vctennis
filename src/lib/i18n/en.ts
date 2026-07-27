@@ -51,6 +51,8 @@ export const en = {
   bookingUpdated: "Booking updated",
   bookingDeleted: "Booking cancelled",
   errorGeneric: "Something went wrong. Please try again.",
+  errorEmailSend:
+    "Could not send the email. If you just signed up, try signing in to resend the link, or contact an admin.",
   errorOverlap: "That time slot is already booked.",
   errorMaxBookings: "You already have the maximum number of active bookings.",
   errorPast: "You can only change future bookings.",

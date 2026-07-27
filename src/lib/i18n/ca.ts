@@ -53,6 +53,8 @@ export const ca: Dictionary = {
   bookingUpdated: "Reserva actualitzada",
   bookingDeleted: "Reserva cancel·lada",
   errorGeneric: "Alguna cosa ha fallat. Torna-ho a provar.",
+  errorEmailSend:
+    "No s'ha pogut enviar el correu. Si t'acabes de registrar, prova d'iniciar sessió per reenviar l'enllaç, o contacta un administrador.",
   errorOverlap: "Aquesta franja ja està reservada.",
   errorMaxBookings: "Ja tens el màxim de reserves actives.",
   errorPast: "Només pots modificar reserves futures.",
