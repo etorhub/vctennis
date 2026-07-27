@@ -3,6 +3,7 @@ import { z } from "astro:schema";
 import { auth as betterAuth } from "@/lib/auth";
 import { APIError } from "better-auth/api";
 import { deleteUserCascade } from "@/lib/users";
+import { THEME_PREFERENCES } from "@/lib/theme";
 import { db, eq, User } from "astro:db";
 
 export const auth = {
@@ -23,7 +24,8 @@ export const auth = {
       showName: z
         .union([z.literal("on"), z.literal("true"), z.literal("false"), z.boolean()])
         .optional()
-        .transform((v) => v === true || v === "on" || v === "true")
+        .transform((v) => v === true || v === "on" || v === "true"),
+      theme: z.enum(THEME_PREFERENCES).optional()
     }),
     handler: async (input, context) => {
       const user = context.locals.user;
@@ -34,14 +36,20 @@ export const auth = {
         throw new ActionError({ code: "FORBIDDEN", message: "Account disabled" });
       }
 
+      const name = input.name.trim();
+      const showName = input.showName ?? false;
+      const theme = input.theme ?? user.theme;
+
       await db
         .update(User)
-        .set({
-          name: input.name.trim(),
-          showName: input.showName ?? false,
-          updatedAt: new Date()
-        })
+        .set({ name, showName, theme, updatedAt: new Date() })
         .where(eq(User.id, user.id));
+
+      // Middleware loaded `locals.user` before this handler ran; refresh it so the
+      // page rendered for this same POST already uses the new name/theme.
+      user.name = name;
+      user.showName = showName;
+      user.theme = theme;
 
       return { success: true };
     }

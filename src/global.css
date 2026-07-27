@@ -9,7 +9,7 @@
 
 html,
 body {
-  @apply bg-base-100 text-neutral antialiased;
+  @apply bg-base-100 text-base-content antialiased;
   overscroll-behavior-y: none;
 }
 
@@ -22,7 +22,7 @@ input[type="email"],
 input[type="datetime-local"],
 select,
 textarea {
-  @apply border-2 border-slate-200 bg-white;
+  @apply border-2 border-base-300 bg-base-100;
 }
 
 .agenda-day {
@@ -49,7 +49,7 @@ textarea {
 
 .agenda-hour-line {
   height: var(--agenda-hour-height);
-  @apply border-t border-slate-100;
+  @apply border-t border-base-content/10;
 }
 
 .agenda-booking {
@@ -69,6 +69,14 @@ textarea {
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
+[data-theme="tennis-dark"] .agenda-booking {
+  background: #475569;
+}
+
+[data-theme="tennis-dark"] .agenda-booking.mine {
+  background: #15803d;
+}
+
 .agenda-slot {
   @apply absolute left-14 right-2 rounded-lg border border-transparent outline-none;
 }
@@ -84,12 +92,17 @@ textarea {
   @apply border-emerald-300 bg-emerald-50;
 }
 
+[data-theme="tennis-dark"] .agenda-slot:hover,
+[data-theme="tennis-dark"] .agenda-slot:focus-visible {
+  @apply border-emerald-700 bg-emerald-950;
+}
+
 .agenda-slot:focus-visible {
   @apply ring-2 ring-emerald-400;
 }
 
 .bottom-sheet {
-  @apply fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white shadow-2xl border-t border-slate-200;
+  @apply fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-base-100 shadow-2xl border-t border-base-300;
   padding-bottom: calc(1rem + var(--safe-bottom));
   max-height: 85vh;
 }
