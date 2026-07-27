@@ -43,6 +43,10 @@ const deleteErrorMessage = deleteErr
     )
   }
   <main class="mx-auto max-w-sm px-4 py-6">
+    <a href="/my-bookings" class="btn btn-primary mb-4 w-full">
+      {t("myBookings")}
+    </a>
+
     <form method="POST" action={actions.auth.updateProfile} class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <label class="form-control w-full">
         <div class="label py-1"><span class="label-text">{t("name")}</span></div>

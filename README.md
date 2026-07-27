@@ -24,6 +24,7 @@ Public day agenda, email/password accounts with verification, and admin tools �
 - Max 3 active future bookings per member; overlaps hard-blocked
 - Open signup with email verification and password reset (Resend)
 - Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion on `/settings` (see `/privacy`)
+- My bookings (`/my-bookings`): upcoming (edit/cancel) and past history from Settings
 - Roles: `member` / `admin` (first admin via `/setup`)
 - Installable PWA (no offline booking data)
 - Catalan / English from `Accept-Language`
@@ -110,7 +111,7 @@ src/
   actions/     # bookings, auth, admin (Astro actions)
   components/  # header, booking bottom sheet
   lib/         # config, auth, time helpers, i18n
-  pages/       # routes (agenda, sign-in, settings, admin, …)
+  pages/       # routes (agenda, sign-in, settings, my-bookings, admin, …)
 db/            # Astro DB schema + seed
 public/        # PWA manifest, icons, sw.js
 ```

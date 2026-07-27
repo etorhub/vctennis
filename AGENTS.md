@@ -59,6 +59,7 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 | `/sign-out` | Auth | Sign out |
 | `/reset-password` | Public | Set new password from email link |
 | `/settings` | Auth | Name, showName, change password, delete account |
+| `/my-bookings` | Auth | Upcoming + past bookings (edit/cancel upcoming) |
 | `/setup` | Auth, once | Become first admin |
 | `/admin/users` | Admin | User management |
 | `/admin/bookings` | Admin | All bookings |
