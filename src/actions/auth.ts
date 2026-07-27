@@ -1,6 +1,7 @@
 import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro:schema";
 import { auth as betterAuth } from "@/lib/auth";
+import { APIError } from "better-auth/api";
 import { db, eq, User } from "astro:db";
 
 export const auth = {
@@ -40,6 +41,48 @@ export const auth = {
           updatedAt: new Date()
         })
         .where(eq(User.id, user.id));
+
+      return { success: true };
+    }
+  }),
+
+  changePassword: defineAction({
+    accept: "form",
+    input: z.object({
+      currentPassword: z.string().min(1),
+      newPassword: z.string().min(8).max(128),
+      confirmPassword: z.string().min(1)
+    }),
+    handler: async (input, context) => {
+      const user = context.locals.user;
+      if (!user) {
+        throw new ActionError({ code: "UNAUTHORIZED", message: "errorUnauthorized" });
+      }
+      if (user.disabled) {
+        throw new ActionError({ code: "FORBIDDEN", message: "errorDisabled" });
+      }
+      if (input.newPassword !== input.confirmPassword) {
+        throw new ActionError({ code: "BAD_REQUEST", message: "passwordMismatch" });
+      }
+
+      try {
+        await betterAuth.api.changePassword({
+          headers: context.request.headers,
+          body: {
+            currentPassword: input.currentPassword,
+            newPassword: input.newPassword
+          }
+        });
+      } catch (err) {
+        if (err instanceof APIError) {
+          const detail = (err.body as { message?: string } | undefined)?.message ?? err.message;
+          if (detail === "Invalid password") {
+            throw new ActionError({ code: "BAD_REQUEST", message: "incorrectPassword" });
+          }
+          throw new ActionError({ code: "BAD_REQUEST", message: "errorGeneric" });
+        }
+        throw err;
+      }
 
       return { success: true };
     }
