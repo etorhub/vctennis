@@ -69,6 +69,25 @@ textarea {
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
+.agenda-slot {
+  @apply absolute left-14 right-2 rounded-lg border border-transparent outline-none;
+}
+
+@media (min-width: 1024px) {
+  .agenda-slot {
+    @apply left-12 right-1.5;
+  }
+}
+
+.agenda-slot:hover,
+.agenda-slot:focus-visible {
+  @apply border-emerald-300 bg-emerald-50;
+}
+
+.agenda-slot:focus-visible {
+  @apply ring-2 ring-emerald-400;
+}
+
 .bottom-sheet {
   @apply fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white shadow-2xl border-t border-slate-200;
   padding-bottom: calc(1rem + var(--safe-bottom));

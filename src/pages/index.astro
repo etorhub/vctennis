@@ -4,7 +4,7 @@ import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
 import BookingSheet from "@/components/BookingSheet.astro";
 import { db, Bookings, User, gte, lte, and } from "astro:db";
-import { OPEN_HOUR, CLOSE_HOUR } from "@/lib/config";
+import { OPEN_HOUR, CLOSE_HOUR, SLOT_MINUTES } from "@/lib/config";
 import {
   agendaDays,
   bookingEnd,
@@ -12,6 +12,9 @@ import {
   formatTime,
   getZonedParts,
   hourLabels,
+  isFuture,
+  isWithinOpenHours,
+  rangesOverlap,
   zonedDate
 } from "@/lib/time";
 import type { MessageKey } from "@/lib/i18n";
@@ -52,7 +55,8 @@ const userMap = new Map(users.map((u) => [u.id, u]));
 
 const hours = hourLabels();
 const hourHeight = 64;
-const nowParts = getZonedParts(new Date());
+const now = new Date();
+const nowParts = getZonedParts(now);
 const todayKey = nowParts.dateKey;
 
 type ViewBooking = {
@@ -102,16 +106,56 @@ function hiddenPastHoursForDay(dateKey: string): number {
   return nowParts.hour - OPEN_HOUR;
 }
 
+type ViewSlot = {
+  startsAtIso: string;
+  durationMin: 30 | 60;
+  top: number;
+  height: number;
+  timeLabel: string;
+  minutesFromOpen: number;
+};
+
+/** Open, aligned, future, unoccupied slots a member can tap to prefill the create sheet. */
+function openSlotsForDay(dayParts: ReturnType<typeof getZonedParts>, dayBookings: ViewBooking[]): ViewSlot[] {
+  const slots: ViewSlot[] = [];
+  for (let hour = OPEN_HOUR; hour < CLOSE_HOUR; hour++) {
+    for (let minute = 0; minute < 60; minute += SLOT_MINUTES) {
+      const slotStart = zonedDate(dayParts.year, dayParts.month, dayParts.day, hour, minute);
+      if (!isWithinOpenHours(slotStart, SLOT_MINUTES)) continue;
+      if (!isFuture(slotStart, now)) continue;
+      const occupied = dayBookings.some((b) =>
+        rangesOverlap(slotStart, SLOT_MINUTES, new Date(b.startsAtIso), b.durationMin)
+      );
+      if (occupied) continue;
+      const canFitHour =
+        isWithinOpenHours(slotStart, 60) &&
+        !dayBookings.some((b) => rangesOverlap(slotStart, 60, new Date(b.startsAtIso), b.durationMin));
+      const minutesFromOpen = (hour - OPEN_HOUR) * 60 + minute;
+      slots.push({
+        startsAtIso: slotStart.toISOString(),
+        durationMin: canFitHour ? 60 : 30,
+        top: (minutesFromOpen / 60) * hourHeight,
+        height: (SLOT_MINUTES / 60) * hourHeight,
+        timeLabel: formatTime(slotStart, locale),
+        minutesFromOpen
+      });
+    }
+  }
+  return slots;
+}
+
 const dayViews = days.map((day, index) => {
   const dayParts = getZonedParts(day);
   const hiddenPastHours = hiddenPastHoursForDay(dayParts.dateKey);
   const title = formatDayHeader(day, locale, { today: t("today"), tomorrow: t("tomorrow") });
+  const dayBookings = viewBookings.filter((b) => b.dateKey === dayParts.dateKey);
   return {
     index,
     dateKey: dayParts.dateKey,
     title,
     hiddenPastHours,
-    bookings: viewBookings.filter((b) => b.dateKey === dayParts.dateKey)
+    bookings: dayBookings,
+    slots: openSlotsForDay(dayParts, dayBookings)
   };
 });
 ---
@@ -253,6 +297,37 @@ const dayViews = days.map((day, index) => {
                         {String(h).padStart(2, "0")}:00
                       </span>
                     </div>
+                  );
+                })}
+                {day.slots.map((slot) => {
+                  const visibleWhenCollapsed = slot.minutesFromOpen + SLOT_MINUTES > startMinutesWhenCollapsed;
+                  const collapsedTop = slot.top - offsetPx;
+                  const initialTop = day.hiddenPastHours > 0 ? collapsedTop : slot.top;
+                  const initialDisplay =
+                    day.hiddenPastHours > 0 && !visibleWhenCollapsed ? "none" : undefined;
+                  const styleParts = [`top: ${initialTop}px`, `height: ${slot.height}px`];
+                  if (initialDisplay) styleParts.push(`display: ${initialDisplay}`);
+                  const slotStyle = styleParts.join("; ");
+                  const slotBind =
+                    day.hiddenPastHours > 0
+                      ? `{
+                          display: (showPastHours || ${visibleWhenCollapsed}) ? null : 'none',
+                          top: (showPastHours ? ${slot.top} : ${collapsedTop}) + 'px',
+                          height: '${slot.height}px'
+                        }`
+                      : undefined;
+
+                  return (
+                    <button
+                      type="button"
+                      class="agenda-slot"
+                      style={slotStyle}
+                      x-bind:style={slotBind}
+                      aria-label={t("bookAt", { time: slot.timeLabel })}
+                      data-starts={slot.startsAtIso}
+                      data-duration={slot.durationMin}
+                      onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'create', startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration) } }))"
+                    />
                   );
                 })}
                 {day.bookings.map((b) => {
