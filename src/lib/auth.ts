@@ -3,7 +3,7 @@ import { APIError } from "better-auth/api";
 import { Account, db, Session, User, Verification } from "astro:db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { SITE_NAME } from "./config";
-import { EmailSendError, sendEmail } from "./email";
+import { EmailSendError, isEmailEnabled, sendEmail } from "./email";
 import { createT, type Locale } from "./i18n";
 
 /** Set per-request in the auth API route so databaseHooks can read it. */
@@ -103,7 +103,7 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
+    requireEmailVerification: isEmailEnabled(),
     minPasswordLength: 8,
     sendResetPassword: async ({ user, token }) => {
       const base = import.meta.env.BETTER_AUTH_URL.replace(/\/$/, "");
@@ -120,7 +120,7 @@ export const auth = betterAuth({
     }
   },
   emailVerification: {
-    sendOnSignUp: true,
+    sendOnSignUp: isEmailEnabled(),
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
       await sendAuthEmail({

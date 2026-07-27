@@ -1,11 +1,14 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
+import { isEmailEnabled } from "@/lib/email";
 
 const { t, user } = Astro.locals;
 if (user && !user.disabled) {
   return Astro.redirect("/");
 }
+
+const emailEnabled = isEmailEnabled();
 
 const messages = {
   errorGeneric: t("errorGeneric"),
@@ -29,6 +32,7 @@ const messages = {
         sentKind: '',
         loading: false,
         error: '',
+        emailEnabled: ${JSON.stringify(emailEnabled)},
         messages: ${JSON.stringify(messages)},
         async parseError(res) {
           const data = await res.json().catch(() => ({}));
@@ -82,8 +86,12 @@ const messages = {
               })
             });
             if (!res.ok) throw new Error(await this.parseError(res));
-            this.sent = true;
-            this.sentKind = 'verify';
+            if (this.emailEnabled) {
+              this.sent = true;
+              this.sentKind = 'verify';
+            } else {
+              window.location.href = '/';
+            }
           } catch (e) {
             this.error = e.message || this.messages.errorGeneric;
           } finally {
@@ -255,7 +263,7 @@ const messages = {
           <button
             type="button"
             class="btn btn-link mt-2 w-full text-sm"
-            x-show="mode === 'signIn'"
+            x-show="mode === 'signIn' && emailEnabled"
             @click="setMode('forgot')"
           >
             {t("forgotPassword")}

@@ -10,7 +10,7 @@ const envExamplePath = join(root, ".env.example");
 const isCI = Boolean(process.env.CI || process.env.NETLIFY);
 
 const envExample = readFileSync(envExamplePath, "utf8");
-const requiredVars = envExample
+const allVars = envExample
   .split("\n")
   .filter((line) => line && !line.startsWith("#"))
   .map((line) => line.split("=")[0]);
@@ -46,6 +46,12 @@ if (existsSync(envPath)) {
   }
   process.exit(1);
 }
+
+// Resend creds are only required when EMAILS_ENABLED="true" - otherwise all email sending is skipped.
+const emailsEnabled = normalize(process.env.EMAILS_ENABLED ?? fileEnv.EMAILS_ENABLED) === "true";
+const requiredVars = emailsEnabled
+  ? allVars
+  : allVars.filter((varName) => varName !== "RESEND_API_KEY" && varName !== "RESEND_FROM_EMAIL");
 
 // Prefer process.env (Netlify/CI), fall back to .env for local dev
 const missingVars = requiredVars.filter((varName) => {

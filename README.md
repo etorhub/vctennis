@@ -36,13 +36,13 @@ Requires **Node 20** (see `.nvmrc`).
 ```bash
 npm install
 cp .env.example .env
-# set at least: BETTER_AUTH_SECRET, BETTER_AUTH_URL, RESEND_API_KEY
+# set at least: BETTER_AUTH_SECRET, BETTER_AUTH_URL
 openssl rand -base64 32   # → BETTER_AUTH_SECRET
 
 npm run dev:local
 ```
 
-Open `http://localhost:4321`, create an account, verify email, then visit `/setup` once to become the first admin.
+Open `http://localhost:4321`, create an account, then visit `/setup` once to become the first admin. By default (`EMAILS_ENABLED="false"`) no verification email is sent and new accounts are active immediately — see [Environment](#environment) for enabling real email delivery.
 
 `dev` / `dev:local` bind to all interfaces (`--host`) so you can use the app from other devices on the LAN.
 
@@ -65,12 +65,25 @@ Copy [`.env.example`](.env.example). Required:
 |---|---|
 | `BETTER_AUTH_SECRET` | Auth signing secret |
 | `BETTER_AUTH_URL` | Public app URL (`http://localhost:4321` locally) |
-| `RESEND_API_KEY` | Verification + password-reset emails |
 | `ASTRO_DB_REMOTE_URL` | Turso URL (remote / production) |
 | `ASTRO_DB_APP_TOKEN` | Turso token (remote / production) |
 | `CRON_SECRET` | Bearer for `/api/cron/send-reminders` |
 
-Optional: `RESEND_FROM_EMAIL` (defaults to Resend onboarding sender). That onboarding address can only email the Resend account owner — for community signups, [verify a domain](https://resend.com/domains) and set `RESEND_FROM_EMAIL` to an address on that domain.
+`RESEND_API_KEY` is only required when `EMAILS_ENABLED="true"`.
+
+### Email (optional, off by default)
+
+Emails (verification, password reset, booking confirmation/reminder) are gated behind `EMAILS_ENABLED`. Leave it `"false"` (the default) to skip all email sending — registration then activates accounts immediately, with no verification step, and "Forgot password" is hidden since it can't work without email.
+
+Once you have a verified Resend sending domain, set:
+
+| Variable | Purpose |
+|---|---|
+| `EMAILS_ENABLED` | Set to `"true"` to enable email sending |
+| `RESEND_API_KEY` | Verification + password-reset + booking emails |
+| `RESEND_FROM_EMAIL` | Optional, defaults to Resend's onboarding sender |
+
+The onboarding sender (`onboarding@resend.dev`) can only email the Resend account owner — for real signups, [verify a domain](https://resend.com/domains) and set `RESEND_FROM_EMAIL` to an address on that domain.
 
 On Netlify production only: set `NETLIFY_AUTH_TOKEN` (personal access token with deploy permissions) so the post-deploy smoke plugin can auto-rollback if key routes return 5xx.
 

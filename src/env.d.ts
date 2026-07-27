@@ -24,7 +24,8 @@ interface ImportMetaEnv {
   readonly ASTRO_DB_APP_TOKEN: string;
   readonly BETTER_AUTH_URL: string;
   readonly BETTER_AUTH_SECRET: string;
-  readonly RESEND_API_KEY: string;
+  readonly EMAILS_ENABLED?: string;
+  readonly RESEND_API_KEY?: string;
   readonly RESEND_FROM_EMAIL?: string;
   readonly CRON_SECRET: string;
 }
