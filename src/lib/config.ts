@@ -10,7 +10,5 @@ export const SITE_NAME = "Vinya Canadell Tennis";
 export const THEME_COLOR = "#16a34a";
 /** Hours before a booking's start time to send the reminder email. */
 export const REMINDER_OFFSET_HOURS = 2;
-/** Members cannot cancel or reschedule a booking within this many minutes of its start time. */
-export const MIN_CANCEL_CHANGE_MINUTES = 10;
 
 export type AllowedDuration = (typeof ALLOWED_DURATIONS)[number];

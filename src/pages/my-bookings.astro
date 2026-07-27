@@ -30,11 +30,11 @@ const now = new Date();
 const rows = await db.select().from(Bookings).where(eq(Bookings.userId, user.id));
 
 const upcoming = rows
-  .filter((b) => b.startsAt.getTime() > now.getTime())
+  .filter((b) => bookingEnd(b.startsAt, b.durationMin).getTime() > now.getTime())
   .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
 
 const past = rows
-  .filter((b) => b.startsAt.getTime() <= now.getTime())
+  .filter((b) => bookingEnd(b.startsAt, b.durationMin).getTime() <= now.getTime())
   .sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime());
 
 function durationLabel(durationMin: number) {

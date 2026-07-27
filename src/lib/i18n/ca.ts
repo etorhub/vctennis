@@ -57,11 +57,9 @@ export const ca: Dictionary = {
     "No s'ha pogut enviar el correu. Si t'acabes de registrar, prova d'iniciar sessió per reenviar l'enllaç, o contacta un administrador.",
   errorOverlap: "Aquesta franja ja està reservada.",
   errorMaxBookings: "Ja tens el màxim de reserves actives.",
-  errorPast: "Només pots modificar reserves futures.",
+  errorPast: "Aquesta hora ja ha passat.",
   errorOutsideHours: "Les reserves han d'estar dins l'horari d'obertura.",
   errorTooFar: "Només pots reservar uns dies endavant.",
-  errorCutoff:
-    "Massa a prop de l'hora d'inici per cancel·lar o canviar la reserva. Contacta amb un admin si necessites ajuda.",
   errorSlot: "L'hora d'inici ha de ser en punt o a i mitja.",
   errorUnauthorized: "Has d'iniciar sessió primer.",
   errorForbidden: "No tens permís per fer això.",
@@ -116,7 +114,7 @@ export const ca: Dictionary = {
   rulesHoursBody: "La pista és oberta de {open}:00 a {close}:00 (Europe/Madrid).",
   rulesBookingTitle: "Reserves",
   rulesBookingBody:
-    "Pots reservar dins d'una finestra de {days} dies (avui i els {ahead} dies següents). Màxim {max} reserves futures actives per persona. Les franges són de {durations} minuts i comencen en punt o a i mitja. Una sola pista — no es permeten solapaments. Les cancel·lacions i els canvis d'hora s'han de fer com a mínim {cutoff} minuts abans que comenci la reserva.",
+    "Pots reservar dins d'una finestra de {days} dies (avui i els {ahead} dies següents). Màxim {max} reserves futures actives per persona. Les franges són de {durations} minuts i comencen en punt o a i mitja. Una sola pista — no es permeten solapaments. Qualsevol reserva es pot cancel·lar o canviar d'hora en qualsevol moment, fins que acabi.",
   rulesEtiquetteTitle: "Etiqueta",
   rulesEtiquetteIntro: "Només tennis a la pista.",
   rulesEtiquetteShoes: "Sabates planes — sense talons",
