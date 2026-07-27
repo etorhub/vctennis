@@ -74,6 +74,9 @@ npm install
 npm run dev:local
 npm run build:local
 
+# Same checks as GitHub Actions (typecheck + local build + dist verify)
+npm run ci
+
 # Turso (required for npm run dev / build --remote and Netlify)
 turso auth login
 npm run db:setup            # create Turso DB + write ASTRO_DB_* to .env
@@ -81,10 +84,16 @@ npm run db:update-schemas   # push schema to Turso
 npm run dev                 # uses Turso --remote (LAN-bound via --host)
 npm run build               # uses Turso --remote (Netlify)
 
-# Deploy
+# Deploy (builds on Netlify so smoke + rollback run)
 npm run host:login
 npm run host:deploy
 ```
+
+## Deploy stability
+
+- **GitHub Actions** (`.github/workflows/ci.yml`): on PR and push to `main`/`master`, runs `npm run ci` (`build:local` + `verify:dist`). Require this check in branch protection.
+- **Netlify smoke plugin** (`netlify/plugins/smoke-test`): after production publish, GETs `/`, `/sign-in`, `/rules`; on 5xx calls site rollback (`PUT /sites/{SITE_ID}/rollback`) then fails the deploy. Needs site env `NETLIFY_AUTH_TOKEN`.
+- `netlify.toml` build command: `astro db push --remote && npm run build`
 
 ## Conventions
 
