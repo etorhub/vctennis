@@ -6,7 +6,7 @@ Community tennis court booking PWA for **Vinya Canadell**.
 
 - **Astro 5** (SSR) + **Netlify** adapter (`output: "server"`)
 - **Astro DB / Turso** (LibSQL); local file DB via `ASTRO_DATABASE_FILE` for `dev:local`
-- **Better Auth** with **email/password**, email verification, and password reset via **Resend**
+- **Better Auth** with **email/password**, email verification, and password reset via **Resend** (production needs a verified Resend domain in `RESEND_FROM_EMAIL`; `onboarding@resend.dev` only emails the Resend account owner)
 - **Tailwind CSS** + **daisyUI** (`tennis` theme)
 - **Alpine.js** for day switcher, bottom sheets, and client UI
 - **PWA**: installable (`manifest.webmanifest` + minimal `sw.js`), no offline data

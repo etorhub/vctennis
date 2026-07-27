@@ -70,7 +70,7 @@ Copy [`.env.example`](.env.example). Required:
 | `ASTRO_DB_APP_TOKEN` | Turso token (remote / production) |
 | `CRON_SECRET` | Bearer for `/api/cron/send-reminders` |
 
-Optional: `RESEND_FROM_EMAIL` (defaults to Resend onboarding sender).
+Optional: `RESEND_FROM_EMAIL` (defaults to Resend onboarding sender). That onboarding address can only email the Resend account owner — for community signups, [verify a domain](https://resend.com/domains) and set `RESEND_FROM_EMAIL` to an address on that domain.
 
 On Netlify production only: set `NETLIFY_AUTH_TOKEN` (personal access token with deploy permissions) so the post-deploy smoke plugin can auto-rollback if key routes return 5xx.
 
