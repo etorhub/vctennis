@@ -75,7 +75,7 @@ const deleteAction = actions.bookings.delete;
     x-transition:leave-end="translate-y-full"
     @keydown.escape.window="open && close()"
   >
-    <div class="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-200"></div>
+    <div class="mx-auto mb-3 h-1.5 w-10 rounded-full bg-base-300"></div>
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-lg font-semibold" x-text="mode === 'edit' ? labels.edit : labels.create"></h2>
       <button type="button" class="btn btn-ghost btn-sm btn-circle" @click="close()" aria-label={t("close")}
@@ -118,7 +118,7 @@ const deleteAction = actions.bookings.delete;
         </select>
       </label>
 
-      <p class="text-sm text-slate-500">{t("openHours", { open: OPEN_HOUR, close: CLOSE_HOUR })}</p>
+      <p class="text-sm text-base-content/60">{t("openHours", { open: OPEN_HOUR, close: CLOSE_HOUR })}</p>
 
       <div class="flex gap-2 pt-2">
         <button type="button" class="btn btn-ghost flex-1" @click="close()">{t("cancel")}</button>

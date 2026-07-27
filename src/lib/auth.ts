@@ -5,6 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { SITE_NAME } from "./config";
 import { EmailSendError, isEmailEnabled, sendEmail } from "./email";
 import { createT, type Locale } from "./i18n";
+import { DEFAULT_THEME_PREFERENCE, type ThemePreference } from "./theme";
 
 /** Set per-request in the auth API route so databaseHooks can read it. */
 export let pendingSignupIp: string | null = null;
@@ -77,6 +78,12 @@ export const auth = betterAuth({
         required: false,
         defaultValue: "en",
         input: false
+      },
+      theme: {
+        type: "string",
+        required: false,
+        defaultValue: DEFAULT_THEME_PREFERENCE,
+        input: false
       }
     }
   },
@@ -94,7 +101,8 @@ export const auth = betterAuth({
               showName: true,
               disabled: false,
               signupIp: pendingSignupIp,
-              locale: pendingSignupLocale
+              locale: pendingSignupLocale,
+              theme: DEFAULT_THEME_PREFERENCE
             }
           };
         }
@@ -153,6 +161,7 @@ export type SessionUser = {
   signupIp?: string | null;
   disabled: boolean;
   locale: Locale;
+  theme: ThemePreference;
   image?: string | null;
   emailVerified: boolean;
   createdAt: Date;

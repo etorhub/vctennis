@@ -1,8 +1,10 @@
 ---
 import { actions } from "astro:actions";
+import Icon from "astro-iconify";
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
 import type { MessageKey } from "@/lib/i18n";
+import { DEFAULT_THEME_PREFERENCE, type ThemePreference } from "@/lib/theme";
 
 const { t, user } = Astro.locals;
 
@@ -32,6 +34,13 @@ const deleteErrorMessage = deleteErr
       return t(key) !== String(key) ? t(key) : t("errorGeneric");
     })()
   : "";
+
+const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
+  { value: "system", label: t("themeSystem"), icon: "monitor" },
+  { value: "light", label: t("themeLight"), icon: "sun" },
+  { value: "dark", label: t("themeDark"), icon: "moon" }
+];
+const currentTheme = user.theme ?? DEFAULT_THEME_PREFERENCE;
 ---
 
 <Layout title={t("settings")}>
@@ -47,7 +56,11 @@ const deleteErrorMessage = deleteErr
       {t("myBookings")}
     </a>
 
-    <form method="POST" action={actions.auth.updateProfile} class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <form
+      method="POST"
+      action={actions.auth.updateProfile}
+      class="flex flex-col gap-4 rounded-2xl border border-base-300 bg-base-100 p-6 shadow-sm"
+    >
       <label class="form-control w-full">
         <div class="label py-1"><span class="label-text">{t("name")}</span></div>
         <input
@@ -60,7 +73,7 @@ const deleteErrorMessage = deleteErr
         />
       </label>
 
-      <label class="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-3">
+      <label class="flex cursor-pointer items-start gap-3 rounded-xl bg-base-200 p-3">
         <input
           type="checkbox"
           name="showName"
@@ -69,9 +82,34 @@ const deleteErrorMessage = deleteErr
         />
         <span>
           <span class="font-medium">{t("showName")}</span>
-          <span class="mt-0.5 block text-sm text-slate-500">{t("showNameHelp")}</span>
+          <span class="mt-0.5 block text-sm text-base-content/60">{t("showNameHelp")}</span>
         </span>
       </label>
+
+      <fieldset class="w-full">
+        <legend class="label-text mb-1 block">{t("appearance")}</legend>
+        <div class="grid grid-cols-3 gap-2">
+          {
+            themeOptions.map((option) => (
+              <label class="cursor-pointer">
+                <input
+                  type="radio"
+                  name="theme"
+                  value={option.value}
+                  class="peer sr-only"
+                  checked={currentTheme === option.value}
+                  onchange="window.applyThemePreference && window.applyThemePreference(this.value)"
+                />
+                <span class="flex flex-col items-center gap-1.5 rounded-xl border-2 border-base-300 bg-base-200 px-2 py-3 text-xs font-medium peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
+                  <Icon pack="lucide" name={option.icon} height={20} width={20} />
+                  {option.label}
+                </span>
+              </label>
+            ))
+          }
+        </div>
+        <p class="mt-2 text-sm text-base-content/60">{t("appearanceHelp")}</p>
+      </fieldset>
 
       {
         result?.error && (
@@ -85,7 +123,7 @@ const deleteErrorMessage = deleteErr
     <form
       method="POST"
       action={actions.auth.changePassword}
-      class="mt-4 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      class="mt-4 flex flex-col gap-4 rounded-2xl border border-base-300 bg-base-100 p-6 shadow-sm"
     >
       <h2 class="text-lg font-semibold">{t("changePassword")}</h2>
 
@@ -129,9 +167,9 @@ const deleteErrorMessage = deleteErr
       <button type="submit" class="btn btn-primary">{t("changePassword")}</button>
     </form>
 
-    <section class="mt-6 rounded-2xl border border-error/30 bg-white p-6 shadow-sm">
+    <section class="mt-6 rounded-2xl border border-error/30 bg-base-100 p-6 shadow-sm">
       <h2 class="text-base font-semibold text-error">{t("deleteAccount")}</h2>
-      <p class="mt-2 text-sm leading-relaxed text-slate-600">{t("deleteAccountHelp")}</p>
+      <p class="mt-2 text-sm leading-relaxed text-base-content/70">{t("deleteAccountHelp")}</p>
       <form
         method="POST"
         action={actions.auth.deleteAccount}

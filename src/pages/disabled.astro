@@ -7,7 +7,7 @@ const { t } = Astro.locals;
 <Layout title={t("accountDisabled")}>
   <main class="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center px-4 text-center">
     <h1 class="text-xl font-semibold">{t("accountDisabled")}</h1>
-    <p class="mt-2 text-slate-600">{t("errorDisabled")}</p>
+    <p class="mt-2 text-base-content/70">{t("errorDisabled")}</p>
     <form method="POST" action="/sign-out">
       <button type="submit" class="btn btn-primary mt-6">{t("signOut")}</button>
     </form>

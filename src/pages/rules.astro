@@ -25,17 +25,17 @@ const etiquettePictograms = [
 <Layout title={t("rules")}>
   <AppHeader title={t("rules")} backHref="/" />
   <main class="mx-auto max-w-lg px-4 py-6">
-    <div class="flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div class="flex flex-col gap-6 rounded-2xl border border-base-300 bg-base-100 p-6 shadow-sm">
       <section class="flex flex-col gap-2">
-        <h2 class="text-base font-semibold text-slate-900">{t("rulesHoursTitle")}</h2>
-        <p class="text-sm leading-relaxed text-slate-600">
+        <h2 class="text-base font-semibold text-base-content">{t("rulesHoursTitle")}</h2>
+        <p class="text-sm leading-relaxed text-base-content/70">
           {t("rulesHoursBody", { open: OPEN_HOUR, close: CLOSE_HOUR })}
         </p>
       </section>
 
-      <section class="flex flex-col gap-2 border-t border-slate-100 pt-6">
-        <h2 class="text-base font-semibold text-slate-900">{t("rulesBookingTitle")}</h2>
-        <p class="text-sm leading-relaxed text-slate-600">
+      <section class="flex flex-col gap-2 border-t border-base-300 pt-6">
+        <h2 class="text-base font-semibold text-base-content">{t("rulesBookingTitle")}</h2>
+        <p class="text-sm leading-relaxed text-base-content/70">
           {
             t("rulesBookingBody", {
               days: BOOK_AHEAD_DAYS,
@@ -47,18 +47,18 @@ const etiquettePictograms = [
         </p>
       </section>
 
-      <section class="flex flex-col gap-3 border-t border-slate-100 pt-6">
-        <h2 class="text-base font-semibold text-slate-900">{t("rulesEtiquetteTitle")}</h2>
-        <p class="text-sm leading-relaxed text-slate-600">{t("rulesEtiquetteIntro")}</p>
+      <section class="flex flex-col gap-3 border-t border-base-300 pt-6">
+        <h2 class="text-base font-semibold text-base-content">{t("rulesEtiquetteTitle")}</h2>
+        <p class="text-sm leading-relaxed text-base-content/70">{t("rulesEtiquetteIntro")}</p>
         <ul class="grid grid-cols-2 gap-3">
           {
             etiquettePictograms.map(({ icon, label }) => (
               <li class="flex items-center gap-3">
-                <span class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-700">
+                <span class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
                   <Icon pack="lucide" name={icon} height={20} width={20} />
                   <span aria-hidden="true" class="absolute left-1/2 top-1/2 h-0.5 w-[130%] -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-red-500" />
                 </span>
-                <span class="text-sm leading-snug text-slate-600">{label}</span>
+                <span class="text-sm leading-snug text-base-content/70">{label}</span>
               </li>
             ))
           }

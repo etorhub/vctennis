@@ -25,6 +25,7 @@ Public day agenda, email/password accounts with verification, and admin tools â€
 - Open signup with email verification and password reset (Resend)
 - Privacy: members can hide their name â†’ shown as **Reserved**; self-serve account deletion on `/settings` (see `/privacy`)
 - My bookings (`/my-bookings`): upcoming (edit/cancel) and past history from Settings
+- Light / dark / system theme, chosen on `/settings` (stored on the account; defaults to the device setting)
 - Roles: `member` / `admin` (first admin via `/setup`)
 - Installable PWA (no offline booking data)
 - Catalan / English from `Accept-Language`
