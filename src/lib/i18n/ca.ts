@@ -106,8 +106,11 @@ export const ca: Dictionary = {
   rulesBookingBody:
     "Pots reservar dins d'una finestra de {days} dies (avui i els {ahead} dies següents). Màxim {max} reserves futures actives per persona. Les franges són de {durations} minuts i comencen en punt o a i mitja. Una sola pista — no es permeten solapaments. Les cancel·lacions i els canvis d'hora s'han de fer com a mínim {cutoff} minuts abans que comenci la reserva.",
   rulesEtiquetteTitle: "Etiqueta",
-  rulesEtiquetteShoes: "Només sabates planes — sense talons.",
-  rulesEtiquetteOnlyTennis: "Només tennis — a la pista no hi caben pilotes de futbol, bicicletes ni animals.",
+  rulesEtiquetteIntro: "Només tennis a la pista.",
+  rulesEtiquetteShoes: "Sabates planes — sense talons",
+  rulesEtiquetteNoBalls: "Sense pilotes de futbol",
+  rulesEtiquetteNoBikes: "Sense bicicletes",
+  rulesEtiquetteNoPets: "Sense animals",
   rulesAccessTitle: "Accés",
   rulesAccessBody: "És la pista comunitària de Vinya Canadell. Demana els detalls d'accés a un admin del lloc.",
   privacyAccountTitle: "Dades del compte",
