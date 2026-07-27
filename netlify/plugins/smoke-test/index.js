@@ -27,7 +27,7 @@ async function checkPath(baseUrl, path) {
   return { path, ok: false, status: lastError };
 }
 
-export const onSuccess = async ({ utils }) => {
+module.exports.onSuccess = async ({ utils }) => {
   const baseUrl = process.env.URL;
   if (!baseUrl) {
     console.log("smoke-test: no deploy URL available (not a deploy that serves traffic), skipping.");
