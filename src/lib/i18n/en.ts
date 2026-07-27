@@ -99,6 +99,21 @@ export const en = {
   rulesEtiquetteOnlyTennis: "Tennis only — no footballs, bikes, or pets on the court.",
   rulesAccessTitle: "Access",
   rulesAccessBody: "This is the community court at Vinya Canadell. Ask a site admin for access details.",
+  privacyAccountTitle: "Account data",
+  privacyAccountBody:
+    "We store your email, display name, role, and email verification status to run sign-in and manage access to the court.",
+  privacySignupIpTitle: "Signup IP address",
+  privacySignupIpBody:
+    "We record the IP address used at signup to help admins detect and prevent abuse of the booking system.",
+  privacyBookingsTitle: "Booking history",
+  privacyBookingsBody:
+    "Your bookings (date, time, and duration) are kept so the calendar and your booking history stay accurate over time.",
+  privacyShowNameTitle: "Name visibility on the calendar",
+  privacyShowNameBody:
+    "By default your name is shown next to your bookings on the shared calendar. You can turn this off in Settings — when hidden, your bookings appear as \"Reserved\" to other members instead of your name.",
+  privacyDeletionTitle: "Deleting your account",
+  privacyDeletionBody:
+    "There is currently no self-service account deletion. To have your account and data removed, contact a site admin.",
   emailBookingConfirmedSubject: "Booking confirmed",
   emailBookingConfirmedBody: "Your court is booked for {date} at {time} ({duration}). See you on court!",
   emailReminderSubject: "Upcoming booking reminder",
