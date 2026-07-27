@@ -12,6 +12,7 @@ const User = defineTable({
     signupIp: column.text({ optional: true }),
     disabled: column.boolean({ default: false }),
     locale: column.text({ optional: true, default: "en" }),
+    theme: column.text({ optional: true, default: "system" }),
     createdAt: column.date(),
     updatedAt: column.date()
   }

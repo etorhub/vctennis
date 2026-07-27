@@ -61,7 +61,7 @@ function durationLabel(durationMin: number) {
       <ul class="flex flex-col gap-3">
         {
           upcoming.length === 0 && (
-            <li class="rounded-xl border border-dashed border-slate-200 bg-white py-8 text-center text-slate-500">
+            <li class="rounded-xl border border-dashed border-base-300 bg-base-100 py-8 text-center text-base-content/60">
               {t("noUpcomingBookings")}
             </li>
           )
@@ -70,9 +70,9 @@ function durationLabel(durationMin: number) {
           upcoming.map((b) => {
             const end = bookingEnd(b.startsAt, b.durationMin);
             return (
-              <li class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <li class="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
                 <p class="font-semibold">{formatFullDate(b.startsAt, locale)}</p>
-                <p class="mt-0.5 text-sm text-slate-500">
+                <p class="mt-0.5 text-sm text-base-content/60">
                   {formatTime(b.startsAt, locale)} – {formatTime(end, locale)} ·{" "}
                   {durationLabel(b.durationMin)}
                 </p>
@@ -98,7 +98,7 @@ function durationLabel(durationMin: number) {
       <ul class="flex flex-col gap-3">
         {
           past.length === 0 && (
-            <li class="rounded-xl border border-dashed border-slate-200 bg-white py-8 text-center text-slate-500">
+            <li class="rounded-xl border border-dashed border-base-300 bg-base-100 py-8 text-center text-base-content/60">
               {t("noPastBookings")}
             </li>
           )
@@ -107,9 +107,9 @@ function durationLabel(durationMin: number) {
           past.map((b) => {
             const end = bookingEnd(b.startsAt, b.durationMin);
             return (
-              <li class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <li class="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
                 <p class="font-semibold">{formatFullDate(b.startsAt, locale)}</p>
-                <p class="mt-0.5 text-sm text-slate-500">
+                <p class="mt-0.5 text-sm text-base-content/60">
                   {formatTime(b.startsAt, locale)} – {formatTime(end, locale)} ·{" "}
                   {durationLabel(b.durationMin)}
                 </p>

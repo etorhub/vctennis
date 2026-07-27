@@ -7,7 +7,7 @@ Community tennis court booking PWA for **Vinya Canadell**.
 - **Astro 5** (SSR) + **Netlify** adapter (`output: "server"`)
 - **Astro DB / Turso** (LibSQL); local file DB via `ASTRO_DATABASE_FILE` for `dev:local`
 - **Better Auth** with **email/password**, email verification, and password reset via **Resend** (production needs a verified Resend domain in `RESEND_FROM_EMAIL`; `onboarding@resend.dev` only emails the Resend account owner)
-- **Tailwind CSS** + **daisyUI** (`tennis` theme)
+- **Tailwind CSS** + **daisyUI** (`tennis` light theme + `tennis-dark`)
 - **Alpine.js** for day switcher, bottom sheets, and client UI
 - **PWA**: installable (`manifest.webmanifest` + minimal `sw.js`), no offline data
 - **Node 20** (`.nvmrc`)
@@ -39,8 +39,15 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 - Signup IP stored on `User.signupIp`
 - Disabled users redirected to `/disabled`
 - Privacy: `User.showName` (default `true`, opt-out). Hidden → display **"Reserved"**
+- Appearance: `User.theme` (`system` default | `light` | `dark`), set on `/settings`
 - Self-serve account deletion on `/settings` (type email to confirm); deletes bookings + auth rows; last admin cannot self-delete
 - Public `/privacy` documents stored data and deletion
+
+## Theming
+
+- daisyUI themes `tennis` / `tennis-dark` in [`tailwind.config.mjs`](tailwind.config.mjs); names, meta colours and the `ThemePreference` type live in [`src/lib/theme.ts`](src/lib/theme.ts)
+- `Layout.astro` renders `data-theme` from `Astro.locals.user.theme` and an inline head script resolves `system` (and follows OS changes) before first paint — no flash
+- Use daisyUI semantic classes (`bg-base-100`, `border-base-300`, `text-base-content/70`, …) in new UI, never `bg-white` / `text-slate-*`; `dark:` variants are wired to `[data-theme="tennis-dark"]`
 
 ## i18n
 
@@ -58,7 +65,7 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 | `/sign-in` | Public | Sign in / sign up |
 | `/sign-out` | Auth | Sign out |
 | `/reset-password` | Public | Set new password from email link |
-| `/settings` | Auth | Name, showName, change password, delete account |
+| `/settings` | Auth | Name, showName, appearance (theme), change password, delete account |
 | `/my-bookings` | Auth | Upcoming + past bookings (edit/cancel upcoming) |
 | `/setup` | Auth, once | Become first admin |
 | `/admin/users` | Admin | User management |
