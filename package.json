@@ -8,10 +8,10 @@
   "scripts": {
     "check:env": "node scripts/check-env.js",
     "dev": "npm run check:env && astro dev --host --remote",
-    "dev:local": "ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro dev --host",
+    "dev:local": "mkdir -p .data && ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro dev --host",
     "start": "npm run check:env && astro dev --host --remote",
     "build": "npm run check:env && astro check && astro build --remote",
-    "build:local": "ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro check && ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro build",
+    "build:local": "mkdir -p .data && ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro check && ASTRO_DB_REMOTE_URL= ASTRO_DB_APP_TOKEN= ASTRO_DATABASE_FILE=./.data/vctennis.db astro build",
     "verify:dist": "node scripts/verify-dist.js",
     "ci": "npm run build:local && npm run verify:dist",
     "preview": "astro preview",
