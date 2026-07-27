@@ -111,8 +111,6 @@ export const ca: Dictionary = {
   rulesEtiquetteNoBalls: "Sense pilotes de futbol",
   rulesEtiquetteNoBikes: "Sense bicicletes",
   rulesEtiquetteNoPets: "Sense animals",
-  rulesAccessTitle: "Accés",
-  rulesAccessBody: "És la pista comunitària de Vinya Canadell. Demana els detalls d'accés a un admin del lloc.",
   privacyAccountTitle: "Dades del compte",
   privacyAccountBody:
     "Guardem el teu correu, nom visible, rol i estat de verificació del correu per gestionar l'inici de sessió i l'accés a la pista.",
