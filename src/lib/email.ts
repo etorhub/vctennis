@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 
-const resend = new Resend(import.meta.env.RESEND_API_KEY);
+export function isEmailEnabled(): boolean {
+  return import.meta.env.EMAILS_ENABLED === "true";
+}
 
 export class EmailSendError extends Error {
   constructor(
@@ -20,6 +22,12 @@ function resendErrorMessage(error: unknown): string {
 }
 
 export async function sendEmail(opts: { to: string; subject: string; html: string }) {
+  if (!isEmailEnabled()) {
+    console.log(`Email sending disabled (EMAILS_ENABLED != "true"); skipping email to ${opts.to}`);
+    return;
+  }
+
+  const resend = new Resend(import.meta.env.RESEND_API_KEY);
   const from = import.meta.env.RESEND_FROM_EMAIL || "Vinya Canadell Tennis <onboarding@resend.dev>";
   const { error } = await resend.emails.send({
     from,
