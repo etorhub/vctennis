@@ -6,6 +6,7 @@ import {
   BOOK_AHEAD_DAYS,
   CLOSE_HOUR,
   MAX_ACTIVE_BOOKINGS,
+  MIN_CANCEL_CHANGE_MINUTES,
   OPEN_HOUR
 } from "@/lib/config";
 
@@ -33,7 +34,8 @@ const durations = ALLOWED_DURATIONS.join(" / ");
               days: BOOK_AHEAD_DAYS,
               ahead: aheadDays,
               max: MAX_ACTIVE_BOOKINGS,
-              durations
+              durations,
+              cutoff: MIN_CANCEL_CHANGE_MINUTES
             })
           }
         </p>
