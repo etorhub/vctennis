@@ -108,8 +108,6 @@ export const en = {
   rulesEtiquetteNoBalls: "No footballs",
   rulesEtiquetteNoBikes: "No bikes",
   rulesEtiquetteNoPets: "No pets",
-  rulesAccessTitle: "Access",
-  rulesAccessBody: "This is the community court at Vinya Canadell. Ask a site admin for access details.",
   privacyAccountTitle: "Account data",
   privacyAccountBody:
     "We store your email, display name, role, and email verification status to run sign-in and manage access to the court.",
