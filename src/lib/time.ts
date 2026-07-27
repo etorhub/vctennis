@@ -2,7 +2,6 @@ import {
   ALLOWED_DURATIONS,
   BOOK_AHEAD_DAYS,
   CLOSE_HOUR,
-  MIN_CANCEL_CHANGE_MINUTES,
   OPEN_HOUR,
   SLOT_MINUTES,
   TIMEZONE,
@@ -158,10 +157,9 @@ export function isFuture(startsAt: Date, now = new Date()): boolean {
   return startsAt.getTime() > now.getTime();
 }
 
-/** True once a booking is inside its no-cancel/no-reschedule cutoff window. */
-export function isWithinCancelCutoff(startsAt: Date, now = new Date()): boolean {
-  const minutesUntilStart = (startsAt.getTime() - now.getTime()) / 60_000;
-  return minutesUntilStart < MIN_CANCEL_CHANGE_MINUTES;
+/** True once a booking's end time has passed. */
+export function isBookingOver(startsAt: Date, durationMin: number, now = new Date()): boolean {
+  return bookingEnd(startsAt, durationMin).getTime() <= now.getTime();
 }
 
 export function rangesOverlap(aStart: Date, aDuration: number, bStart: Date, bDuration: number): boolean {

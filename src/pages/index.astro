@@ -81,7 +81,7 @@ const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
   const height = Math.max((b.durationMin / 60) * hourHeight - 2, 28);
   const end = bookingEnd(b.startsAt, b.durationMin);
   const mine = !!user && user.id === b.userId;
-  const canEdit = mine || user?.role === "admin";
+  const canEdit = !!user;
   const show = u?.showName !== false;
   const name = show ? u?.name || t("reserved") : t("reserved");
   return {

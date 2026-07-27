@@ -7,9 +7,9 @@ import { sendEmail } from "@/lib/email";
 import {
   isAlignedSlot,
   isAllowedDuration,
+  isBookingOver,
   isFuture,
   isWithinBookAhead,
-  isWithinCancelCutoff,
   isWithinOpenHours,
   rangesOverlap
 } from "@/lib/time";
@@ -120,16 +120,9 @@ export const bookings = {
         throw new ActionError({ code: "NOT_FOUND", message: "errorGeneric" });
       }
 
-      const isOwner = booking.userId === user.id;
       const isAdmin = user.role === "admin";
-      if (!isOwner && !isAdmin) {
-        throw new ActionError({ code: "FORBIDDEN", message: "errorForbidden" });
-      }
-      if (!isFuture(booking.startsAt) && !isAdmin) {
+      if (isBookingOver(booking.startsAt, booking.durationMin) && !isAdmin) {
         throw new ActionError({ code: "BAD_REQUEST", message: "errorPast" });
-      }
-      if (!isAdmin && isWithinCancelCutoff(booking.startsAt)) {
-        throw new ActionError({ code: "BAD_REQUEST", message: "errorCutoff" });
       }
 
       const startsAt = new Date(input.startsAt);
@@ -161,16 +154,9 @@ export const bookings = {
         throw new ActionError({ code: "NOT_FOUND", message: "errorGeneric" });
       }
 
-      const isOwner = booking.userId === user.id;
       const isAdmin = user.role === "admin";
-      if (!isOwner && !isAdmin) {
-        throw new ActionError({ code: "FORBIDDEN", message: "errorForbidden" });
-      }
-      if (!isFuture(booking.startsAt) && !isAdmin) {
+      if (isBookingOver(booking.startsAt, booking.durationMin) && !isAdmin) {
         throw new ActionError({ code: "BAD_REQUEST", message: "errorPast" });
-      }
-      if (!isAdmin && isWithinCancelCutoff(booking.startsAt)) {
-        throw new ActionError({ code: "BAD_REQUEST", message: "errorCutoff" });
       }
 
       await db.delete(Bookings).where(eq(Bookings.id, booking.id));
