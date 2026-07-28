@@ -3,6 +3,7 @@ import { z } from "astro:schema";
 import { auth as betterAuth } from "@/lib/auth";
 import { APIError } from "better-auth/api";
 import { deleteUserCascade } from "@/lib/users";
+import { parseApartmentBlock, parseApartmentDoor, parseApartmentFloor } from "@/lib/apartment";
 import { THEME_PREFERENCES } from "@/lib/theme";
 import { db, eq, User } from "astro:db";
 
@@ -21,11 +22,16 @@ export const auth = {
     accept: "form",
     input: z.object({
       name: z.string().min(1).max(80),
+      // An unchecked checkbox is absent from the form body, which Astro passes through as
+      // `null` — accept it here so "hide my name" can actually be saved.
       showName: z
-        .union([z.literal("on"), z.literal("true"), z.literal("false"), z.boolean()])
+        .union([z.literal("on"), z.literal("true"), z.literal("false"), z.boolean(), z.null()])
         .optional()
         .transform((v) => v === true || v === "on" || v === "true"),
-      theme: z.enum(THEME_PREFERENCES).optional()
+      theme: z.enum(THEME_PREFERENCES).optional(),
+      apartmentBlock: z.string().nullish(),
+      apartmentFloor: z.string().nullish(),
+      apartmentDoor: z.string().nullish()
     }),
     handler: async (input, context) => {
       const user = context.locals.user;
@@ -40,9 +46,19 @@ export const auth = {
       const showName = input.showName ?? false;
       const theme = input.theme ?? user.theme;
 
+      // Accounts created before apartments existed can leave all three blank; a partial
+      // apartment is always rejected so we never store half an address.
+      const apartmentBlock = parseApartmentBlock(input.apartmentBlock);
+      const apartmentFloor = parseApartmentFloor(input.apartmentFloor);
+      const apartmentDoor = parseApartmentDoor(input.apartmentDoor);
+      const apartmentParts = [apartmentBlock, apartmentFloor, apartmentDoor];
+      if (apartmentParts.some((part) => part !== null) && apartmentParts.some((part) => part === null)) {
+        throw new ActionError({ code: "BAD_REQUEST", message: "errorApartmentRequired" });
+      }
+
       await db
         .update(User)
-        .set({ name, showName, theme, updatedAt: new Date() })
+        .set({ name, showName, theme, apartmentBlock, apartmentFloor, apartmentDoor, updatedAt: new Date() })
         .where(eq(User.id, user.id));
 
       // Middleware loaded `locals.user` before this handler ran; refresh it so the
@@ -50,6 +66,9 @@ export const auth = {
       user.name = name;
       user.showName = showName;
       user.theme = theme;
+      user.apartmentBlock = apartmentBlock;
+      user.apartmentFloor = apartmentFloor;
+      user.apartmentDoor = apartmentDoor;
 
       return { success: true };
     }
@@ -116,11 +135,7 @@ export const auth = {
         throw new ActionError({ code: "BAD_REQUEST", message: "errorEmailMismatch" });
       }
 
-      const [row] = await db
-        .select({ role: User.role })
-        .from(User)
-        .where(eq(User.id, user.id))
-        .limit(1);
+      const [row] = await db.select({ role: User.role }).from(User).where(eq(User.id, user.id)).limit(1);
       const role = row?.role ?? user.role;
 
       if (role === "admin") {
@@ -153,10 +168,7 @@ export const auth = {
         throw new ActionError({ code: "FORBIDDEN", message: "Setup unavailable" });
       }
 
-      await db
-        .update(User)
-        .set({ role: "admin", updatedAt: new Date() })
-        .where(eq(User.id, user.id));
+      await db.update(User).set({ role: "admin", updatedAt: new Date() }).where(eq(User.id, user.id));
 
       return { success: true };
     }

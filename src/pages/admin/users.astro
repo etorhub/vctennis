@@ -2,6 +2,7 @@
 import { actions } from "astro:actions";
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
+import { formatApartment } from "@/lib/apartment";
 import { db, Bookings, User, gt, eq, and } from "astro:db";
 
 const { t, user } = Astro.locals;
@@ -38,9 +39,10 @@ const countMap = new Map(bookingCounts);
               <div class="min-w-0">
                 <p class="truncate font-semibold">{u.name || "—"}</p>
                 <p class="truncate text-sm text-base-content/60">{u.email}</p>
+                <p class="mt-1 text-xs text-base-content/50">{formatApartment(u, t)}</p>
                 <p class="mt-1 text-xs text-base-content/50">
-                  {t("role")}: {u.role === "admin" ? t("admin") : t("member")} · {t("signupIp")}:{" "}
-                  {u.signupIp || "—"} · {t("activeBookings")}: {countMap.get(u.id) ?? 0}
+                  {t("role")}: {u.role === "admin" ? t("admin") : t("member")} · {t("signupIp")}: {u.signupIp || "—"} ·{" "}
+                  {t("activeBookings")}: {countMap.get(u.id) ?? 0}
                   {u.disabled ? ` · ${t("accountDisabled")}` : ""}
                 </p>
               </div>

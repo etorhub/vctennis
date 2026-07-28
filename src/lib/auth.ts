@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { Account, db, Session, User, Verification } from "astro:db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { parseApartmentBlock, parseApartmentDoor, parseApartmentFloor } from "./apartment";
 import { SITE_NAME } from "./config";
 import { EmailSendError, isEmailEnabled, sendEmail } from "./email";
 import { createT, type Locale } from "./i18n";
@@ -62,6 +63,23 @@ export const auth = betterAuth({
         defaultValue: true,
         input: true
       },
+      // `input: true` is what lets these come through the sign-up body; they are still
+      // validated server-side in the `user.create.before` hook below.
+      apartmentBlock: {
+        type: "number",
+        required: false,
+        input: true
+      },
+      apartmentFloor: {
+        type: "string",
+        required: false,
+        input: true
+      },
+      apartmentDoor: {
+        type: "number",
+        required: false,
+        input: true
+      },
       signupIp: {
         type: "string",
         required: false,
@@ -93,6 +111,19 @@ export const auth = betterAuth({
         before: async (user) => {
           const email = user.email ?? "";
           const defaultName = email.includes("@") ? email.split("@")[0] : email;
+
+          // The sign-up form validates these too, but that is trivially bypassable —
+          // this is the check that actually enforces "apartment required at signup".
+          const incoming = user as Partial<Record<"apartmentBlock" | "apartmentFloor" | "apartmentDoor", unknown>>;
+          const apartmentBlock = parseApartmentBlock(incoming.apartmentBlock);
+          const apartmentFloor = parseApartmentFloor(incoming.apartmentFloor);
+          const apartmentDoor = parseApartmentDoor(incoming.apartmentDoor);
+          if (apartmentBlock === null || apartmentFloor === null || apartmentDoor === null) {
+            throw new APIError("BAD_REQUEST", {
+              message: createT(pendingSignupLocale)("errorApartmentRequired")
+            });
+          }
+
           return {
             data: {
               ...user,
@@ -100,6 +131,9 @@ export const auth = betterAuth({
               role: "member",
               showName: true,
               disabled: false,
+              apartmentBlock,
+              apartmentFloor,
+              apartmentDoor,
               signupIp: pendingSignupIp,
               locale: pendingSignupLocale,
               theme: DEFAULT_THEME_PREFERENCE
@@ -158,6 +192,9 @@ export type SessionUser = {
   name: string;
   role: string;
   showName: boolean;
+  apartmentBlock: number | null;
+  apartmentFloor: string | null;
+  apartmentDoor: number | null;
   signupIp?: string | null;
   disabled: boolean;
   locale: Locale;
