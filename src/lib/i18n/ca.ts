@@ -74,6 +74,17 @@ export const ca: Dictionary = {
   signupIp: "IP de registre",
   showName: "Mostrar el meu nom al calendari",
   showNameHelp: "Si està desactivat, els altres veuran «Reservat».",
+  apartment: "Apartament",
+  apartmentBlock: "Bloc",
+  apartmentFloor: "Pis",
+  apartmentDoor: "Porta",
+  apartmentDoorShort: "{door}a",
+  floorGround: "Baix",
+  floorFirst: "Primer",
+  floorSecond: "Segon",
+  apartmentHelp: "Els admins fan servir l'apartament per saber qui ha reservat la pista.",
+  apartmentMissing: "Encara no has indicat el teu apartament. Omple'l aquí sota.",
+  errorApartmentRequired: "Cal indicar el bloc, el pis i la porta.",
   disable: "Desactivar",
   enable: "Activar",
   delete: "Eliminar",
@@ -119,7 +130,9 @@ export const ca: Dictionary = {
   rulesHoursBody: "La pista és oberta de {open}:00 a {close}:00 (Europe/Madrid).",
   rulesBookingTitle: "Reserves",
   rulesBookingBody:
-    "Pots reservar dins d'una finestra de {days} dies (avui i els {ahead} dies següents). Màxim {max} reserves futures actives per persona. Les franges són de {durations} minuts i comencen en punt o a i mitja. Una sola pista — no es permeten solapaments. Qualsevol reserva es pot cancel·lar o canviar d'hora en qualsevol moment, fins que acabi.",
+    "Pots reservar dins d'una finestra de {days} dies (avui i els {ahead} dies següents). {maxBookings} Les franges són de {durations} minuts i comencen en punt o a i mitja. Una sola pista — no es permeten solapaments. Qualsevol reserva es pot cancel·lar o canviar d'hora en qualsevol moment, fins que acabi.",
+  rulesBookingMaxOne: "Només pots tenir una reserva futura activa alhora.",
+  rulesBookingMaxMany: "Màxim {max} reserves futures actives per persona.",
   rulesEtiquetteTitle: "Etiqueta",
   rulesEtiquetteIntro: "Només tennis a la pista.",
   rulesEtiquetteShoes: "Sabates planes — sense talons",
@@ -129,6 +142,9 @@ export const ca: Dictionary = {
   privacyAccountTitle: "Dades del compte",
   privacyAccountBody:
     "Guardem el teu correu, nom visible, rol i estat de verificació del correu per gestionar l'inici de sessió i l'accés a la pista.",
+  privacyApartmentTitle: "Apartament",
+  privacyApartmentBody:
+    "Guardem el bloc, el pis i la porta que indiques en registrar-te perquè els admins sàpiguen quin habitatge ha reservat la pista i puguin contactar-te si hi ha cap problema amb una reserva.",
   privacySignupIpTitle: "Adreça IP de registre",
   privacySignupIpBody:
     "Registrem l'adreça IP utilitzada en donar-te d'alta perquè els admins puguin detectar i prevenir usos abusius del sistema de reserves.",
@@ -137,7 +153,7 @@ export const ca: Dictionary = {
     "Les teves reserves (data, hora i durada) es conserven perquè el calendari i el teu historial de reserves es mantinguin correctes al llarg del temps. Eliminar el compte també elimina totes les teves reserves i allibera aquestes hores.",
   privacyShowNameTitle: "Visibilitat del nom al calendari",
   privacyShowNameBody:
-    "Per defecte el teu nom apareix al costat de les teves reserves al calendari compartit. Ho pots desactivar a Configuració — quan està amagat, les teves reserves es mostren com a \"Reservat\" a la resta de membres en lloc del teu nom.",
+    'Per defecte el teu nom apareix al costat de les teves reserves al calendari compartit. Ho pots desactivar a Configuració — quan està amagat, les teves reserves es mostren com a "Reservat" a la resta de membres en lloc del teu nom.',
   privacyDeletionTitle: "Eliminar el teu compte",
   privacyDeletionBody:
     "Els membres amb sessió iniciada poden eliminar permanentment el compte a Configuració → Eliminar el meu compte (cal escriure el correu per confirmar). Això elimina les dades del compte i les reserves. L'últim admin no pot marxar fins que n'hi hagi un altre.",

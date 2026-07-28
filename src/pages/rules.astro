@@ -2,17 +2,13 @@
 import Icon from "astro-iconify";
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
-import {
-  ALLOWED_DURATIONS,
-  BOOK_AHEAD_DAYS,
-  CLOSE_HOUR,
-  MAX_ACTIVE_BOOKINGS,
-  OPEN_HOUR
-} from "@/lib/config";
+import { ALLOWED_DURATIONS, BOOK_AHEAD_DAYS, CLOSE_HOUR, MAX_ACTIVE_BOOKINGS, OPEN_HOUR } from "@/lib/config";
 
 const { t } = Astro.locals;
 const aheadDays = Math.max(BOOK_AHEAD_DAYS - 1, 0);
 const durations = ALLOWED_DURATIONS.join(" / ");
+const maxBookings =
+  MAX_ACTIVE_BOOKINGS === 1 ? t("rulesBookingMaxOne") : t("rulesBookingMaxMany", { max: MAX_ACTIVE_BOOKINGS });
 
 const etiquettePictograms = [
   { icon: "footprints", label: t("rulesEtiquetteShoes") },
@@ -40,7 +36,7 @@ const etiquettePictograms = [
             t("rulesBookingBody", {
               days: BOOK_AHEAD_DAYS,
               ahead: aheadDays,
-              max: MAX_ACTIVE_BOOKINGS,
+              maxBookings,
               durations
             })
           }
@@ -56,7 +52,10 @@ const etiquettePictograms = [
               <li class="flex items-center gap-3">
                 <span class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
                   <Icon pack="lucide" name={icon} height={20} width={20} />
-                  <span aria-hidden="true" class="absolute left-1/2 top-1/2 h-0.5 w-[130%] -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-red-500" />
+                  <span
+                    aria-hidden="true"
+                    class="absolute left-1/2 top-1/2 h-0.5 w-[130%] -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-red-500"
+                  />
                 </span>
                 <span class="text-sm leading-snug text-base-content/70">{label}</span>
               </li>

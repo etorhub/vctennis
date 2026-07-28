@@ -72,6 +72,17 @@ export const en = {
   signupIp: "Signup IP",
   showName: "Show my name on the calendar",
   showNameHelp: 'If off, others will see "Reserved".',
+  apartment: "Apartment",
+  apartmentBlock: "Block",
+  apartmentFloor: "Floor",
+  apartmentDoor: "Door",
+  apartmentDoorShort: "Door {door}",
+  floorGround: "Ground floor",
+  floorFirst: "First floor",
+  floorSecond: "Second floor",
+  apartmentHelp: "Admins use your apartment to know who booked the court.",
+  apartmentMissing: "You haven't set your apartment yet. Please fill it in below.",
+  errorApartmentRequired: "Choose your block, floor and door.",
   disable: "Disable",
   enable: "Enable",
   delete: "Delete",
@@ -98,8 +109,7 @@ export const en = {
   loading: "Loading…",
   privacy: "Privacy",
   deleteAccount: "Delete my account",
-  deleteAccountHelp:
-    "This permanently removes your account and all of your bookings. Type your email to confirm.",
+  deleteAccountHelp: "This permanently removes your account and all of your bookings. Type your email to confirm.",
   confirmDeleteAccount: "Delete your account and all bookings? This cannot be undone.",
   confirmEmail: "Type your email to confirm",
   myBookings: "My bookings",
@@ -117,7 +127,9 @@ export const en = {
   rulesHoursBody: "The court is open from {open}:00 to {close}:00 (Europe/Madrid).",
   rulesBookingTitle: "Booking",
   rulesBookingBody:
-    "You can book within a {days}-day window (today and the next {ahead} days). Up to {max} active future bookings per person. Slots are {durations} minutes and start on the hour or half hour. One court — overlapping bookings are not allowed. Any booking can be cancelled or rescheduled at any time, right up until it ends.",
+    "You can book within a {days}-day window (today and the next {ahead} days). {maxBookings} Slots are {durations} minutes and start on the hour or half hour. One court — overlapping bookings are not allowed. Any booking can be cancelled or rescheduled at any time, right up until it ends.",
+  rulesBookingMaxOne: "You can only have one active future booking at a time.",
+  rulesBookingMaxMany: "Up to {max} active future bookings per person.",
   rulesEtiquetteTitle: "Etiquette",
   rulesEtiquetteIntro: "Tennis only on the court.",
   rulesEtiquetteShoes: "Flat shoes only — no heels",
@@ -127,6 +139,9 @@ export const en = {
   privacyAccountTitle: "Account data",
   privacyAccountBody:
     "We store your email, display name, role, and email verification status to run sign-in and manage access to the court.",
+  privacyApartmentTitle: "Apartment",
+  privacyApartmentBody:
+    "We store the block, floor and door you give at signup so admins can tell which household booked the court and reach you about an issue with a booking.",
   privacySignupIpTitle: "Signup IP address",
   privacySignupIpBody:
     "We record the IP address used at signup to help admins detect and prevent abuse of the booking system.",
@@ -135,7 +150,7 @@ export const en = {
     "Your bookings (date, time, and duration) are kept so the calendar and your booking history stay accurate over time. Deleting your account also deletes all of your bookings and frees those times.",
   privacyShowNameTitle: "Name visibility on the calendar",
   privacyShowNameBody:
-    "By default your name is shown next to your bookings on the shared calendar. You can turn this off in Settings — when hidden, your bookings appear as \"Reserved\" to other members instead of your name.",
+    'By default your name is shown next to your bookings on the shared calendar. You can turn this off in Settings — when hidden, your bookings appear as "Reserved" to other members instead of your name.',
   privacyDeletionTitle: "Deleting your account",
   privacyDeletionBody:
     "Signed-in members can permanently delete their account under Settings → Delete my account (type your email to confirm). This removes your account data and bookings. The last admin cannot leave until another admin exists.",

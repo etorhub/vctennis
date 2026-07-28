@@ -20,7 +20,7 @@ All constants live in [`src/lib/config.ts`](src/lib/config.ts):
 |---|---|---|
 | `OPEN_HOUR` / `CLOSE_HOUR` | 10 / 21 | Court hours (Europe/Madrid) |
 | `BOOK_AHEAD_DAYS` | 3 | Agenda window: today + 2; book within that window |
-| `MAX_ACTIVE_BOOKINGS` | 3 | Max future bookings per user |
+| `MAX_ACTIVE_BOOKINGS` | 1 | Max future bookings per user (one active booking at a time) |
 | `SLOT_MINUTES` | 30 | Starts on :00 / :30 |
 | `ALLOWED_DURATIONS` | 30, 60 | Minutes |
 | `TIMEZONE` | Europe/Madrid | Always use helpers in [`src/lib/time.ts`](src/lib/time.ts) |
@@ -36,6 +36,7 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 - Password reset via email link (`/reset-password`)
 - Roles: `member` | `admin` on `User.role`
 - First admin: visit `/setup` while signed in when **no admin exists**
+- Apartment collected at sign-up: `User.apartmentBlock` (1–4), `User.apartmentFloor` (`ground` | `first` | `second`), `User.apartmentDoor` (1–4). Constants, parsers and `formatApartment()` live in [`src/lib/apartment.ts`](src/lib/apartment.ts); required by the `databaseHooks.user.create.before` hook, DB columns stay optional so pre-existing accounts keep working. Editable on `/settings`, shown on `/admin/users`
 - Signup IP stored on `User.signupIp`
 - Disabled users redirected to `/disabled`
 - Privacy: `User.showName` (default `true`, opt-out). Hidden → display **"Reserved"**
