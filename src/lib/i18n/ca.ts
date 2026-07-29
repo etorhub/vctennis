@@ -26,6 +26,7 @@ export const ca: Dictionary = {
   incorrectPassword: "La contrasenya actual no és correcta.",
   backToSignIn: "Torna a iniciar sessió",
   backToCalendar: "Torna al calendari",
+  backToSettings: "Torna a configuració",
   invalidResetToken: "Aquest enllaç de restabliment no és vàlid o ha caducat.",
   passwordResetDone: "Contrasenya actualitzada. Ja pots iniciar sessió.",
   today: "Avui",
@@ -149,10 +150,10 @@ export const ca: Dictionary = {
     "Les teves reserves (data, hora i durada) es conserven perquè el calendari i el teu historial de reserves es mantinguin correctes al llarg del temps. Eliminar el compte també elimina totes les teves reserves i allibera aquestes hores.",
   privacyShowNameTitle: "Visibilitat del nom al calendari",
   privacyShowNameBody:
-    'Per defecte el teu nom apareix al costat de les teves reserves al calendari compartit. Ho pots desactivar a Configuració — quan està amagat, les teves reserves es mostren com a "Reservat" a la resta de membres en lloc del teu nom.',
+    'Per defecte el teu nom apareix al costat de les teves reserves al calendari compartit. Ho pots desactivar a la teva configuració — quan està amagat, les teves reserves es mostren com a "Reservat" a la resta de membres en lloc del teu nom.',
   privacyDeletionTitle: "Eliminar el teu compte",
   privacyDeletionBody:
-    "Els membres amb sessió iniciada poden eliminar permanentment el compte a Configuració → Eliminar el meu compte (cal escriure el correu per confirmar). Això elimina les dades del compte i les reserves. L'últim admin no pot marxar fins que n'hi hagi un altre.",
+    "Els membres amb sessió iniciada poden eliminar permanentment el compte amb «Eliminar el meu compte» a la seva configuració (cal escriure el correu per confirmar). Això elimina les dades del compte i les reserves. L'últim admin no pot marxar fins que n'hi hagi un altre.",
   emailBookingConfirmedSubject: "Reserva confirmada",
   emailBookingConfirmedBody:
     "La teva pista està reservada per al {date} a les {time} ({duration}). Ens veiem a la pista!",

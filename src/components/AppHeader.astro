@@ -32,9 +32,6 @@ const { title = t("siteName"), backHref } = Astro.props;
       <a href="/rules" class="btn btn-ghost btn-sm" title={t("rules")} aria-label={t("rules")}>
         <Icon pack="lucide" name="circle-help" height={18} width={18} />
       </a>
-      <a href="/privacy" class="btn btn-ghost btn-sm" title={t("privacy")} aria-label={t("privacy")}>
-        <Icon pack="lucide" name="lock" height={18} width={18} />
-      </a>
       {
         user?.role === "admin" && (
           <a href="/admin/users" class="btn btn-ghost btn-sm" title={t("admin")}>

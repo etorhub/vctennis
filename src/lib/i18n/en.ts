@@ -24,6 +24,7 @@ export const en = {
   incorrectPassword: "Current password is incorrect.",
   backToSignIn: "Back to sign in",
   backToCalendar: "Back to calendar",
+  backToSettings: "Back to settings",
   invalidResetToken: "This reset link is invalid or has expired.",
   passwordResetDone: "Password updated. You can sign in now.",
   today: "Today",
@@ -146,10 +147,10 @@ export const en = {
     "Your bookings (date, time, and duration) are kept so the calendar and your booking history stay accurate over time. Deleting your account also deletes all of your bookings and frees those times.",
   privacyShowNameTitle: "Name visibility on the calendar",
   privacyShowNameBody:
-    'By default your name is shown next to your bookings on the shared calendar. You can turn this off in Settings — when hidden, your bookings appear as "Reserved" to other members instead of your name.',
+    'By default your name is shown next to your bookings on the shared calendar. You can turn this off in your settings — when hidden, your bookings appear as "Reserved" to other members instead of your name.',
   privacyDeletionTitle: "Deleting your account",
   privacyDeletionBody:
-    "Signed-in members can permanently delete their account under Settings → Delete my account (type your email to confirm). This removes your account data and bookings. The last admin cannot leave until another admin exists.",
+    "Signed-in members can permanently delete their account with Delete my account in their settings (type your email to confirm). This removes your account data and bookings. The last admin cannot leave until another admin exists.",
   emailBookingConfirmedSubject: "Booking confirmed",
   emailBookingConfirmedBody: "Your court is booked for {date} at {time} ({duration}). See you on court!",
   emailReminderSubject: "Upcoming booking reminder",
