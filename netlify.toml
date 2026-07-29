@@ -1,5 +1,5 @@
 [build]
-  command = "npx astro db push --remote && npm run build"
+  command = "npx astro db push --remote && node scripts/migrate-apartment-number.js && npm run build"
   publish = "dist"
 
 [build.environment]
