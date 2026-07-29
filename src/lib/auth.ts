@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { Account, db, Session, User, Verification } from "astro:db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { parseApartmentBlock, parseApartmentDoor, parseApartmentFloor } from "./apartment";
+import { parseApartmentBlock, parseApartmentNumber } from "./apartment";
 import { SITE_NAME } from "./config";
 import { EmailSendError, isEmailEnabled, sendEmail } from "./email";
 import { createT, type Locale } from "./i18n";
@@ -70,12 +70,7 @@ export const auth = betterAuth({
         required: false,
         input: true
       },
-      apartmentFloor: {
-        type: "string",
-        required: false,
-        input: true
-      },
-      apartmentDoor: {
+      apartmentNumber: {
         type: "number",
         required: false,
         input: true
@@ -114,11 +109,10 @@ export const auth = betterAuth({
 
           // The sign-up form validates these too, but that is trivially bypassable —
           // this is the check that actually enforces "apartment required at signup".
-          const incoming = user as Partial<Record<"apartmentBlock" | "apartmentFloor" | "apartmentDoor", unknown>>;
+          const incoming = user as Partial<Record<"apartmentBlock" | "apartmentNumber", unknown>>;
           const apartmentBlock = parseApartmentBlock(incoming.apartmentBlock);
-          const apartmentFloor = parseApartmentFloor(incoming.apartmentFloor);
-          const apartmentDoor = parseApartmentDoor(incoming.apartmentDoor);
-          if (apartmentBlock === null || apartmentFloor === null || apartmentDoor === null) {
+          const apartmentNumber = parseApartmentNumber(incoming.apartmentNumber, apartmentBlock);
+          if (apartmentBlock === null || apartmentNumber === null) {
             throw new APIError("BAD_REQUEST", {
               message: createT(pendingSignupLocale)("errorApartmentRequired")
             });
@@ -132,8 +126,7 @@ export const auth = betterAuth({
               showName: true,
               disabled: false,
               apartmentBlock,
-              apartmentFloor,
-              apartmentDoor,
+              apartmentNumber,
               signupIp: pendingSignupIp,
               locale: pendingSignupLocale,
               theme: DEFAULT_THEME_PREFERENCE
@@ -193,8 +186,7 @@ export type SessionUser = {
   role: string;
   showName: boolean;
   apartmentBlock: number | null;
-  apartmentFloor: string | null;
-  apartmentDoor: number | null;
+  apartmentNumber: number | null;
   signupIp?: string | null;
   disabled: boolean;
   locale: Locale;

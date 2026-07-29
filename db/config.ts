@@ -9,11 +9,10 @@ const User = defineTable({
     image: column.text({ optional: true }),
     role: column.text({ default: "member" }),
     showName: column.boolean({ default: true }),
-    // Apartment (block / floor / door). Required at sign-up, but optional in the schema so
+    // Apartment (block + number). Required at sign-up, but optional in the schema so
     // accounts created before this feature keep working — see `src/lib/apartment.ts`.
     apartmentBlock: column.number({ optional: true }),
-    apartmentFloor: column.text({ optional: true }),
-    apartmentDoor: column.number({ optional: true }),
+    apartmentNumber: column.number({ optional: true }),
     signupIp: column.text({ optional: true }),
     disabled: column.boolean({ default: false }),
     locale: column.text({ optional: true, default: "en" }),

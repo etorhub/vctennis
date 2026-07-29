@@ -3,7 +3,7 @@ import { z } from "astro:schema";
 import { auth as betterAuth } from "@/lib/auth";
 import { APIError } from "better-auth/api";
 import { deleteUserCascade } from "@/lib/users";
-import { parseApartmentBlock, parseApartmentDoor, parseApartmentFloor } from "@/lib/apartment";
+import { parseApartmentBlock, parseApartmentNumber } from "@/lib/apartment";
 import { THEME_PREFERENCES } from "@/lib/theme";
 import { db, eq, User } from "astro:db";
 
@@ -30,8 +30,7 @@ export const auth = {
         .transform((v) => v === true || v === "on" || v === "true"),
       theme: z.enum(THEME_PREFERENCES).optional(),
       apartmentBlock: z.string().nullish(),
-      apartmentFloor: z.string().nullish(),
-      apartmentDoor: z.string().nullish()
+      apartmentNumber: z.string().nullish()
     }),
     handler: async (input, context) => {
       const user = context.locals.user;
@@ -46,19 +45,18 @@ export const auth = {
       const showName = input.showName ?? false;
       const theme = input.theme ?? user.theme;
 
-      // Accounts created before apartments existed can leave all three blank; a partial
-      // apartment is always rejected so we never store half an address.
+      // Accounts created before apartments existed can leave both blank; a partial
+      // apartment is always rejected so we never store half an address. A number sent
+      // without a block never parses, so "block only" is the shape to reject here.
       const apartmentBlock = parseApartmentBlock(input.apartmentBlock);
-      const apartmentFloor = parseApartmentFloor(input.apartmentFloor);
-      const apartmentDoor = parseApartmentDoor(input.apartmentDoor);
-      const apartmentParts = [apartmentBlock, apartmentFloor, apartmentDoor];
-      if (apartmentParts.some((part) => part !== null) && apartmentParts.some((part) => part === null)) {
+      const apartmentNumber = parseApartmentNumber(input.apartmentNumber, apartmentBlock);
+      if (apartmentBlock !== null && apartmentNumber === null) {
         throw new ActionError({ code: "BAD_REQUEST", message: "errorApartmentRequired" });
       }
 
       await db
         .update(User)
-        .set({ name, showName, theme, apartmentBlock, apartmentFloor, apartmentDoor, updatedAt: new Date() })
+        .set({ name, showName, theme, apartmentBlock, apartmentNumber, updatedAt: new Date() })
         .where(eq(User.id, user.id));
 
       // Middleware loaded `locals.user` before this handler ran; refresh it so the
@@ -67,8 +65,7 @@ export const auth = {
       user.showName = showName;
       user.theme = theme;
       user.apartmentBlock = apartmentBlock;
-      user.apartmentFloor = apartmentFloor;
-      user.apartmentDoor = apartmentDoor;
+      user.apartmentNumber = apartmentNumber;
 
       return { success: true };
     }

@@ -23,7 +23,7 @@ Public day agenda, email/password accounts with verification, and admin tools �
 - Book 30 or 60 minutes on `:00` / `:30` slots (10:00–21:00)
 - One active future booking per member at a time; overlaps hard-blocked
 - Open signup with email verification and password reset (Resend)
-- Members give their apartment at signup — block (1–4), floor (ground / first / second) and door (1–4); editable on `/settings` and listed on `/admin/users`
+- Members give their apartment at signup — block (1–4) and apartment number (1–12 in block 1, 1–9 in blocks 2–4); editable on `/settings` and listed on `/admin/users`
 - Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion on `/settings` (see `/privacy`)
 - My bookings (`/my-bookings`): upcoming (edit/cancel) and past history from Settings
 - Light / dark / system theme, chosen on `/settings` (stored on the account; defaults to the device setting)

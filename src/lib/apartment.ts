@@ -1,30 +1,32 @@
-import type { MessageKey, TFunction } from "./i18n";
+import type { TFunction } from "./i18n";
 
 /**
- * Apartment a member lives in, stored on `User.apartmentBlock` / `apartmentFloor` /
- * `apartmentDoor`. Required at sign-up and editable on `/settings`; the DB columns are
- * optional so accounts created before this feature keep working until they fill it in.
+ * Apartment a member lives in, stored on `User.apartmentBlock` / `User.apartmentNumber`.
+ * Required at sign-up and editable on `/settings`; the DB columns are optional so accounts
+ * created before this feature keep working until they fill it in.
  */
 export const APARTMENT_BLOCKS = [1, 2, 3, 4] as const;
-export const APARTMENT_FLOORS = ["ground", "first", "second"] as const;
-export const APARTMENT_DOORS = [1, 2, 3, 4] as const;
 
 export type ApartmentBlock = (typeof APARTMENT_BLOCKS)[number];
-export type ApartmentFloor = (typeof APARTMENT_FLOORS)[number];
-export type ApartmentDoor = (typeof APARTMENT_DOORS)[number];
+
+/** Block 1 is the big one; the rest have nine apartments each. */
+export const APARTMENTS_PER_BLOCK: Record<ApartmentBlock, number> = {
+  1: 12,
+  2: 9,
+  3: 9,
+  4: 9
+};
 
 /** Apartment fields as they appear on `User` rows and `Astro.locals.user`. */
 export type ApartmentFields = {
   apartmentBlock?: number | null;
-  apartmentFloor?: string | null;
-  apartmentDoor?: number | null;
+  apartmentNumber?: number | null;
 };
 
-const FLOOR_LABEL_KEYS: Record<ApartmentFloor, MessageKey> = {
-  ground: "floorGround",
-  first: "floorFirst",
-  second: "floorSecond"
-};
+/** Valid apartment numbers in a block, e.g. `[1..9]` for block 2. */
+export function apartmentNumbersForBlock(block: ApartmentBlock): number[] {
+  return Array.from({ length: APARTMENTS_PER_BLOCK[block] }, (_, i) => i + 1);
+}
 
 function parseOption<T extends number>(value: unknown, options: readonly T[]): T | null {
   const n = typeof value === "string" ? Number(value.trim()) : value;
@@ -35,32 +37,25 @@ export function parseApartmentBlock(value: unknown): ApartmentBlock | null {
   return parseOption(value, APARTMENT_BLOCKS);
 }
 
-export function parseApartmentDoor(value: unknown): ApartmentDoor | null {
-  return parseOption(value, APARTMENT_DOORS);
-}
-
-export function parseApartmentFloor(value: unknown): ApartmentFloor | null {
-  return APARTMENT_FLOORS.includes(value as ApartmentFloor) ? (value as ApartmentFloor) : null;
-}
-
-export function floorLabel(floor: ApartmentFloor, t: TFunction): string {
-  return t(FLOOR_LABEL_KEYS[floor]);
+/**
+ * A number only means anything alongside its block — 11 is a real apartment in block 1 and
+ * nowhere else — so the block is always required here.
+ */
+export function parseApartmentNumber(value: unknown, block: ApartmentBlock | null): number | null {
+  if (block === null) return null;
+  return parseOption(value, apartmentNumbersForBlock(block));
 }
 
 export function hasApartment(user: ApartmentFields | null | undefined): boolean {
   if (!user) return false;
-  return (
-    parseApartmentBlock(user.apartmentBlock) !== null &&
-    parseApartmentFloor(user.apartmentFloor) !== null &&
-    parseApartmentDoor(user.apartmentDoor) !== null
-  );
+  const block = parseApartmentBlock(user.apartmentBlock);
+  return parseApartmentNumber(user.apartmentNumber, block) !== null;
 }
 
-/** e.g. "Bloc 2 · Primer · 3a". Returns "—" when the apartment is not set yet. */
+/** e.g. "Bloc 2 · Apt. 7". Returns "—" when the apartment is not set yet. */
 export function formatApartment(user: ApartmentFields | null | undefined, t: TFunction): string {
   const block = parseApartmentBlock(user?.apartmentBlock);
-  const floor = parseApartmentFloor(user?.apartmentFloor);
-  const door = parseApartmentDoor(user?.apartmentDoor);
-  if (block === null || floor === null || door === null) return "—";
-  return `${t("apartmentBlock")} ${block} · ${floorLabel(floor, t)} · ${t("apartmentDoorShort", { door })}`;
+  const number = parseApartmentNumber(user?.apartmentNumber, block);
+  if (block === null || number === null) return "—";
+  return `${t("apartmentBlock")} ${block} · ${t("apartmentShort", { number })}`;
 }

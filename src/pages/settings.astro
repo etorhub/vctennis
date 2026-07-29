@@ -4,7 +4,7 @@ import Icon from "astro-iconify";
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
 import type { MessageKey } from "@/lib/i18n";
-import { APARTMENT_BLOCKS, APARTMENT_DOORS, APARTMENT_FLOORS, floorLabel, hasApartment } from "@/lib/apartment";
+import { APARTMENT_BLOCKS, APARTMENTS_PER_BLOCK, hasApartment } from "@/lib/apartment";
 import { DEFAULT_THEME_PREFERENCE, type ThemePreference } from "@/lib/theme";
 
 const { t, user } = Astro.locals;
@@ -43,9 +43,16 @@ const themeOptions: { value: ThemePreference; label: string; icon: string }[] = 
 ];
 const currentTheme = user.theme ?? DEFAULT_THEME_PREFERENCE;
 
-const floorOptions = APARTMENT_FLOORS.map((value) => ({ value, label: floorLabel(value, t) }));
-const doorOptions = APARTMENT_DOORS.map((value) => ({ value, label: t("apartmentDoorShort", { door: value }) }));
 const apartmentMissing = !hasApartment(user);
+// Alpine owns the number dropdown so its options can follow the chosen block; seed it with
+// what is stored today. `storedNumber` is applied on the next tick because `x-model` binds
+// before `x-for` has created the options — selecting it any earlier silently clears it.
+const apartmentState = {
+  apartmentBlock: user.apartmentBlock == null ? "" : String(user.apartmentBlock),
+  apartmentNumber: "",
+  storedNumber: user.apartmentNumber == null ? "" : String(user.apartmentNumber),
+  apartmentCounts: APARTMENTS_PER_BLOCK
+};
 
 const profileErr = result?.error?.message;
 const profileError = profileErr
@@ -90,48 +97,50 @@ const profileError = profileErr
         />
       </label>
 
-      <fieldset class="w-full">
+      <fieldset
+        class="w-full"
+        x-data={`{
+          ...${JSON.stringify(apartmentState)},
+          get apartmentNumbers() {
+            const count = this.apartmentCounts[this.apartmentBlock] || 0;
+            return Array.from({ length: count }, (_, i) => i + 1);
+          },
+          onBlockChange() {
+            // Blocks 2-4 stop at 9, so a number picked for block 1 can become invalid.
+            if (!this.apartmentNumbers.includes(Number(this.apartmentNumber))) {
+              this.apartmentNumber = '';
+            }
+          }
+        }`}
+        x-init="$nextTick(() => { apartmentNumber = storedNumber })"
+      >
         <legend class="label-text mb-1 block">{t("apartment")}</legend>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 gap-2">
           <label class="form-control w-full">
             <div class="label py-1"><span class="label-text text-xs">{t("apartmentBlock")}</span></div>
-            <select name="apartmentBlock" class="select select-bordered w-full">
+            <select
+              name="apartmentBlock"
+              class="select select-bordered w-full"
+              x-model="apartmentBlock"
+              @change="onBlockChange()"
+            >
               <option value="">—</option>
-              {
-                APARTMENT_BLOCKS.map((block) => (
-                  <option value={block} selected={user.apartmentBlock === block}>
-                    {block}
-                  </option>
-                ))
-              }
+              {APARTMENT_BLOCKS.map((block) => <option value={block}>{block}</option>)}
             </select>
           </label>
 
           <label class="form-control w-full">
-            <div class="label py-1"><span class="label-text text-xs">{t("apartmentFloor")}</span></div>
-            <select name="apartmentFloor" class="select select-bordered w-full">
+            <div class="label py-1"><span class="label-text text-xs">{t("apartmentNumber")}</span></div>
+            <select
+              name="apartmentNumber"
+              class="select select-bordered w-full"
+              x-model="apartmentNumber"
+              :disabled="!apartmentBlock"
+            >
               <option value="">—</option>
-              {
-                floorOptions.map((option) => (
-                  <option value={option.value} selected={user.apartmentFloor === option.value}>
-                    {option.label}
-                  </option>
-                ))
-              }
-            </select>
-          </label>
-
-          <label class="form-control w-full">
-            <div class="label py-1"><span class="label-text text-xs">{t("apartmentDoor")}</span></div>
-            <select name="apartmentDoor" class="select select-bordered w-full">
-              <option value="">—</option>
-              {
-                doorOptions.map((option) => (
-                  <option value={option.value} selected={user.apartmentDoor === option.value}>
-                    {option.label}
-                  </option>
-                ))
-              }
+              <template x-for="n in apartmentNumbers" :key="n">
+                <option :value="n" x-text="n"></option>
+              </template>
             </select>
           </label>
         </div>

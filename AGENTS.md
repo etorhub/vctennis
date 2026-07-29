@@ -36,7 +36,7 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 - Password reset via email link (`/reset-password`)
 - Roles: `member` | `admin` on `User.role`
 - First admin: visit `/setup` while signed in when **no admin exists**
-- Apartment collected at sign-up: `User.apartmentBlock` (1–4), `User.apartmentFloor` (`ground` | `first` | `second`), `User.apartmentDoor` (1–4). Constants, parsers and `formatApartment()` live in [`src/lib/apartment.ts`](src/lib/apartment.ts); required by the `databaseHooks.user.create.before` hook, DB columns stay optional so pre-existing accounts keep working. Editable on `/settings`, shown on `/admin/users`
+- Apartment collected at sign-up: `User.apartmentBlock` (1–4) and `User.apartmentNumber` (1–12 in block 1, 1–9 in blocks 2–4 — see `APARTMENTS_PER_BLOCK`). Constants, parsers and `formatApartment()` live in [`src/lib/apartment.ts`](src/lib/apartment.ts); a number is only ever validated together with its block. Required by the `databaseHooks.user.create.before` hook, DB columns stay optional so pre-existing accounts keep working. Editable on `/settings`, shown on `/admin/users`
 - Signup IP stored on `User.signupIp`
 - Disabled users redirected to `/disabled`
 - Privacy: `User.showName` (default `true`, opt-out). Hidden → display **"Reserved"**
@@ -90,6 +90,13 @@ npm run ci
 turso auth login
 npm run db:setup            # create Turso DB + write ASTRO_DB_* to .env
 npm run db:update-schemas   # push schema to Turso
+
+# One-off, run against Turso BEFORE deploying the apartment-number schema:
+# converts apartmentFloor + apartmentDoor into apartmentNumber and drops the old columns
+# in raw SQL, so `astro db push` never sees a destructive change (which would need
+# --force-reset and wipe the database).
+node scripts/migrate-apartment-number.js --dry-run
+node scripts/migrate-apartment-number.js
 npm run dev                 # uses Turso --remote (LAN-bound via --host)
 npm run build               # uses Turso --remote (Netlify)
 
