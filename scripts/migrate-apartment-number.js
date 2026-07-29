@@ -2,15 +2,19 @@
 /**
  * One-off migration: User.apartmentFloor + User.apartmentDoor -> User.apartmentNumber.
  *
- * Run this against Turso ONCE, before deploying the schema that drops the old columns:
+ * Runs from the Netlify build command, right after `astro db push --remote` has added
+ * `apartmentNumber` and while the deprecated floor/door columns are still around. Can also
+ * be run by hand against Turso:
  *
  *   node scripts/migrate-apartment-number.js --dry-run   # print the mapping, change nothing
  *   node scripts/migrate-apartment-number.js             # apply it
  *
- * Why a script instead of `astro db push --remote`: dropping columns is a destructive
- * change, and push either refuses it or demands `--force-reset`, which wipes the whole
- * database (users and bookings included). Doing it here in raw SQL keeps the data and
- * leaves the DB already matching db/config.ts, so the Netlify build's push is a no-op.
+ * It only ever fills rows whose `apartmentNumber` is still NULL, so re-running it (every
+ * deploy does) never overwrites a value a member has since corrected on /settings. Dropping
+ * the old columns is deliberately left to `astro db push`, which needs to do it itself so
+ * its schema snapshot stays in sync — see the comment in db/config.ts. Once that follow-up
+ * push lands, this script finds no old columns and exits as a no-op, and both it and its
+ * line in netlify.toml can go.
  *
  * Mapping (the old grid was floor-major): number = floorIndex * doorsPerFloor + door,
  * with 4 doors per floor in block 1 and 3 in blocks 2-4.
@@ -18,9 +22,6 @@
  *   Blocks 2-4: ground 1-3 -> 1-3, first -> 4-6,  second -> 7-9
  * Door 4 in blocks 2-4 has no valid target and is left NULL, so that member re-picks their
  * apartment on /settings (the "apartment missing" banner already prompts for it).
- *
- * Safe to re-run: adding the column and dropping the old ones are both tolerated if the
- * previous run already did them.
  */
 import { existsSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
@@ -65,19 +66,6 @@ function readEnvFile() {
   );
 }
 
-async function run(client, sql, { tolerate } = {}) {
-  try {
-    await client.execute(sql);
-  } catch (err) {
-    const message = String(err?.message ?? err);
-    if (tolerate && tolerate.test(message)) {
-      console.log(`   skipped (already done): ${sql}`);
-      return;
-    }
-    throw err;
-  }
-}
-
 async function main() {
   const fileEnv = readEnvFile();
   const url = process.env.ASTRO_DB_REMOTE_URL || fileEnv.ASTRO_DB_REMOTE_URL;
@@ -89,26 +77,27 @@ async function main() {
   }
 
   const client = createClient({ url, authToken });
-  console.log(`${dryRun ? "🔍 Dry run" : "🚚 Migrating"} against ${url}\n`);
+  console.log(`${dryRun ? "🔍 Dry run" : "🚚 Migrating apartments"} against ${url}`);
 
   const columns = await client.execute("PRAGMA table_info(User)");
   const columnNames = columns.rows.map((row) => row.name);
-  const hasOldColumns = columnNames.includes("apartmentFloor") && columnNames.includes("apartmentDoor");
+  for (const required of ["apartmentFloor", "apartmentDoor", "apartmentNumber"]) {
+    if (!columnNames.includes(required)) {
+      console.log(`   User.${required} is not there — nothing to migrate.`);
+      return;
+    }
+  }
 
-  if (!hasOldColumns) {
-    console.log("apartmentFloor / apartmentDoor are already gone — nothing to migrate.");
+  // Only untouched rows: a member who has already picked a number on /settings wins over
+  // whatever the old floor/door columns still say.
+  const { rows } = await client.execute(
+    "SELECT id, email, apartmentBlock, apartmentFloor, apartmentDoor FROM User WHERE apartmentNumber IS NULL ORDER BY createdAt"
+  );
+
+  if (rows.length === 0) {
+    console.log("   Every account already has an apartment number — nothing to do.");
     return;
   }
-
-  if (!dryRun) {
-    await run(client, "ALTER TABLE User ADD COLUMN apartmentNumber integer", {
-      tolerate: /duplicate column/i
-    });
-  }
-
-  const { rows } = await client.execute(
-    "SELECT id, email, apartmentBlock, apartmentFloor, apartmentDoor FROM User ORDER BY createdAt"
-  );
 
   let mapped = 0;
   let blanked = 0;
@@ -125,26 +114,20 @@ async function main() {
     } else {
       mapped += 1;
       console.log(`   ${row.email}: ${before} -> apartment ${number}`);
-    }
-
-    if (!dryRun) {
-      await client.execute({
-        sql: "UPDATE User SET apartmentNumber = ? WHERE id = ?",
-        args: [number, row.id]
-      });
+      if (!dryRun) {
+        await client.execute({
+          sql: "UPDATE User SET apartmentNumber = ? WHERE id = ?",
+          args: [number, row.id]
+        });
+      }
     }
   }
 
-  if (!dryRun) {
-    await run(client, "ALTER TABLE User DROP COLUMN apartmentFloor", { tolerate: /no such column/i });
-    await run(client, "ALTER TABLE User DROP COLUMN apartmentDoor", { tolerate: /no such column/i });
-  }
-
-  console.log(`\n${dryRun ? "Would map" : "Mapped"} ${mapped} of ${rows.length} account(s); ${blanked} left blank.`);
+  console.log(`${dryRun ? "Would map" : "Mapped"} ${mapped} of ${rows.length} account(s); ${blanked} left blank.`);
   if (dryRun) console.log("Nothing was written. Re-run without --dry-run to apply.");
 }
 
 main().catch((err) => {
-  console.error("Migration failed:", err);
+  console.error("Apartment migration failed:", err);
   process.exit(1);
 });

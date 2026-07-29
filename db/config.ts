@@ -13,6 +13,13 @@ const User = defineTable({
     // accounts created before this feature keep working — see `src/lib/apartment.ts`.
     apartmentBlock: column.number({ optional: true }),
     apartmentNumber: column.number({ optional: true }),
+    // Replaced by `apartmentNumber`; nothing reads or writes these any more. They are kept
+    // one push longer because `astro db push` rejects adding and dropping columns in the
+    // same table (it reads that as a rename). `deprecated: true` is the documented way out:
+    // this push keeps the data so `scripts/migrate-apartment-number.js` can convert it, and
+    // a follow-up push deletes these two lines to actually drop the columns.
+    apartmentFloor: column.text({ optional: true, deprecated: true }),
+    apartmentDoor: column.number({ optional: true, deprecated: true }),
     signupIp: column.text({ optional: true }),
     disabled: column.boolean({ default: false }),
     locale: column.text({ optional: true, default: "en" }),
