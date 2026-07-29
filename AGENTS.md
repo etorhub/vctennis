@@ -42,7 +42,7 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 - Privacy: `User.showName` (default `true`, opt-out). Hidden → display **"Reserved"**
 - Appearance: `User.theme` (`system` default | `light` | `dark`), set on `/settings`
 - Self-serve account deletion on `/settings` (type email to confirm); deletes bookings + auth rows; last admin cannot self-delete
-- Public `/privacy` documents stored data and deletion
+- `/settings` also documents stored data and deletion (privacy section, `PrivacyContent.astro`) — desktop two-column layout, mobile toggled via a "Privacy" button; auth-only, no separate public page
 
 ## Theming
 
@@ -62,11 +62,10 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 |---|---|---|
 | `/` | Public | Day agenda (today + 2, one day at a time) |
 | `/rules` | Public | Hours, booking rules, etiquette, access |
-| `/privacy` | Public | Data stored, showName, account deletion |
 | `/sign-in` | Public | Sign in / sign up |
 | `/sign-out` | Auth | Sign out |
 | `/reset-password` | Public | Set new password from email link |
-| `/settings` | Auth | Name, showName, appearance (theme), change password, delete account |
+| `/settings` | Auth | Name, showName, appearance (theme), change password, delete account, privacy (data stored) |
 | `/my-bookings` | Auth | Upcoming + past bookings (edit/cancel upcoming) |
 | `/setup` | Auth, once | Become first admin |
 | `/admin/users` | Admin | User management |

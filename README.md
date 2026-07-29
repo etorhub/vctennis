@@ -24,7 +24,7 @@ Public day agenda, email/password accounts with verification, and admin tools �
 - One active future booking per member at a time; overlaps hard-blocked
 - Open signup with email verification and password reset (Resend)
 - Members give their apartment at signup — block (1–4) and apartment number (1–12 in block 1, 1–9 in blocks 2–4); editable on `/settings` and listed on `/admin/users`
-- Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion on `/settings` (see `/privacy`)
+- Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion and a privacy section (data stored) on `/settings`
 - My bookings (`/my-bookings`): upcoming (edit/cancel) and past history from Settings
 - Light / dark / system theme, chosen on `/settings` (stored on the account; defaults to the device setting)
 - Roles: `member` / `admin` (first admin via `/setup`)
