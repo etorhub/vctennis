@@ -35,8 +35,17 @@ export const POST: APIRoute = async ({ request }) => {
     try {
       const locale: Locale = booking.locale === "ca" ? "ca" : "en";
       const t = createT(locale);
-      const { subject, html } = buildBookingEmail("reminder", t, locale, booking.startsAt, booking.durationMin);
-      await sendEmail({ to: booking.email, subject, html });
+      const { subject, html, text } = buildBookingEmail("reminder", t, locale, booking.startsAt, booking.durationMin);
+      const replyTo = import.meta.env.RESEND_REPLY_TO;
+      await sendEmail({
+        to: booking.email,
+        subject,
+        html,
+        text,
+        tags: { type: "booking_reminder", locale },
+        idempotencyKey: `booking-reminder-${booking.id}`,
+        ...(replyTo ? { headers: { "List-Unsubscribe": `<mailto:${replyTo}?subject=unsubscribe>` } } : {})
+      });
       await db.update(Bookings).set({ reminderSentAt: new Date() }).where(eq(Bookings.id, booking.id));
       sent++;
     } catch (err) {

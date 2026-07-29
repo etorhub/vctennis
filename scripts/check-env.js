@@ -47,11 +47,16 @@ if (existsSync(envPath)) {
   process.exit(1);
 }
 
+// Always optional, regardless of EMAILS_ENABLED.
+const OPTIONAL_VARS = new Set(["RESEND_REPLY_TO"]);
+
 // Resend creds are only required when EMAILS_ENABLED="true" - otherwise all email sending is skipped.
 const emailsEnabled = normalize(process.env.EMAILS_ENABLED ?? fileEnv.EMAILS_ENABLED) === "true";
-const requiredVars = emailsEnabled
-  ? allVars
-  : allVars.filter((varName) => varName !== "RESEND_API_KEY" && varName !== "RESEND_FROM_EMAIL");
+const requiredVars = allVars.filter((varName) => {
+  if (OPTIONAL_VARS.has(varName)) return false;
+  if (!emailsEnabled && (varName === "RESEND_API_KEY" || varName === "RESEND_FROM_EMAIL")) return false;
+  return true;
+});
 
 // Prefer process.env (Netlify/CI), fall back to .env for local dev
 const missingVars = requiredVars.filter((varName) => {

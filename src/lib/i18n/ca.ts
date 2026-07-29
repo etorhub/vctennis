@@ -157,6 +157,23 @@ export const ca: Dictionary = {
   emailBookingConfirmedSubject: "Reserva confirmada",
   emailBookingConfirmedBody:
     "La teva pista està reservada per al {date} a les {time} ({duration}). Ens veiem a la pista!",
+  emailBookingConfirmedPreview: "La teva pista està reservada per al {date} a les {time}.",
   emailReminderSubject: "Recordatori de reserva propera",
-  emailReminderBody: "Recordatori: la teva reserva de pista comença el {date} a les {time} ({duration})."
+  emailReminderBody: "Recordatori: la teva reserva de pista comença el {date} a les {time} ({duration}).",
+  emailReminderPreview: "La teva reserva de pista comença el {date} a les {time}.",
+  emailVerifySubject: "Verifica el teu correu",
+  emailVerifyHeading: "Verifica el teu correu",
+  emailVerifyBody: "Verifica el teu correu per activar el teu compte de {site}.",
+  emailVerifyIgnore: "Si no has creat cap compte, pots ignorar aquest correu.",
+  emailVerifyPreview: "Verifica el teu correu per activar el teu compte de {site}.",
+  emailResetSubject: "Restableix la teva contrasenya",
+  emailResetHeading: "Restableix la teva contrasenya",
+  emailResetBody: "Hem rebut una sol·licitud per restablir la contrasenya del teu compte de {site}.",
+  emailResetIgnore: "Si no ho has sol·licitat tu, pots ignorar aquest correu — la teva contrasenya no canviarà.",
+  emailResetPreview: "Restableix la contrasenya del teu compte de {site}.",
+  emailCtaViewBookings: "Veure les meves reserves",
+  emailCtaVerify: "Verificar correu",
+  emailCtaReset: "Restablir contrasenya",
+  emailLinkFallback: "Si el botó no funciona, copia i enganxa aquest enllaç al teu navegador:",
+  emailFooterTransactional: "Reps aquest correu perquè tens un compte a {site}."
 };

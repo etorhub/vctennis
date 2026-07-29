@@ -29,6 +29,7 @@ interface ImportMetaEnv {
   readonly EMAILS_ENABLED?: string;
   readonly RESEND_API_KEY?: string;
   readonly RESEND_FROM_EMAIL?: string;
+  readonly RESEND_REPLY_TO?: string;
   readonly CRON_SECRET: string;
 }
 
