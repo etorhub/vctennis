@@ -89,14 +89,21 @@ export const bookings = {
       });
 
       try {
-        const { subject, html } = buildBookingEmail(
+        const { subject, html, text } = buildBookingEmail(
           "confirmed",
           context.locals.t,
           context.locals.locale,
           startsAt,
           input.durationMin
         );
-        await sendEmail({ to: user.email, subject, html });
+        await sendEmail({
+          to: user.email,
+          subject,
+          html,
+          text,
+          tags: { type: "booking_confirmed", locale: context.locals.locale },
+          idempotencyKey: `booking-confirmed-${id}`
+        });
       } catch (err) {
         console.error("Failed to send booking confirmation email:", err);
       }

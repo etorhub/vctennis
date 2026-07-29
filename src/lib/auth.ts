@@ -3,10 +3,15 @@ import { APIError } from "better-auth/api";
 import { Account, db, Session, User, Verification } from "astro:db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { parseApartmentBlock, parseApartmentNumber } from "./apartment";
-import { SITE_NAME } from "./config";
-import { EmailSendError, isEmailEnabled, sendEmail } from "./email";
+import { buildResetEmail, buildVerifyEmail } from "./authEmail";
+import { EmailSendError, isEmailEnabled, sendEmail, type SendEmailOptions } from "./email";
+import { siteUrl } from "./emailLayout";
 import { createT, type Locale } from "./i18n";
 import { DEFAULT_THEME_PREFERENCE, type ThemePreference } from "./theme";
+
+function userLocale(user: { locale?: string }): Locale {
+  return user.locale === "ca" || user.locale === "en" ? user.locale : pendingSignupLocale;
+}
 
 /** Set per-request in the auth API route so databaseHooks can read it. */
 export let pendingSignupIp: string | null = null;
@@ -22,7 +27,7 @@ export function setPendingSignupLocale(locale: Locale) {
   pendingSignupLocale = locale;
 }
 
-async function sendAuthEmail(opts: { to: string; subject: string; html: string }) {
+async function sendAuthEmail(opts: SendEmailOptions, locale: Locale) {
   try {
     await sendEmail(opts);
   } catch (err) {
@@ -32,7 +37,7 @@ async function sendAuthEmail(opts: { to: string; subject: string; html: string }
       console.error("Auth email failed:", err);
     }
     throw new APIError("BAD_REQUEST", {
-      message: createT(pendingSignupLocale)("errorEmailSend")
+      message: createT(locale)("errorEmailSend")
     });
   }
 }
@@ -141,32 +146,39 @@ export const auth = betterAuth({
     requireEmailVerification: isEmailEnabled(),
     minPasswordLength: 8,
     sendResetPassword: async ({ user, token }) => {
-      const base = import.meta.env.BETTER_AUTH_URL.replace(/\/$/, "");
-      const url = `${base}/reset-password?token=${encodeURIComponent(token)}`;
-      await sendAuthEmail({
-        to: user.email,
-        subject: `${SITE_NAME} — reset password`,
-        html: `
-          <p>Reset your password for ${SITE_NAME}:</p>
-          <p><a href="${url}">${url}</a></p>
-          <p>This link expires soon. If you did not request it, you can ignore this email.</p>
-        `
-      });
+      const locale = userLocale(user as Partial<Record<"locale", string>>);
+      const url = `${siteUrl()}/reset-password?token=${encodeURIComponent(token)}`;
+      const { subject, html, text } = buildResetEmail(createT(locale), locale, url);
+      await sendAuthEmail(
+        {
+          to: user.email,
+          subject,
+          html,
+          text,
+          tags: { type: "password_reset", locale },
+          idempotencyKey: `password-reset-${token}`
+        },
+        locale
+      );
     }
   },
   emailVerification: {
     sendOnSignUp: isEmailEnabled(),
     autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url }) => {
-      await sendAuthEmail({
-        to: user.email,
-        subject: `${SITE_NAME} — verify your email`,
-        html: `
-          <p>Verify your email to activate your ${SITE_NAME} account:</p>
-          <p><a href="${url}">${url}</a></p>
-          <p>This link expires soon. If you did not create an account, you can ignore this email.</p>
-        `
-      });
+    sendVerificationEmail: async ({ user, url, token }) => {
+      const locale = userLocale(user as Partial<Record<"locale", string>>);
+      const { subject, html, text } = buildVerifyEmail(createT(locale), locale, url);
+      await sendAuthEmail(
+        {
+          to: user.email,
+          subject,
+          html,
+          text,
+          tags: { type: "verify_email", locale },
+          idempotencyKey: `verify-email-${token}`
+        },
+        locale
+      );
     }
   },
   session: {

@@ -152,8 +152,25 @@ export const en = {
     "Signed-in members can permanently delete their account under Settings → Delete my account (type your email to confirm). This removes your account data and bookings. The last admin cannot leave until another admin exists.",
   emailBookingConfirmedSubject: "Booking confirmed",
   emailBookingConfirmedBody: "Your court is booked for {date} at {time} ({duration}). See you on court!",
+  emailBookingConfirmedPreview: "Your court is booked for {date} at {time}.",
   emailReminderSubject: "Upcoming booking reminder",
-  emailReminderBody: "Reminder: your court booking starts {date} at {time} ({duration})."
+  emailReminderBody: "Reminder: your court booking starts {date} at {time} ({duration}).",
+  emailReminderPreview: "Your court booking starts {date} at {time}.",
+  emailVerifySubject: "Verify your email",
+  emailVerifyHeading: "Verify your email",
+  emailVerifyBody: "Verify your email to activate your {site} account.",
+  emailVerifyIgnore: "If you did not create an account, you can ignore this email.",
+  emailVerifyPreview: "Verify your email to activate your {site} account.",
+  emailResetSubject: "Reset your password",
+  emailResetHeading: "Reset your password",
+  emailResetBody: "We received a request to reset the password for your {site} account.",
+  emailResetIgnore: "If you did not request this, you can ignore this email — your password will not change.",
+  emailResetPreview: "Reset the password for your {site} account.",
+  emailCtaViewBookings: "View my bookings",
+  emailCtaVerify: "Verify email",
+  emailCtaReset: "Reset password",
+  emailLinkFallback: "If the button doesn't work, copy and paste this link into your browser:",
+  emailFooterTransactional: "You're receiving this because you have an account at {site}."
 };
 
 export type MessageKey = keyof typeof en;
