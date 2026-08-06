@@ -9,7 +9,12 @@ export default async () => {
 
   const res = await fetch(`${base}/api/cron/send-reminders`, {
     method: "POST",
-    headers: { authorization: `Bearer ${process.env.CRON_SECRET}` }
+    headers: {
+      authorization: `Bearer ${process.env.CRON_SECRET}`,
+      "content-type": "application/json",
+      origin: base
+    },
+    body: "{}"
   });
 
   if (!res.ok) {
