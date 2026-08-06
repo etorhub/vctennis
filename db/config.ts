@@ -80,12 +80,27 @@ const Bookings = defineTable({
   }
 });
 
+/** Append-only domain events for ops / future Grafana. See wiki Event-logging. */
+const Events = defineTable({
+  columns: {
+    id: column.text({ primaryKey: true }),
+    type: column.text(),
+    actorUserId: column.text({ optional: true }),
+    subjectUserId: column.text({ optional: true }),
+    bookingId: column.text({ optional: true }),
+    reason: column.text({ optional: true }),
+    payload: column.text({ optional: true }),
+    createdAt: column.date()
+  }
+});
+
 export default defineDb({
   tables: {
     User,
     Session,
     Account,
     Verification,
-    Bookings
+    Bookings,
+    Events
   }
 });

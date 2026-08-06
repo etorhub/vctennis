@@ -2,7 +2,7 @@ import type { TFunction } from "./i18n";
 
 /**
  * Apartment a member lives in, stored on `User.apartmentBlock` / `User.apartmentNumber`.
- * Required at sign-up and editable on `/settings`; the DB columns are optional so accounts
+ * Required at sign-up and editable on `/profile`; the DB columns are optional so accounts
  * created before this feature keep working until they fill it in.
  */
 export const APARTMENT_BLOCKS = [1, 2, 3, 4] as const;

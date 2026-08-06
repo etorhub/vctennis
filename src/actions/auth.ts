@@ -4,6 +4,7 @@ import { auth as betterAuth } from "@/lib/auth";
 import { APIError } from "better-auth/api";
 import { deleteUserCascade } from "@/lib/users";
 import { parseApartmentBlock, parseApartmentNumber } from "@/lib/apartment";
+import { emitEvent } from "@/lib/events";
 import { THEME_PREFERENCES } from "@/lib/theme";
 import { db, eq, User } from "astro:db";
 
@@ -11,9 +12,13 @@ export const auth = {
   signOut: defineAction({
     accept: "form",
     handler: async (_input, context) => {
+      const userId = context.locals.user?.id;
       await betterAuth.api.signOut({
         headers: context.request.headers
       });
+      if (userId) {
+        await emitEvent({ type: "user.signed_out", actorUserId: userId, subjectUserId: userId });
+      }
       return { success: true };
     }
   }),
@@ -67,6 +72,13 @@ export const auth = {
       user.apartmentBlock = apartmentBlock;
       user.apartmentNumber = apartmentNumber;
 
+      await emitEvent({
+        type: "user.profile_updated",
+        actorUserId: user.id,
+        subjectUserId: user.id,
+        payload: { showName, theme }
+      });
+
       return { success: true };
     }
   }),
@@ -87,6 +99,12 @@ export const auth = {
         throw new ActionError({ code: "FORBIDDEN", message: "errorDisabled" });
       }
       if (input.newPassword !== input.confirmPassword) {
+        await emitEvent({
+          type: "user.password_change_rejected",
+          actorUserId: user.id,
+          subjectUserId: user.id,
+          reason: "mismatch"
+        });
         throw new ActionError({ code: "BAD_REQUEST", message: "passwordMismatch" });
       }
 
@@ -101,6 +119,13 @@ export const auth = {
       } catch (err) {
         if (err instanceof APIError) {
           const detail = (err.body as { message?: string } | undefined)?.message ?? err.message;
+          const reason = detail === "Invalid password" ? "incorrect_password" : "error";
+          await emitEvent({
+            type: "user.password_change_rejected",
+            actorUserId: user.id,
+            subjectUserId: user.id,
+            reason
+          });
           if (detail === "Invalid password") {
             throw new ActionError({ code: "BAD_REQUEST", message: "incorrectPassword" });
           }
@@ -108,6 +133,12 @@ export const auth = {
         }
         throw err;
       }
+
+      await emitEvent({
+        type: "user.password_changed",
+        actorUserId: user.id,
+        subjectUserId: user.id
+      });
 
       return { success: true };
     }
@@ -146,7 +177,11 @@ export const auth = {
         headers: context.request.headers
       });
 
-      await deleteUserCascade(user.id);
+      await deleteUserCascade(user.id, {
+        actorUserId: user.id,
+        source: "self",
+        email: user.email
+      });
 
       return { success: true };
     }
@@ -166,6 +201,12 @@ export const auth = {
       }
 
       await db.update(User).set({ role: "admin", updatedAt: new Date() }).where(eq(User.id, user.id));
+
+      await emitEvent({
+        type: "user.became_admin",
+        actorUserId: user.id,
+        subjectUserId: user.id
+      });
 
       return { success: true };
     }

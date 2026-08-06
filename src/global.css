@@ -41,14 +41,6 @@ textarea {
   }
 }
 
-/* Desktop: show both settings panes even when Alpine x-show hides one. */
-@media (min-width: 1024px) {
-  .settings-pane,
-  .settings-pane[x-cloak] {
-    display: block !important;
-  }
-}
-
 .agenda-grid {
   position: relative;
   overflow: hidden;

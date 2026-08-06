@@ -76,7 +76,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (user.role !== "admin") return context.redirect("/");
   }
 
-  if (path === "/settings" || path === "/setup") {
+  if (path === "/profile" || path === "/privacy" || path === "/setup") {
     if (!user) return context.redirect("/sign-in");
   }
 

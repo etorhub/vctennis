@@ -4,6 +4,7 @@ import { db, Bookings, eq, and, gt } from "astro:db";
 import { buildBookingEmail } from "@/lib/bookingEmail";
 import { MAX_ACTIVE_BOOKINGS } from "@/lib/config";
 import { sendEmail } from "@/lib/email";
+import { emitEvent, type BookingRejectReason } from "@/lib/events";
 import {
   isAlignedSlot,
   isAllowedDuration,
@@ -14,42 +15,73 @@ import {
   rangesOverlap
 } from "@/lib/time";
 
-function requireUser(context: { locals: App.Locals }) {
+async function rejectBooking(
+  actorUserId: string | undefined,
+  reason: BookingRejectReason,
+  message: string,
+  code: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" = "BAD_REQUEST",
+  extra?: { bookingId?: string; payload?: Record<string, unknown> }
+): Promise<never> {
+  await emitEvent({
+    type: "booking.rejected",
+    actorUserId,
+    bookingId: extra?.bookingId,
+    reason,
+    payload: extra?.payload
+  });
+  throw new ActionError({ code, message });
+}
+
+async function requireUser(context: { locals: App.Locals }) {
   const user = context.locals.user;
   if (!user) {
+    await emitEvent({ type: "booking.rejected", reason: "unauthorized" });
     throw new ActionError({ code: "UNAUTHORIZED", message: "errorUnauthorized" });
   }
   if (user.disabled) {
+    await emitEvent({
+      type: "booking.rejected",
+      actorUserId: user.id,
+      reason: "disabled"
+    });
     throw new ActionError({ code: "FORBIDDEN", message: "errorDisabled" });
   }
   return user;
 }
 
-async function assertNoOverlap(startsAt: Date, durationMin: number, excludeId?: string) {
+async function assertNoOverlap(
+  actorUserId: string,
+  startsAt: Date,
+  durationMin: number,
+  excludeId?: string
+) {
   const existing = await db.select().from(Bookings);
   for (const b of existing) {
     if (excludeId && b.id === excludeId) continue;
     if (rangesOverlap(startsAt, durationMin, b.startsAt, b.durationMin)) {
-      throw new ActionError({ code: "CONFLICT", message: "errorOverlap" });
+      await rejectBooking(actorUserId, "overlap", "errorOverlap", "CONFLICT", {
+        bookingId: excludeId,
+        payload: { startsAt: startsAt.toISOString(), durationMin }
+      });
     }
   }
 }
 
-function validateSlot(startsAt: Date, durationMin: number) {
+async function validateSlot(actorUserId: string, startsAt: Date, durationMin: number) {
   if (!isAllowedDuration(durationMin)) {
-    throw new ActionError({ code: "BAD_REQUEST", message: "errorSlot" });
+    await rejectBooking(actorUserId, "invalid_slot", "errorSlot");
   }
   if (!isAlignedSlot(startsAt)) {
-    throw new ActionError({ code: "BAD_REQUEST", message: "errorSlot" });
+    await rejectBooking(actorUserId, "invalid_slot", "errorSlot");
   }
   if (!isWithinOpenHours(startsAt, durationMin)) {
-    throw new ActionError({ code: "BAD_REQUEST", message: "errorOutsideHours" });
+    await rejectBooking(actorUserId, "outside_hours", "errorOutsideHours");
   }
   if (!isWithinBookAhead(startsAt)) {
-    throw new ActionError({ code: "BAD_REQUEST", message: "errorTooFar" });
+    await rejectBooking(actorUserId, "too_far", "errorTooFar");
   }
   if (!isFuture(startsAt)) {
-    throw new ActionError({ code: "BAD_REQUEST", message: "errorPast" });
+    await rejectBooking(actorUserId, "past", "errorPast");
   }
 }
 
@@ -61,12 +93,12 @@ export const bookings = {
       durationMin: z.coerce.number().int()
     }),
     handler: async (input, context) => {
-      const user = requireUser(context);
+      const user = await requireUser(context);
       const startsAt = new Date(input.startsAt);
       if (Number.isNaN(startsAt.getTime())) {
-        throw new ActionError({ code: "BAD_REQUEST", message: "errorSlot" });
+        await rejectBooking(user.id, "invalid_slot", "errorSlot");
       }
-      validateSlot(startsAt, input.durationMin);
+      await validateSlot(user.id, startsAt, input.durationMin);
 
       const active = await db
         .select()
@@ -74,10 +106,10 @@ export const bookings = {
         .where(and(eq(Bookings.userId, user.id), gt(Bookings.startsAt, new Date())));
 
       if (active.length >= MAX_ACTIVE_BOOKINGS) {
-        throw new ActionError({ code: "BAD_REQUEST", message: "errorMaxBookings" });
+        await rejectBooking(user.id, "max_bookings", "errorMaxBookings");
       }
 
-      await assertNoOverlap(startsAt, input.durationMin);
+      await assertNoOverlap(user.id, startsAt, input.durationMin);
 
       const id = crypto.randomUUID();
       await db.insert(Bookings).values({
@@ -86,6 +118,18 @@ export const bookings = {
         startsAt,
         durationMin: input.durationMin,
         createdAt: new Date()
+      });
+
+      await emitEvent({
+        type: "booking.created",
+        actorUserId: user.id,
+        subjectUserId: user.id,
+        bookingId: id,
+        payload: {
+          startsAt: startsAt.toISOString(),
+          durationMin: input.durationMin,
+          source: "member"
+        }
       });
 
       try {
@@ -120,29 +164,49 @@ export const bookings = {
       durationMin: z.coerce.number().int()
     }),
     handler: async (input, context) => {
-      const user = requireUser(context);
+      const user = await requireUser(context);
       const rows = await db.select().from(Bookings).where(eq(Bookings.id, input.id)).limit(1);
       const booking = rows[0];
       if (!booking) {
-        throw new ActionError({ code: "NOT_FOUND", message: "errorGeneric" });
+        await rejectBooking(user.id, "not_found", "errorGeneric", "NOT_FOUND", {
+          bookingId: input.id
+        });
       }
 
       const isAdmin = user.role === "admin";
       if (isBookingOver(booking.startsAt, booking.durationMin) && !isAdmin) {
-        throw new ActionError({ code: "BAD_REQUEST", message: "errorPast" });
+        await rejectBooking(user.id, "past", "errorPast", "BAD_REQUEST", {
+          bookingId: booking.id
+        });
       }
 
       const startsAt = new Date(input.startsAt);
       if (Number.isNaN(startsAt.getTime())) {
-        throw new ActionError({ code: "BAD_REQUEST", message: "errorSlot" });
+        await rejectBooking(user.id, "invalid_slot", "errorSlot", "BAD_REQUEST", {
+          bookingId: booking.id
+        });
       }
-      validateSlot(startsAt, input.durationMin);
-      await assertNoOverlap(startsAt, input.durationMin, booking.id);
+      await validateSlot(user.id, startsAt, input.durationMin);
+      await assertNoOverlap(user.id, startsAt, input.durationMin, booking.id);
 
       await db
         .update(Bookings)
         .set({ startsAt, durationMin: input.durationMin, reminderSentAt: null })
         .where(eq(Bookings.id, booking.id));
+
+      await emitEvent({
+        type: "booking.updated",
+        actorUserId: user.id,
+        subjectUserId: booking.userId,
+        bookingId: booking.id,
+        payload: {
+          beforeStartsAt: booking.startsAt.toISOString(),
+          beforeDurationMin: booking.durationMin,
+          startsAt: startsAt.toISOString(),
+          durationMin: input.durationMin,
+          source: isAdmin ? "admin" : "member"
+        }
+      });
 
       return { success: true };
     }
@@ -154,19 +218,36 @@ export const bookings = {
       id: z.string().min(1)
     }),
     handler: async (input, context) => {
-      const user = requireUser(context);
+      const user = await requireUser(context);
       const rows = await db.select().from(Bookings).where(eq(Bookings.id, input.id)).limit(1);
       const booking = rows[0];
       if (!booking) {
-        throw new ActionError({ code: "NOT_FOUND", message: "errorGeneric" });
+        await rejectBooking(user.id, "not_found", "errorGeneric", "NOT_FOUND", {
+          bookingId: input.id
+        });
       }
 
       const isAdmin = user.role === "admin";
       if (isBookingOver(booking.startsAt, booking.durationMin) && !isAdmin) {
-        throw new ActionError({ code: "BAD_REQUEST", message: "errorPast" });
+        await rejectBooking(user.id, "past", "errorPast", "BAD_REQUEST", {
+          bookingId: booking.id
+        });
       }
 
       await db.delete(Bookings).where(eq(Bookings.id, booking.id));
+
+      await emitEvent({
+        type: "booking.cancelled",
+        actorUserId: user.id,
+        subjectUserId: booking.userId,
+        bookingId: booking.id,
+        payload: {
+          startsAt: booking.startsAt.toISOString(),
+          durationMin: booking.durationMin,
+          source: isAdmin ? "admin" : "member"
+        }
+      });
+
       return { success: true };
     }
   })

@@ -6,6 +6,7 @@ import { parseApartmentBlock, parseApartmentNumber } from "./apartment";
 import { buildResetEmail, buildVerifyEmail } from "./authEmail";
 import { EmailSendError, isEmailEnabled, sendEmail, type SendEmailOptions } from "./email";
 import { siteUrl } from "./emailLayout";
+import { emitEvent } from "./events";
 import { createT, type Locale } from "./i18n";
 import { DEFAULT_THEME_PREFERENCE, type ThemePreference } from "./theme";
 
@@ -137,6 +138,25 @@ export const auth = betterAuth({
               theme: DEFAULT_THEME_PREFERENCE
             }
           };
+        },
+        after: async (user) => {
+          await emitEvent({
+            type: "user.signed_up",
+            actorUserId: user.id,
+            subjectUserId: user.id,
+            payload: { email: user.email }
+          });
+        }
+      }
+    },
+    session: {
+      create: {
+        after: async (session) => {
+          await emitEvent({
+            type: "user.signed_in",
+            actorUserId: session.userId,
+            subjectUserId: session.userId
+          });
         }
       }
     }
@@ -179,6 +199,14 @@ export const auth = betterAuth({
         },
         locale
       );
+    },
+    afterEmailVerification: async (user: { id: string; email: string }) => {
+      await emitEvent({
+        type: "user.verified",
+        actorUserId: user.id,
+        subjectUserId: user.id,
+        payload: { email: user.email }
+      });
     }
   },
   session: {

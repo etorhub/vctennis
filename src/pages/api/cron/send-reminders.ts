@@ -3,6 +3,7 @@ import { db, Bookings, User, and, eq, gt, isNull, lte } from "astro:db";
 import { buildBookingEmail } from "@/lib/bookingEmail";
 import { REMINDER_OFFSET_HOURS } from "@/lib/config";
 import { sendEmail } from "@/lib/email";
+import { emitEvent } from "@/lib/events";
 import { createT, type Locale } from "@/lib/i18n";
 
 export const prerender = false;
@@ -47,9 +48,20 @@ export const POST: APIRoute = async ({ request }) => {
         ...(replyTo ? { headers: { "List-Unsubscribe": `<mailto:${replyTo}?subject=unsubscribe>` } } : {})
       });
       await db.update(Bookings).set({ reminderSentAt: new Date() }).where(eq(Bookings.id, booking.id));
+      await emitEvent({
+        type: "reminder.sent",
+        bookingId: booking.id,
+        payload: { source: "system", startsAt: booking.startsAt.toISOString() }
+      });
       sent++;
     } catch (err) {
       console.error(`Failed to send reminder for booking ${booking.id}:`, err);
+      await emitEvent({
+        type: "reminder.failed",
+        bookingId: booking.id,
+        reason: "send_failed",
+        payload: { source: "system" }
+      });
       failed++;
     }
   }

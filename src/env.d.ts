@@ -7,7 +7,7 @@ import type { Locale, TFunction } from "./lib/i18n";
 declare global {
   interface Window {
     Alpine: import("alpinejs").Alpine;
-    /** Set by the inline theme script in `Layout.astro` (live preview in /settings). */
+    /** Set by the inline theme script in `Layout.astro` (live preview in /profile). */
     applyThemePreference?: (preference: import("./lib/theme").ThemePreference) => void;
   }
 

@@ -23,10 +23,11 @@ Public day agenda, email/password accounts with verification, and admin tools �
 - Book 30 or 60 minutes on `:00` / `:30` slots (10:00–21:00)
 - One active future booking per member at a time; overlaps hard-blocked
 - Open signup with email verification and password reset (Resend)
-- Members give their apartment at signup — block (1–4) and apartment number (1–12 in block 1, 1–9 in blocks 2–4); editable on `/settings` and listed on `/admin/users`
-- Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion and a privacy section (data stored) on `/settings`
-- My bookings (`/my-bookings`): upcoming (edit/cancel) and past history from Settings
-- Light / dark / system theme, chosen on `/settings` (stored on the account; defaults to the device setting)
+- Members give their apartment at signup — block (1–4) and apartment number (1–12 in block 1, 1–9 in blocks 2–4); editable on `/profile` and listed on `/admin/users`
+- Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion on `/profile`; stored-data docs on `/privacy`
+- My bookings (`/my-bookings`): upcoming (edit/cancel) and past history
+- Light / dark / system theme, chosen on `/profile` (stored on the account; defaults to the device setting)
+- Signed-in header: user menu with bookings, profile, privacy, and sign out
 - Roles: `member` / `admin` (first admin via `/setup`)
 - Installable PWA (no offline booking data)
 - Catalan / English from `Accept-Language`
@@ -126,7 +127,7 @@ src/
   actions/     # bookings, auth, admin (Astro actions)
   components/  # header, booking bottom sheet
   lib/         # config, auth, time helpers, i18n
-  pages/       # routes (agenda, sign-in, settings, my-bookings, admin, …)
+  pages/       # routes (agenda, sign-in, profile, privacy, my-bookings, admin, …)
 db/            # Astro DB schema + seed
 public/        # PWA manifest, icons, sw.js
 ```

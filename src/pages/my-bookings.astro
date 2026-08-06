@@ -43,7 +43,7 @@ function durationLabel(durationMin: number) {
 ---
 
 <Layout title={t("myBookings")}>
-  <AppHeader title={t("myBookings")} backHref="/settings" />
+  <AppHeader title={t("myBookings")} backHref="/" />
   {
     toastMessage && (
       <div x-init={`toastMessage = ${JSON.stringify(toastMessage)}`} class="sr-only" />
