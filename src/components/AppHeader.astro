@@ -41,21 +41,47 @@ const { title = t("siteName"), backHref } = Astro.props;
       }
       {
         user ? (
-          <>
-            <a href="/settings" class="btn btn-ghost btn-sm" title={t("settings")}>
+          <div
+            class="dropdown dropdown-end"
+            x-data="{ open: false }"
+            x-bind:class="{ 'dropdown-open': open }"
+            @keydown.escape.window="open = false"
+          >
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              title={t("profile")}
+              aria-label={t("profile")}
+              aria-haspopup="menu"
+              x-bind:aria-expanded="open"
+              @click="open = !open"
+            >
               <Icon pack="lucide" name="user" height={18} width={18} />
-            </a>
-            <form method="POST" action="/sign-out">
-              <button
-                type="submit"
-                class="btn btn-ghost btn-sm"
-                title={t("signOut")}
-                aria-label={t("signOut")}
-              >
-                <Icon pack="lucide" name="log-out" height={18} width={18} />
-              </button>
-            </form>
-          </>
+            </button>
+            <ul
+              x-show="open"
+              x-cloak
+              @click.outside="open = false"
+              class="menu dropdown-content z-30 mt-1 w-52 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+              role="menu"
+            >
+              <li role="none">
+                <a href="/my-bookings" role="menuitem" @click="open = false">{t("myBookings")}</a>
+              </li>
+              <li role="none">
+                <a href="/profile" role="menuitem" @click="open = false">{t("profile")}</a>
+              </li>
+              <li role="none">
+                <a href="/privacy" role="menuitem" @click="open = false">{t("privacy")}</a>
+              </li>
+              <li class="mt-1 border-t border-base-300 pt-1" role="separator"></li>
+              <li role="none">
+                <form method="POST" action="/sign-out" class="contents">
+                  <button type="submit" role="menuitem">{t("signOut")}</button>
+                </form>
+              </li>
+            </ul>
+          </div>
         ) : (
           <a href="/sign-in" class="btn btn-primary btn-sm">
             {t("signIn")}

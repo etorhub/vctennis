@@ -36,13 +36,14 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 - Password reset via email link (`/reset-password`)
 - Roles: `member` | `admin` on `User.role`
 - First admin: visit `/setup` while signed in when **no admin exists**
-- Apartment collected at sign-up: `User.apartmentBlock` (1–4) and `User.apartmentNumber` (1–12 in block 1, 1–9 in blocks 2–4 — see `APARTMENTS_PER_BLOCK`). Constants, parsers and `formatApartment()` live in [`src/lib/apartment.ts`](src/lib/apartment.ts); a number is only ever validated together with its block. Required by the `databaseHooks.user.create.before` hook, DB columns stay optional so pre-existing accounts keep working. Editable on `/settings`, shown on `/admin/users`. `apartmentFloor` / `apartmentDoor` are the previous model, kept `deprecated: true` for one push so the data can be converted — delete them from [`db/config.ts`](db/config.ts) (and drop the migrate line from `netlify.toml`) once the deploy that added `apartmentNumber` is live
+- Apartment collected at sign-up: `User.apartmentBlock` (1–4) and `User.apartmentNumber` (1–12 in block 1, 1–9 in blocks 2–4 — see `APARTMENTS_PER_BLOCK`). Constants, parsers and `formatApartment()` live in [`src/lib/apartment.ts`](src/lib/apartment.ts); a number is only ever validated together with its block. Required by the `databaseHooks.user.create.before` hook, DB columns stay optional so pre-existing accounts keep working. Editable on `/profile`, shown on `/admin/users`. `apartmentFloor` / `apartmentDoor` are the previous model, kept `deprecated: true` for one push so the data can be converted — delete them from [`db/config.ts`](db/config.ts) (and drop the migrate line from `netlify.toml`) once the deploy that added `apartmentNumber` is live
 - Signup IP stored on `User.signupIp`
 - Disabled users redirected to `/disabled`
 - Privacy: `User.showName` (default `true`, opt-out). Hidden → display **"Reserved"**
-- Appearance: `User.theme` (`system` default | `light` | `dark`), set on `/settings`
-- Self-serve account deletion on `/settings` (type email to confirm); deletes bookings + auth rows; last admin cannot self-delete
-- `/settings` also documents stored data and deletion (privacy section, `PrivacyContent.astro`) — desktop two-column layout, mobile toggled via a "Privacy" button; auth-only, no separate public page
+- Appearance: `User.theme` (`system` default | `light` | `dark`), set on `/profile`
+- Self-serve account deletion on `/profile` (type email to confirm); deletes bookings + auth rows; last admin cannot self-delete
+- Privacy docs (stored data / deletion) on `/privacy` via `PrivacyContent.astro` — auth-only; `/settings` redirects to `/profile`
+- Header user menu (signed-in): bookings, profile, privacy, sign out
 
 ## Theming
 
@@ -65,7 +66,9 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 | `/sign-in` | Public | Sign in / sign up |
 | `/sign-out` | Auth | Sign out |
 | `/reset-password` | Public | Set new password from email link |
-| `/settings` | Auth | Name, showName, appearance (theme), change password, delete account, privacy (data stored) |
+| `/profile` | Auth | Name, showName, appearance (theme), change password, delete account |
+| `/privacy` | Auth | Stored data and deletion docs (`PrivacyContent.astro`) |
+| `/settings` | Auth | Redirects to `/profile` |
 | `/my-bookings` | Auth | Upcoming + past bookings (edit/cancel upcoming) |
 | `/setup` | Auth, once | Become first admin |
 | `/admin/users` | Admin | User management |

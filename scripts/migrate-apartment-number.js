@@ -10,7 +10,7 @@
  *   node scripts/migrate-apartment-number.js             # apply it
  *
  * It only ever fills rows whose `apartmentNumber` is still NULL, so re-running it (every
- * deploy does) never overwrites a value a member has since corrected on /settings. Dropping
+ * deploy does) never overwrites a value a member has since corrected on /profile. Dropping
  * the old columns is deliberately left to `astro db push`, which needs to do it itself so
  * its schema snapshot stays in sync — see the comment in db/config.ts. Once that follow-up
  * push lands, this script finds no old columns and exits as a no-op, and both it and its
@@ -21,7 +21,7 @@
  *   Block 1:   ground 1-4 -> 1-4,  first -> 5-8,  second -> 9-12
  *   Blocks 2-4: ground 1-3 -> 1-3, first -> 4-6,  second -> 7-9
  * Door 4 in blocks 2-4 has no valid target and is left NULL, so that member re-picks their
- * apartment on /settings (the "apartment missing" banner already prompts for it).
+ * apartment on /profile (the "apartment missing" banner already prompts for it).
  */
 import { existsSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
@@ -88,7 +88,7 @@ async function main() {
     }
   }
 
-  // Only untouched rows: a member who has already picked a number on /settings wins over
+  // Only untouched rows: a member who has already picked a number on /profile wins over
   // whatever the old floor/door columns still say.
   const { rows } = await client.execute(
     "SELECT id, email, apartmentBlock, apartmentFloor, apartmentDoor FROM User WHERE apartmentNumber IS NULL ORDER BY createdAt"
@@ -110,7 +110,7 @@ async function main() {
 
     if (number === null) {
       blanked += 1;
-      console.log(`   ${row.email}: ${before} -> NULL (must re-pick on /settings)`);
+      console.log(`   ${row.email}: ${before} -> NULL (must re-pick on /profile)`);
     } else {
       mapped += 1;
       console.log(`   ${row.email}: ${before} -> apartment ${number}`);
