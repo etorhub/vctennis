@@ -74,6 +74,20 @@ Copy [`.env.example`](.env.example). Required:
 
 `RESEND_API_KEY` is only required when `EMAILS_ENABLED=true`.
 
+### Grafana Cloud (optional)
+
+Domain events dual-write to Grafana Cloud Loki + Prometheus when configured. Create an [Access Policy](https://grafana.com/docs/grafana-cloud/account-management/authentication-and-permissions/access-policies/) with `logs:write` and `metrics:write`, then set:
+
+| Variable | Purpose |
+|---|---|
+| `GRAFANA_CLOUD_TOKEN` | Access policy token |
+| `GRAFANA_LOKI_URL` | Loki base URL (e.g. `https://logs-prod-039.grafana.net`) |
+| `GRAFANA_LOKI_USER` | Loki numeric instance user |
+| `GRAFANA_PROM_REMOTE_WRITE_URL` | Prometheus remote-write URL (`…/api/prom/push`) |
+| `GRAFANA_PROM_USER` | Prometheus/Mimir numeric instance user |
+
+Leave unset to skip shipping (Turso `Events` still records everything). Dashboard JSON: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json).
+
 ### Email (optional, off by default)
 
 Emails (verification, password reset, booking confirmation/reminder) are gated behind `EMAILS_ENABLED`. Leave it `false` (the default) to skip all email sending — registration then activates accounts immediately, with no verification step, and "Forgot password" is hidden since it can't work without email.

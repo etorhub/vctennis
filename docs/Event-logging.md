@@ -1,6 +1,6 @@
 # Event logging
 
-Append-only **domain events** for ops and future Grafana dashboards. There is no admin UI yet — events are written to Astro DB / Turso only.
+Append-only **domain events** for ops and Grafana Cloud dashboards. There is no admin UI yet — events are always written to Astro DB / Turso, and optionally dual-written to Loki + Prometheus.
 
 > Canonical copy lives in this repo. After the GitHub wiki has been initialized once (create any page under Wiki in the GitHub UI), run `npm run docs:wiki` to publish this file (and Home) to [Event-logging](https://github.com/etorhub/vctennis/wiki/Event-logging).
 
@@ -10,6 +10,8 @@ Append-only **domain events** for ops and future Grafana dashboards. There is no
 | --- | --- |
 | Schema | [`db/config.ts`](../db/config.ts) — `Events` table |
 | Emit helper | [`src/lib/events.ts`](../src/lib/events.ts) — `emitEvent`, `redactEventEmails` |
+| Grafana ship | [`src/lib/observability.ts`](../src/lib/observability.ts) — Loki push + Prometheus remote write |
+| Dashboard | [`ops/grafana/dashboards/domain-events.json`](../ops/grafana/dashboards/domain-events.json) |
 | Instrumentation | Astro actions (`bookings`, `admin`, `auth`), Better Auth hooks in `src/lib/auth.ts`, reminder cron |
 
 ## Schema
@@ -107,9 +109,18 @@ GROUP BY reason
 ORDER BY n DESC;
 ```
 
+## Grafana Cloud
+
+When `GRAFANA_CLOUD_TOKEN` and related `GRAFANA_*` vars are set (see [`.env.example`](../.env.example)):
+
+- **Loki** — structured log line per event; labels `service_name=vctennis`, `event_type`, `reason`. Body omits email/name/IP.
+- **Prometheus** — sample `vctennis_events{type,reason,source}=1` per event. Panels use `count_over_time` (not `rate`/`increase`) because serverless has no cumulative counter.
+
+Provisioning: import or sync [`ops/grafana/dashboards/domain-events.json`](../ops/grafana/dashboards/domain-events.json). Datasource UIDs assume Grafana Cloud defaults `grafanacloud-prom` / `grafanacloud-logs`.
+
 ## Out of scope / future
 
 - Admin UI for browsing events
-- Push to Loki / Prometheus / Grafana on a home NAS
 - Retention / TTL job
 - IP logging in events
+- Backfill of historical Turso rows into Loki/Prometheus

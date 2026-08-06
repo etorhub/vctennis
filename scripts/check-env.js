@@ -48,7 +48,14 @@ if (existsSync(envPath)) {
 }
 
 // Always optional, regardless of EMAILS_ENABLED.
-const OPTIONAL_VARS = new Set(["RESEND_REPLY_TO"]);
+const OPTIONAL_VARS = new Set([
+  "RESEND_REPLY_TO",
+  "GRAFANA_CLOUD_TOKEN",
+  "GRAFANA_LOKI_URL",
+  "GRAFANA_LOKI_USER",
+  "GRAFANA_PROM_REMOTE_WRITE_URL",
+  "GRAFANA_PROM_USER"
+]);
 
 // Resend creds are only required when EMAILS_ENABLED="true" - otherwise all email sending is skipped.
 const emailsEnabled = normalize(process.env.EMAILS_ENABLED ?? fileEnv.EMAILS_ENABLED) === "true";
