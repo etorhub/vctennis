@@ -112,9 +112,9 @@ npm run host:deploy
 
 ## Event logging
 
-Append-only domain events in the `Events` table (Astro DB / Turso). Emit via [`src/lib/events.ts`](src/lib/events.ts) (`emitEvent`). No admin UI yet.
+Append-only domain events in the `Events` table (Astro DB / Turso). Emit via [`src/lib/events.ts`](src/lib/events.ts) (`emitEvent`). After insert, [`src/lib/observability.ts`](src/lib/observability.ts) best-effort dual-writes to Grafana Cloud Loki + Prometheus when `GRAFANA_*` env is set (no-op otherwise; never fails the mutation). No admin UI yet.
 
-Canonical catalog, PII rules, and reason codes: [`docs/Event-logging.md`](docs/Event-logging.md). After the GitHub wiki is initialized once in the UI, sync with `npm run docs:wiki` → [wiki Event-logging](https://github.com/etorhub/vctennis/wiki/Event-logging).
+Canonical catalog, PII rules, and reason codes: [`docs/Event-logging.md`](docs/Event-logging.md). Dashboard: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json). After the GitHub wiki is initialized once in the UI, sync with `npm run docs:wiki` → [wiki Event-logging](https://github.com/etorhub/vctennis/wiki/Event-logging).
 
 ## Conventions
 

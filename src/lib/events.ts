@@ -1,4 +1,5 @@
 import { db, Events, eq, or } from "astro:db";
+import { shipEventObservability } from "./observability";
 
 export const EVENT_TYPES = [
   "booking.created",
@@ -60,6 +61,7 @@ export async function emitEvent(input: EmitEventInput): Promise<void> {
       payload: input.payload ? JSON.stringify(input.payload) : undefined,
       createdAt: new Date()
     });
+    await shipEventObservability(input);
   } catch (err) {
     console.error("Failed to emit event:", input.type, err);
   }

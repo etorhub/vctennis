@@ -38,6 +38,12 @@ interface ImportMetaEnv {
   readonly RESEND_FROM_EMAIL?: string;
   readonly RESEND_REPLY_TO?: string;
   readonly CRON_SECRET: string;
+  /** Grafana Cloud access policy token (logs:write + metrics:write). Optional. */
+  readonly GRAFANA_CLOUD_TOKEN?: string;
+  readonly GRAFANA_LOKI_URL?: string;
+  readonly GRAFANA_LOKI_USER?: string;
+  readonly GRAFANA_PROM_REMOTE_WRITE_URL?: string;
+  readonly GRAFANA_PROM_USER?: string;
 }
 
 interface ImportMeta {
