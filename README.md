@@ -70,7 +70,7 @@ Copy [`.env.example`](.env.example). Required:
 | `BETTER_AUTH_URL` | Public app URL (`http://localhost:4321` locally) |
 | `ASTRO_DB_REMOTE_URL` | Turso URL (remote / production) |
 | `ASTRO_DB_APP_TOKEN` | Turso token (remote / production) |
-| `CRON_SECRET` | Bearer for `/api/cron/send-reminders` |
+| `CRON_SECRET` | Bearer for `/api/cron/send-reminders` and `/api/cron/health-probe` |
 
 `RESEND_API_KEY` is only required when `EMAILS_ENABLED=true`.
 
@@ -85,8 +85,11 @@ Domain events dual-write to Grafana Cloud Loki + Prometheus when configured. Cre
 | `GRAFANA_LOKI_USER` | Loki numeric instance user |
 | `GRAFANA_PROM_REMOTE_WRITE_URL` | Prometheus remote-write URL (`…/api/prom/push`) |
 | `GRAFANA_PROM_USER` | Prometheus/Mimir numeric instance user |
+| `HEALTH_PROBE_BASE_URL` | Optional override for the health probe target (defaults to Netlify `URL` / `BETTER_AUTH_URL`) |
 
-Leave unset to skip shipping (Turso `Events` still records everything). Dashboard JSON: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json).
+Leave Grafana vars unset to skip shipping (Turso `Events` still records everything). Dashboards: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](ops/grafana/dashboards/prod-health.json).
+
+A Netlify scheduled function (`health-probe`, every 5 minutes) hits `/`, `/sign-in`, and `/rules` and ships `vctennis_probe_*` metrics when Grafana env is set.
 
 ### Email (optional, off by default)
 

@@ -44,6 +44,8 @@ interface ImportMetaEnv {
   readonly GRAFANA_LOKI_USER?: string;
   readonly GRAFANA_PROM_REMOTE_WRITE_URL?: string;
   readonly GRAFANA_PROM_USER?: string;
+  /** Optional override for health probe target (else URL / BETTER_AUTH_URL). */
+  readonly HEALTH_PROBE_BASE_URL?: string;
 }
 
 interface ImportMeta {
