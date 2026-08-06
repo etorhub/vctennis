@@ -144,12 +144,15 @@ export const en = {
   privacyBookingsTitle: "Booking history",
   privacyBookingsBody:
     "Your bookings (date, time, and duration) are kept so the calendar and your booking history stay accurate over time. Deleting your account also deletes all of your bookings and frees those times.",
+  privacyActivityTitle: "Activity log",
+  privacyActivityBody:
+    "We keep an internal activity log of actions such as bookings, sign-in, and account changes (action type, related ids, timestamps, and sometimes email). This helps operate and secure the booking system. Deleting your account removes your account data and bookings and redacts emails from that log; anonymized event rows may be retained.",
   privacyShowNameTitle: "Name visibility on the calendar",
   privacyShowNameBody:
     'By default your name is shown next to your bookings on the shared calendar. You can turn this off in your profile — when hidden, your bookings appear as "Reserved" to other members instead of your name.',
   privacyDeletionTitle: "Deleting your account",
   privacyDeletionBody:
-    "Signed-in members can permanently delete their account with Delete my account in their profile (type your email to confirm). This removes your account data and bookings. The last admin cannot leave until another admin exists.",
+    "Signed-in members can permanently delete their account with Delete my account in their profile (type your email to confirm). This removes your account data and bookings and redacts emails from the activity log. The last admin cannot leave until another admin exists.",
   emailBookingConfirmedSubject: "Booking confirmed",
   emailBookingConfirmedBody: "Your court is booked for {date} at {time} ({duration}). See you on court!",
   emailBookingConfirmedPreview: "Your court is booked for {date} at {time}.",

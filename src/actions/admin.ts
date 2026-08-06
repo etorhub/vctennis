@@ -1,6 +1,7 @@
 import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro:schema";
 import { db, Bookings, eq, User } from "astro:db";
+import { emitEvent } from "@/lib/events";
 import { deleteUserCascade } from "@/lib/users";
 
 async function requireAdmin(context: { locals: App.Locals }) {
@@ -20,6 +21,11 @@ async function requireAdmin(context: { locals: App.Locals }) {
   return user;
 }
 
+async function loadUserEmail(userId: string): Promise<string | undefined> {
+  const [row] = await db.select({ email: User.email }).from(User).where(eq(User.id, userId)).limit(1);
+  return row?.email;
+}
+
 export const admin = {
   setRole: defineAction({
     accept: "form",
@@ -35,10 +41,17 @@ export const admin = {
           message: "You cannot demote yourself."
         });
       }
+      const email = await loadUserEmail(input.userId);
       await db
         .update(User)
         .set({ role: input.role, updatedAt: new Date() })
         .where(eq(User.id, input.userId));
+      await emitEvent({
+        type: "user.role_changed",
+        actorUserId: adminUser.id,
+        subjectUserId: input.userId,
+        payload: { role: input.role, ...(email ? { email } : {}) }
+      });
       return { success: true };
     }
   }),
@@ -57,10 +70,18 @@ export const admin = {
           message: "You cannot disable yourself."
         });
       }
+      const disabled = input.disabled === "true";
+      const email = await loadUserEmail(input.userId);
       await db
         .update(User)
-        .set({ disabled: input.disabled === "true", updatedAt: new Date() })
+        .set({ disabled, updatedAt: new Date() })
         .where(eq(User.id, input.userId));
+      await emitEvent({
+        type: disabled ? "user.disabled" : "user.enabled",
+        actorUserId: adminUser.id,
+        subjectUserId: input.userId,
+        payload: { ...(email ? { email } : {}) }
+      });
       return { success: true };
     }
   }),
@@ -78,7 +99,12 @@ export const admin = {
           message: "You cannot delete yourself."
         });
       }
-      await deleteUserCascade(input.userId);
+      const email = await loadUserEmail(input.userId);
+      await deleteUserCascade(input.userId, {
+        actorUserId: adminUser.id,
+        source: "admin",
+        email
+      });
       return { success: true };
     }
   }),
@@ -89,8 +115,23 @@ export const admin = {
       id: z.string().min(1)
     }),
     handler: async (input, context) => {
-      await requireAdmin(context);
+      const adminUser = await requireAdmin(context);
+      const rows = await db.select().from(Bookings).where(eq(Bookings.id, input.id)).limit(1);
+      const booking = rows[0];
       await db.delete(Bookings).where(eq(Bookings.id, input.id));
+      if (booking) {
+        await emitEvent({
+          type: "booking.cancelled",
+          actorUserId: adminUser.id,
+          subjectUserId: booking.userId,
+          bookingId: booking.id,
+          payload: {
+            startsAt: booking.startsAt.toISOString(),
+            durationMin: booking.durationMin,
+            source: "admin"
+          }
+        });
+      }
       return { success: true };
     }
   })

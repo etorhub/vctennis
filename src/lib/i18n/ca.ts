@@ -147,12 +147,15 @@ export const ca: Dictionary = {
   privacyBookingsTitle: "Historial de reserves",
   privacyBookingsBody:
     "Les teves reserves (data, hora i durada) es conserven perquè el calendari i el teu historial de reserves es mantinguin correctes al llarg del temps. Eliminar el compte també elimina totes les teves reserves i allibera aquestes hores.",
+  privacyActivityTitle: "Registre d'activitat",
+  privacyActivityBody:
+    "Mantenim un registre intern d'activitat (reserves, inici de sessió, canvis de compte): tipus d'acció, identificadors, marques de temps i de vegades el correu. Serveix per operar i protegir el sistema de reserves. En eliminar el compte s'esborren les dades del compte i les reserves i es redacten els correus d'aquest registre; les files d'esdeveniments anonimitzades es poden conservar.",
   privacyShowNameTitle: "Visibilitat del nom al calendari",
   privacyShowNameBody:
     'Per defecte el teu nom apareix al costat de les teves reserves al calendari compartit. Ho pots desactivar al teu perfil — quan està amagat, les teves reserves es mostren com a "Reservat" a la resta de membres en lloc del teu nom.',
   privacyDeletionTitle: "Eliminar el teu compte",
   privacyDeletionBody:
-    "Els membres amb sessió iniciada poden eliminar permanentment el compte amb «Eliminar el meu compte» al seu perfil (cal escriure el correu per confirmar). Això elimina les dades del compte i les reserves. L'últim admin no pot marxar fins que n'hi hagi un altre.",
+    "Els membres amb sessió iniciada poden eliminar permanentment el compte amb «Eliminar el meu compte» al seu perfil (cal escriure el correu per confirmar). Això elimina les dades del compte i les reserves i redacta els correus del registre d'activitat. L'últim admin no pot marxar fins que n'hi hagi un altre.",
   emailBookingConfirmedSubject: "Reserva confirmada",
   emailBookingConfirmedBody:
     "La teva pista està reservada per al {date} a les {time} ({duration}). Ens veiem a la pista!",

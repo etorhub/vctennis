@@ -110,6 +110,12 @@ npm run host:deploy
 - **Netlify smoke plugin** (`netlify/plugins/smoke-test`): after production publish, GETs `/`, `/sign-in`, `/rules`; on 5xx calls site rollback (`PUT /sites/{SITE_ID}/rollback`) then fails the deploy. Needs site env `NETLIFY_AUTH_TOKEN`.
 - `netlify.toml` build command: `astro db push --remote && npm run build`
 
+## Event logging
+
+Append-only domain events in the `Events` table (Astro DB / Turso). Emit via [`src/lib/events.ts`](src/lib/events.ts) (`emitEvent`). No admin UI yet.
+
+Canonical catalog, PII rules, and reason codes: [`docs/Event-logging.md`](docs/Event-logging.md). After the GitHub wiki is initialized once in the UI, sync with `npm run docs:wiki` → [wiki Event-logging](https://github.com/etorhub/vctennis/wiki/Event-logging).
+
 ## Conventions
 
 - Mobile-first UI; Google-agenda style calendar
