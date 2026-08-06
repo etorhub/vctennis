@@ -71,17 +71,17 @@ Copy [`.env.example`](.env.example). Required:
 | `ASTRO_DB_APP_TOKEN` | Turso token (remote / production) |
 | `CRON_SECRET` | Bearer for `/api/cron/send-reminders` |
 
-`RESEND_API_KEY` is only required when `EMAILS_ENABLED="true"`.
+`RESEND_API_KEY` is only required when `EMAILS_ENABLED=true`.
 
 ### Email (optional, off by default)
 
-Emails (verification, password reset, booking confirmation/reminder) are gated behind `EMAILS_ENABLED`. Leave it `"false"` (the default) to skip all email sending — registration then activates accounts immediately, with no verification step, and "Forgot password" is hidden since it can't work without email.
+Emails (verification, password reset, booking confirmation/reminder) are gated behind `EMAILS_ENABLED`. Leave it `false` (the default) to skip all email sending — registration then activates accounts immediately, with no verification step, and "Forgot password" is hidden since it can't work without email.
 
 Once you have a verified Resend sending domain, set:
 
 | Variable | Purpose |
 |---|---|
-| `EMAILS_ENABLED` | Set to `"true"` to enable email sending |
+| `EMAILS_ENABLED` | Set to `true` to enable email sending (in Netlify enter the bare value, no quotes) |
 | `RESEND_API_KEY` | Verification + password-reset + booking emails |
 | `RESEND_FROM_EMAIL` | Optional, defaults to Resend's onboarding sender |
 
