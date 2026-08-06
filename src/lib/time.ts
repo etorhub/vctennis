@@ -146,8 +146,9 @@ export function isWithinOpenHours(startsAt: Date, durationMin: number): boolean 
 }
 
 export function isWithinBookAhead(startsAt: Date, now = new Date()): boolean {
-  // BOOK_AHEAD_DAYS=3 → today + 2 more days (same as agenda view)
-  const lastDay = addZonedDays(startOfZonedDay(now), BOOK_AHEAD_DAYS - 1);
+  // Same sliding window as agendaDays (skips today when no slots remain)
+  const days = agendaDays(now);
+  const lastDay = days[days.length - 1];
   const p = getZonedParts(lastDay);
   const endOfLast = zonedDate(p.year, p.month, p.day, CLOSE_HOUR, 0);
   return startsAt.getTime() <= endOfLast.getTime() && startsAt.getTime() > now.getTime();
@@ -168,8 +169,31 @@ export function rangesOverlap(aStart: Date, aDuration: number, bStart: Date, bDu
   return aStart.getTime() < bEnd && bStart.getTime() < aEnd;
 }
 
+export type BookingInterval = {
+  startsAt: Date;
+  durationMin: number;
+  id?: string;
+};
+
+/** True if `startsAt`+`durationMin` overlaps any existing booking (optionally skipping one id). */
+export function conflictsWithExisting(
+  startsAt: Date,
+  durationMin: number,
+  existing: BookingInterval[],
+  excludeId?: string
+): boolean {
+  return existing.some(
+    (b) =>
+      (!excludeId || b.id !== excludeId) &&
+      rangesOverlap(startsAt, durationMin, b.startsAt, b.durationMin)
+  );
+}
+
 export function agendaDays(now = new Date()): Date[] {
-  const start = startOfZonedDay(now);
+  const today = startOfZonedDay(now);
+  // After the last bookable slot today, start from tomorrow (sliding BOOK_AHEAD_DAYS window)
+  const start =
+    slotOptionsForDay(today, now).length === 0 ? addZonedDays(today, 1) : today;
   return Array.from({ length: BOOK_AHEAD_DAYS }, (_, i) => addZonedDays(start, i));
 }
 
@@ -177,16 +201,32 @@ export function hourLabels(): number[] {
   return Array.from({ length: CLOSE_HOUR - OPEN_HOUR }, (_, i) => OPEN_HOUR + i);
 }
 
-export function slotOptionsForDay(day: Date, now = new Date()): Date[] {
+export type SlotOptions = {
+  /** Required duration that must fit open hours and not overlap (default 30). */
+  durationMin?: number;
+  existing?: BookingInterval[];
+  excludeId?: string;
+};
+
+/**
+ * Bookable start times for a day. Past times and overlaps (for the given duration) are excluded.
+ * Default duration 30 lists every start where a 30‑minute booking would fit.
+ */
+export function slotOptionsForDay(day: Date, now = new Date(), options: SlotOptions = {}): Date[] {
+  const durationMin = options.durationMin ?? 30;
   const p = getZonedParts(day);
   const slots: Date[] = [];
   for (let hour = OPEN_HOUR; hour < CLOSE_HOUR; hour++) {
     for (let minute = 0; minute < 60; minute += SLOT_MINUTES) {
-      if (hour === CLOSE_HOUR - 0 && minute > 0) continue;
       const slot = zonedDate(p.year, p.month, p.day, hour, minute);
-      // last start for 30min is 20:30; for simplicity list all starts where 30min fits
-      if (!isWithinOpenHours(slot, 30)) continue;
+      if (!isWithinOpenHours(slot, durationMin)) continue;
       if (slot.getTime() <= now.getTime()) continue;
+      if (
+        options.existing &&
+        conflictsWithExisting(slot, durationMin, options.existing, options.excludeId)
+      ) {
+        continue;
+      }
       slots.push(slot);
     }
   }

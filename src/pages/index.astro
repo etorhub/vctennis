@@ -9,6 +9,7 @@ import {
   agendaDays,
   bookingEnd,
   formatDayHeader,
+  formatFullDate,
   formatTime,
   getZonedParts,
   hourLabels,
@@ -65,8 +66,9 @@ type ViewBooking = {
   startsAtIso: string;
   durationMin: number;
   label: string;
+  dayLabel: string;
   mine: boolean;
-  canEdit: boolean;
+  canManage: boolean;
   top: number;
   height: number;
   timeLabel: string;
@@ -82,7 +84,7 @@ const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
   const height = Math.max((b.durationMin / 60) * hourHeight - 2, 28);
   const end = bookingEnd(b.startsAt, b.durationMin);
   const mine = !!user && user.id === b.userId;
-  const canEdit = !!user;
+  const canManage = mine || user?.role === "admin";
   const show = u?.showName !== false;
   const name = show ? u?.name || t("reserved") : t("reserved");
   return {
@@ -90,8 +92,9 @@ const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
     startsAtIso: b.startsAt.toISOString(),
     durationMin: b.durationMin,
     label: mine ? `${name} (${t("you")})` : name,
+    dayLabel: formatFullDate(b.startsAt, locale),
     mine,
-    canEdit,
+    canManage,
     top,
     height,
     timeLabel: `${formatTime(b.startsAt, locale)} – ${formatTime(end, locale)}`,
@@ -349,7 +352,7 @@ const dayViews = days.map((day, index) => {
                         }`
                       : undefined;
 
-                  return b.canEdit ? (
+                  return (
                     <button
                       type="button"
                       class:list={["agenda-booking text-left", { mine: b.mine }]}
@@ -358,20 +361,15 @@ const dayViews = days.map((day, index) => {
                       data-id={b.id}
                       data-starts={b.startsAtIso}
                       data-duration={b.durationMin}
-                      onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'edit', id: this.dataset.id, startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration) } }))"
+                      data-label={b.label}
+                      data-time={b.timeLabel}
+                      data-day={b.dayLabel}
+                      data-manage={b.canManage ? "1" : "0"}
+                      onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'view', id: this.dataset.id, startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration), label: this.dataset.label, timeLabel: this.dataset.time, dayLabel: this.dataset.day, canManage: this.dataset.manage === '1' } }))"
                     >
                       <div class="text-xs font-semibold leading-tight">{b.timeLabel}</div>
                       <div class="truncate text-xs opacity-95">{b.label}</div>
                     </button>
-                  ) : (
-                    <div
-                      class="agenda-booking"
-                      style={bookingStyle}
-                      x-bind:style={bookingBind}
-                    >
-                      <div class="text-xs font-semibold leading-tight">{b.timeLabel}</div>
-                      <div class="truncate text-xs opacity-95">{b.label}</div>
-                    </div>
                   );
                 })}
               </div>

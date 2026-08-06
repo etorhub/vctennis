@@ -12,7 +12,7 @@ import {
   isFuture,
   isWithinBookAhead,
   isWithinOpenHours,
-  rangesOverlap
+  conflictsWithExisting
 } from "@/lib/time";
 
 async function rejectBooking(
@@ -56,14 +56,11 @@ async function assertNoOverlap(
   excludeId?: string
 ) {
   const existing = await db.select().from(Bookings);
-  for (const b of existing) {
-    if (excludeId && b.id === excludeId) continue;
-    if (rangesOverlap(startsAt, durationMin, b.startsAt, b.durationMin)) {
-      await rejectBooking(actorUserId, "overlap", "errorOverlap", "CONFLICT", {
-        bookingId: excludeId,
-        payload: { startsAt: startsAt.toISOString(), durationMin }
-      });
-    }
+  if (conflictsWithExisting(startsAt, durationMin, existing, excludeId)) {
+    await rejectBooking(actorUserId, "overlap", "errorOverlap", "CONFLICT", {
+      bookingId: excludeId,
+      payload: { startsAt: startsAt.toISOString(), durationMin }
+    });
   }
 }
 

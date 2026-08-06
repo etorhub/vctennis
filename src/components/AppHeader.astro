@@ -62,22 +62,53 @@ const { title = t("siteName"), backHref } = Astro.props;
               x-show="open"
               x-cloak
               @click.outside="open = false"
-              class="menu dropdown-content z-30 mt-1 w-52 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+              class="dropdown-content z-30 mt-1 w-52 overflow-hidden rounded-box border border-base-300 bg-base-100 py-1 shadow-lg"
               role="menu"
             >
               <li role="none">
-                <a href="/my-bookings" role="menuitem" @click="open = false">{t("myBookings")}</a>
+                <a
+                  href="/my-bookings"
+                  role="menuitem"
+                  class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-base-200"
+                  @click="open = false"
+                >
+                  <Icon pack="lucide" name="calendar" height={16} width={16} class="shrink-0 opacity-70" />
+                  {t("myBookings")}
+                </a>
               </li>
               <li role="none">
-                <a href="/profile" role="menuitem" @click="open = false">{t("profile")}</a>
+                <a
+                  href="/profile"
+                  role="menuitem"
+                  class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-base-200"
+                  @click="open = false"
+                >
+                  <Icon pack="lucide" name="user" height={16} width={16} class="shrink-0 opacity-70" />
+                  {t("profile")}
+                </a>
               </li>
               <li role="none">
-                <a href="/privacy" role="menuitem" @click="open = false">{t("privacy")}</a>
+                <a
+                  href="/privacy"
+                  role="menuitem"
+                  class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-base-200"
+                  @click="open = false"
+                >
+                  <Icon pack="lucide" name="lock" height={16} width={16} class="shrink-0 opacity-70" />
+                  {t("privacy")}
+                </a>
               </li>
-              <li class="mt-1 border-t border-base-300 pt-1" role="separator"></li>
+              <li class="my-1 h-px bg-base-300" role="separator"></li>
               <li role="none">
-                <form method="POST" action="/sign-out" class="contents">
-                  <button type="submit" role="menuitem">{t("signOut")}</button>
+                <form method="POST" action="/sign-out">
+                  <button
+                    type="submit"
+                    role="menuitem"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-normal hover:bg-base-200"
+                  >
+                    <Icon pack="lucide" name="log-out" height={16} width={16} class="shrink-0 opacity-70" />
+                    {t("signOut")}
+                  </button>
                 </form>
               </li>
             </ul>

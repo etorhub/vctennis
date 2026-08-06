@@ -19,8 +19,9 @@ export function parseThemePreference(value: unknown): ThemePreference {
 }
 
 /**
- * Server-side best guess: `system` renders light and is corrected before paint
- * by the inline script in `Layout.astro`.
+ * Server-side best guess only. `system` always renders the light daisyUI theme;
+ * the inline script in `Layout.astro` resolves the real OS preference before paint
+ * and re-applies it on View Transitions (`astro:before-swap` / `astro:after-swap`).
  */
 export function resolveTheme(preference: ThemePreference): typeof LIGHT_THEME | typeof DARK_THEME {
   return preference === "dark" ? DARK_THEME : LIGHT_THEME;

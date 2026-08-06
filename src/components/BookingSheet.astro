@@ -1,10 +1,35 @@
 ---
 import { actions } from "astro:actions";
+import { db, Bookings, and, gte, lte } from "astro:db";
 import { OPEN_HOUR, CLOSE_HOUR } from "@/lib/config";
-import { agendaDays, formatTime, slotOptionsForDay } from "@/lib/time";
+import {
+  agendaDays,
+  formatFullDate,
+  formatTime,
+  getZonedParts,
+  isWithinOpenHours,
+  slotOptionsForDay,
+  zonedDate
+} from "@/lib/time";
 
 const { t, locale, user } = Astro.locals;
 const days = agendaDays();
+const rangeStart = days[0];
+const last = days[days.length - 1];
+const lp = getZonedParts(last);
+const rangeEnd = zonedDate(lp.year, lp.month, lp.day, CLOSE_HOUR, 0);
+
+const existingRows = await db
+  .select()
+  .from(Bookings)
+  .where(and(gte(Bookings.startsAt, rangeStart), lte(Bookings.startsAt, rangeEnd)));
+
+const existing = existingRows.map((b) => ({
+  id: b.id,
+  startsAt: b.startsAt.toISOString(),
+  durationMin: b.durationMin
+}));
+
 const slotsByDay = days.map((d) => ({
   dateKey: d.toISOString(),
   label: new Intl.DateTimeFormat(locale === "ca" ? "ca-ES" : "en-GB", {
@@ -13,42 +38,157 @@ const slotsByDay = days.map((d) => ({
     month: "short",
     timeZone: "Europe/Madrid"
   }).format(d),
+  confirmLabel: formatFullDate(d, locale),
   slots: slotOptionsForDay(d).map((s) => ({
     value: s.toISOString(),
-    label: formatTime(s, locale)
+    label: formatTime(s, locale),
+    maxDuration: isWithinOpenHours(s, 60) ? 60 : 30
   }))
 }));
 
 const createAction = actions.bookings.create;
 const updateAction = actions.bookings.update;
 const deleteAction = actions.bookings.delete;
+
+const durationLabels: Record<number, string> = {
+  30: t("minutes30"),
+  60: t("minutes60")
+};
+
+const overlapDetailTemplate = t("errorOverlapDetail");
 ---
 
 <div
   id="booking-sheet"
   x-data={`{
     open: false,
+    step: 'form',
     mode: 'create',
     bookingId: '',
-    startsAt: ${JSON.stringify(slotsByDay[0]?.slots[0]?.value || "")},
+    bookingLabel: '',
+    viewDayLabel: '',
+    viewTimeLabel: '',
+    canManage: false,
+    startsAt: '',
     durationMin: 60,
     slotsByDay: ${JSON.stringify(slotsByDay)},
+    existing: ${JSON.stringify(existing)},
+    durationLabels: ${JSON.stringify(durationLabels)},
+    overlapDetailTemplate: ${JSON.stringify(overlapDetailTemplate)},
     signedIn: ${JSON.stringify(!!user)},
     labels: {
       edit: ${JSON.stringify(t("editBooking"))},
-      create: ${JSON.stringify(t("bookCourt"))}
+      create: ${JSON.stringify(t("bookCourt"))},
+      view: ${JSON.stringify(t("viewBooking"))},
+      confirm: ${JSON.stringify(t("bookingConfirmTitle"))},
+      conflict: ${JSON.stringify(t("bookingConflictTitle"))}
+    },
+    overlaps(aStart, aDur, bStart, bDur) {
+      const a0 = new Date(aStart).getTime();
+      const a1 = a0 + aDur * 60000;
+      const b0 = new Date(bStart).getTime();
+      const b1 = b0 + bDur * 60000;
+      return a0 < b1 && b0 < a1;
+    },
+    hasOverlap(slot, duration = this.durationMin) {
+      if (!slot) return true;
+      return this.existing.some(
+        (b) =>
+          b.id !== this.bookingId &&
+          this.overlaps(slot.value, duration, b.startsAt, b.durationMin)
+      );
+    },
+    fitsOpenHours(slot, duration = this.durationMin) {
+      return !!slot && duration <= slot.maxDuration;
+    },
+    findSlot(value) {
+      for (const day of this.slotsByDay) {
+        const slot = day.slots.find((s) => s.value === value);
+        if (slot) return slot;
+      }
+      return null;
+    },
+    get selectableDays() {
+      return this.slotsByDay
+        .map((day) => ({
+          ...day,
+          slots: day.slots.filter((s) => this.fitsOpenHours(s))
+        }))
+        .filter((day) => day.slots.length > 0);
+    },
+    firstSelectableStartsAt() {
+      for (const day of this.selectableDays) {
+        if (day.slots[0]) return day.slots[0].value;
+      }
+      return '';
+    },
+    ensureSelectableStart() {
+      const slot = this.findSlot(this.startsAt);
+      if (this.fitsOpenHours(slot)) return;
+      if (this.durationMin === 60 && this.fitsOpenHours(slot, 30)) {
+        this.durationMin = 30;
+        return;
+      }
+      this.startsAt = this.firstSelectableStartsAt();
+      if (this.durationMin === 60 && this.startsAt && !this.fitsOpenHours(this.findSlot(this.startsAt), 60)) {
+        this.durationMin = 30;
+      }
+    },
+    onDurationChange() {
+      this.ensureSelectableStart();
+    },
+    get selectedDayLabel() {
+      if (!this.startsAt) return '';
+      for (const day of this.slotsByDay) {
+        if (day.slots.some((s) => s.value === this.startsAt)) return day.confirmLabel;
+      }
+      return '';
+    },
+    get selectedTimeLabel() {
+      const slot = this.findSlot(this.startsAt);
+      return slot ? slot.label : '';
+    },
+    get selectedDurationLabel() {
+      return this.durationLabels[this.durationMin] || '';
+    },
+    get overlapDetail() {
+      return this.overlapDetailTemplate
+        .replaceAll('{time}', this.selectedTimeLabel || '—')
+        .replaceAll('{duration}', this.selectedDurationLabel || '—');
+    },
+    get title() {
+      if (this.mode === 'view') return this.labels.view;
+      if (this.step === 'confirm') return this.labels.confirm;
+      if (this.step === 'conflict') return this.labels.conflict;
+      return this.mode === 'edit' ? this.labels.edit : this.labels.create;
     },
     init() {
       const onOpenBookingSheet = (e) => {
         const d = e.detail || {};
-        if (!this.signedIn) {
+        if (!this.signedIn && d.mode !== 'view') {
           window.location.href = '/sign-in';
           return;
         }
         this.mode = d.mode || 'create';
         this.bookingId = d.id || '';
-        this.startsAt = d.startsAt || (this.slotsByDay[0]?.slots[0]?.value || '');
+        this.bookingLabel = d.label || '';
+        this.viewDayLabel = d.dayLabel || '';
+        this.viewTimeLabel = d.timeLabel || '';
+        this.canManage = !!d.canManage;
         this.durationMin = d.durationMin || 60;
+        this.startsAt = d.startsAt || '';
+        if (this.mode === 'view') {
+          this.step = 'view';
+        } else {
+          this.step = 'form';
+          if (this.mode === 'create') {
+            this.viewDayLabel = '';
+            this.viewTimeLabel = '';
+            this.bookingLabel = '';
+            this.canManage = false;
+          }
+          this.ensureSelectableStart();
+        }
         this.open = true;
         document.body.style.overflow = 'hidden';
       };
@@ -57,128 +197,241 @@ const deleteAction = actions.bookings.delete;
     },
     close() {
       this.open = false;
+      this.step = 'form';
+      this.mode = 'create';
       document.body.style.overflow = '';
+    },
+    goConfirm() {
+      if (!this.startsAt) return;
+      const slot = this.findSlot(this.startsAt);
+      if (!this.fitsOpenHours(slot) || this.hasOverlap(slot)) {
+        this.step = 'conflict';
+        return;
+      }
+      this.step = 'confirm';
+    },
+    goForm() {
+      this.step = 'form';
+    },
+    goEdit() {
+      if (!this.signedIn) {
+        window.location.href = '/sign-in';
+        return;
+      }
+      this.mode = 'edit';
+      this.step = 'form';
+      this.ensureSelectableStart();
+    },
+    goView() {
+      this.mode = 'view';
+      this.step = 'view';
     }
   }`}
   x-cloak
 >
   <div class="sheet-backdrop" x-show="open" x-transition.opacity @click="close()"></div>
 
-  <div
-    class="bottom-sheet p-4"
-    x-show="open"
-    x-transition:enter="transition ease-out duration-200"
-    x-transition:enter-start="translate-y-full"
-    x-transition:enter-end="translate-y-0"
-    x-transition:leave="transition ease-in duration-150"
-    x-transition:leave-start="translate-y-0"
-    x-transition:leave-end="translate-y-full"
-    @keydown.escape.window="open && close()"
-  >
-    <div class="mx-auto mb-3 h-1.5 w-10 rounded-full bg-base-300"></div>
-    <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-lg font-semibold" x-text="mode === 'edit' ? labels.edit : labels.create"></h2>
-      <button type="button" class="btn btn-ghost btn-sm btn-circle" @click="close()" aria-label={t("close")}
-        >✕</button
+  <div class="sheet-layer" @keydown.escape.window="open && close()">
+    <div
+      class="bottom-sheet p-4"
+      x-show="open"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="translate-y-full lg:translate-y-4 lg:opacity-0"
+      x-transition:enter-end="translate-y-0 lg:opacity-100"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="translate-y-0 lg:opacity-100"
+      x-transition:leave-end="translate-y-full lg:translate-y-4 lg:opacity-0"
+      @click.stop
+    >
+      <div class="mx-auto mb-3 h-1.5 w-10 rounded-full bg-base-300"></div>
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-semibold" x-text="title"></h2>
+        <button type="button" class="btn btn-ghost btn-sm btn-circle" @click="close()" aria-label={t("close")}
+          >✕</button
+        >
+      </div>
+
+      {/* View existing booking */}
+      <div class="flex flex-col gap-4" x-show="mode === 'view' && step === 'view'" x-cloak>
+        <div class="rounded-xl border border-base-300 bg-base-200/60 px-4 py-4 text-center">
+          <p class="text-base font-semibold" x-text="viewDayLabel"></p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums" x-text="viewTimeLabel"></p>
+          <p class="mt-2 text-sm text-base-content/70" x-text="selectedDurationLabel"></p>
+          <p class="mt-3 text-sm text-base-content/60">{t("bookedBy")}</p>
+          <p class="font-medium" x-text="bookingLabel"></p>
+        </div>
+
+        <div class="flex flex-col gap-2" x-show="canManage" x-cloak>
+          <button type="button" class="btn btn-primary w-full" @click="goEdit()">{t("editBooking")}</button>
+          <form
+            method="POST"
+            action={deleteAction}
+            onsubmit={`return confirm(${JSON.stringify(t("confirmCancelBooking"))})`}
+          >
+            <input type="hidden" name="id" :value="bookingId" />
+            <button type="submit" class="btn btn-outline btn-error w-full">{t("cancelBooking")}</button>
+          </form>
+        </div>
+
+        <button type="button" class="btn btn-ghost w-full" @click="close()">{t("close")}</button>
+      </div>
+
+      {/* Step 1: pick slot (create) */}
+      <div class="flex flex-col gap-4" x-show="mode === 'create' && step === 'form'">
+        <p class="text-sm font-medium text-base-content" x-show="selectedDayLabel" x-text="selectedDayLabel"></p>
+
+        <label class="form-control w-full">
+          <div class="label py-1"><span class="label-text font-medium">{t("startTime")}</span></div>
+          <select class="select select-bordered w-full" x-model="startsAt" required>
+            <template x-for="day in selectableDays" :key="day.dateKey">
+              <optgroup :label="day.label">
+                <template x-for="slot in day.slots" :key="slot.value">
+                  <option :value="slot.value" x-text="slot.label"></option>
+                </template>
+              </optgroup>
+            </template>
+          </select>
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label py-1"><span class="label-text font-medium">{t("duration")}</span></div>
+          <select
+            class="select select-bordered w-full"
+            x-model.number="durationMin"
+            @change="onDurationChange()"
+            required
+          >
+            <option value="30">{t("minutes30")}</option>
+            <option value="60">{t("minutes60")}</option>
+          </select>
+        </label>
+
+        <p class="text-sm text-base-content/60">{t("openHours", { open: OPEN_HOUR, close: CLOSE_HOUR })}</p>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="btn btn-ghost flex-1" @click="close()">{t("cancel")}</button>
+          <button type="button" class="btn btn-primary flex-1" @click="goConfirm()" :disabled="!startsAt"
+            >{t("continue")}</button
+          >
+        </div>
+      </div>
+
+      {/* Step 1: pick slot (edit) */}
+      <div class="flex flex-col gap-4" x-show="mode === 'edit' && step === 'form'" x-cloak>
+        <p class="text-sm font-medium text-base-content" x-show="selectedDayLabel" x-text="selectedDayLabel"></p>
+
+        <label class="form-control w-full">
+          <div class="label py-1"><span class="label-text font-medium">{t("startTime")}</span></div>
+          <select class="select select-bordered w-full" x-model="startsAt" required>
+            <template x-for="day in selectableDays" :key="day.dateKey">
+              <optgroup :label="day.label">
+                <template x-for="slot in day.slots" :key="slot.value">
+                  <option :value="slot.value" x-text="slot.label"></option>
+                </template>
+              </optgroup>
+            </template>
+          </select>
+        </label>
+
+        <label class="form-control w-full">
+          <div class="label py-1"><span class="label-text font-medium">{t("duration")}</span></div>
+          <select
+            class="select select-bordered w-full"
+            x-model.number="durationMin"
+            @change="onDurationChange()"
+            required
+          >
+            <option value="30">{t("minutes30")}</option>
+            <option value="60">{t("minutes60")}</option>
+          </select>
+        </label>
+
+        <div class="flex gap-2 pt-2">
+          <button
+            type="button"
+            class="btn btn-ghost flex-1"
+            @click="viewDayLabel ? goView() : close()"
+          >
+            <span x-show="viewDayLabel" x-cloak>{t("back")}</span>
+            <span x-show="!viewDayLabel">{t("cancel")}</span>
+          </button>
+          <button type="button" class="btn btn-primary flex-1" @click="goConfirm()" :disabled="!startsAt"
+            >{t("continue")}</button
+          >
+        </div>
+      </div>
+
+      {/* Conflict (create + edit) — replaces confirmation when the slot overlaps */}
+      <div class="flex flex-col gap-4" x-show="step === 'conflict'" x-cloak>
+        <div class="rounded-xl border border-error/40 bg-error/10 px-4 py-4 text-center">
+          <p class="text-base font-semibold text-error">{t("errorOverlap")}</p>
+          <p class="mt-2 text-sm text-base-content/80" x-text="overlapDetail"></p>
+          <p class="mt-3 text-sm font-medium text-base-content" x-text="selectedDayLabel"></p>
+          <p class="text-lg font-semibold tabular-nums" x-text="selectedTimeLabel"></p>
+          <p class="text-sm text-base-content/70" x-text="selectedDurationLabel"></p>
+        </div>
+
+        <button type="button" class="btn btn-primary w-full" @click="goForm()">{t("back")}</button>
+      </div>
+
+      {/* Step 2: confirm (create) */}
+      <form
+        method="POST"
+        action={createAction}
+        class="flex flex-col gap-4"
+        x-show="mode === 'create' && step === 'confirm'"
+        x-cloak
       >
+        <input type="hidden" name="startsAt" :value="startsAt" />
+        <input type="hidden" name="durationMin" :value="durationMin" />
+
+        <div class="rounded-xl border border-base-300 bg-base-200/60 px-4 py-4 text-center">
+          <p class="text-base font-semibold" x-text="selectedDayLabel"></p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums" x-text="selectedTimeLabel"></p>
+          <p class="mt-2 text-sm text-base-content/70" x-text="selectedDurationLabel"></p>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="btn btn-ghost flex-1" @click="goForm()">{t("back")}</button>
+          <button type="submit" class="btn btn-primary flex-1">{t("save")}</button>
+        </div>
+      </form>
+
+      {/* Step 2: confirm (edit) */}
+      <form
+        method="POST"
+        action={updateAction}
+        class="flex flex-col gap-4"
+        x-show="mode === 'edit' && step === 'confirm'"
+        x-cloak
+      >
+        <input type="hidden" name="id" :value="bookingId" />
+        <input type="hidden" name="startsAt" :value="startsAt" />
+        <input type="hidden" name="durationMin" :value="durationMin" />
+
+        <div class="rounded-xl border border-base-300 bg-base-200/60 px-4 py-4 text-center">
+          <p class="text-base font-semibold" x-text="selectedDayLabel"></p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums" x-text="selectedTimeLabel"></p>
+          <p class="mt-2 text-sm text-base-content/70" x-text="selectedDurationLabel"></p>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="btn btn-ghost flex-1" @click="goForm()">{t("back")}</button>
+          <button type="submit" class="btn btn-primary flex-1">{t("save")}</button>
+        </div>
+      </form>
+
+      <form
+        method="POST"
+        action={deleteAction}
+        class="mt-3"
+        x-show="mode === 'edit' && step === 'form'"
+        x-cloak
+        onsubmit={`return confirm(${JSON.stringify(t("confirmCancelBooking"))})`}
+      >
+        <input type="hidden" name="id" :value="bookingId" />
+        <button type="submit" class="btn btn-outline btn-error w-full">{t("cancelBooking")}</button>
+      </form>
     </div>
-
-    {/* Create form */}
-    <form
-      method="POST"
-      action={createAction}
-      class="flex flex-col gap-4"
-      x-show="mode === 'create'"
-    >
-      <label class="form-control w-full">
-        <div class="label py-1"><span class="label-text font-medium">{t("startTime")}</span></div>
-        <select class="select select-bordered w-full" name="startsAt" x-model="startsAt" required>
-          {
-            slotsByDay.map((day) => (
-              <optgroup label={day.label}>
-                {day.slots.map((slot) => (
-                  <option value={slot.value}>{slot.label}</option>
-                ))}
-              </optgroup>
-            ))
-          }
-        </select>
-      </label>
-
-      <label class="form-control w-full">
-        <div class="label py-1"><span class="label-text font-medium">{t("duration")}</span></div>
-        <select
-          class="select select-bordered w-full"
-          name="durationMin"
-          x-model.number="durationMin"
-          required
-        >
-          <option value="30">{t("minutes30")}</option>
-          <option value="60">{t("minutes60")}</option>
-        </select>
-      </label>
-
-      <p class="text-sm text-base-content/60">{t("openHours", { open: OPEN_HOUR, close: CLOSE_HOUR })}</p>
-
-      <div class="flex gap-2 pt-2">
-        <button type="button" class="btn btn-ghost flex-1" @click="close()">{t("cancel")}</button>
-        <button type="submit" class="btn btn-primary flex-1">{t("save")}</button>
-      </div>
-    </form>
-
-    {/* Edit form */}
-    <form
-      method="POST"
-      action={updateAction}
-      class="flex flex-col gap-4"
-      x-show="mode === 'edit'"
-      x-cloak
-    >
-      <input type="hidden" name="id" :value="bookingId" />
-      <label class="form-control w-full">
-        <div class="label py-1"><span class="label-text font-medium">{t("startTime")}</span></div>
-        <select class="select select-bordered w-full" name="startsAt" x-model="startsAt" required>
-          {
-            slotsByDay.map((day) => (
-              <optgroup label={day.label}>
-                {day.slots.map((slot) => (
-                  <option value={slot.value}>{slot.label}</option>
-                ))}
-              </optgroup>
-            ))
-          }
-        </select>
-      </label>
-
-      <label class="form-control w-full">
-        <div class="label py-1"><span class="label-text font-medium">{t("duration")}</span></div>
-        <select
-          class="select select-bordered w-full"
-          name="durationMin"
-          x-model.number="durationMin"
-          required
-        >
-          <option value="30">{t("minutes30")}</option>
-          <option value="60">{t("minutes60")}</option>
-        </select>
-      </label>
-
-      <div class="flex gap-2 pt-2">
-        <button type="button" class="btn btn-ghost flex-1" @click="close()">{t("cancel")}</button>
-        <button type="submit" class="btn btn-primary flex-1">{t("save")}</button>
-      </div>
-    </form>
-
-    <form
-      method="POST"
-      action={deleteAction}
-      class="mt-3"
-      x-show="mode === 'edit'"
-      x-cloak
-      onsubmit={`return confirm(${JSON.stringify(t("confirmCancelBooking"))})`}
-    >
-      <input type="hidden" name="id" :value="bookingId" />
-      <button type="submit" class="btn btn-outline btn-error w-full">{t("cancelBooking")}</button>
-    </form>
   </div>
 </div>

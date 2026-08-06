@@ -7,7 +7,14 @@ import type { Locale, TFunction } from "./lib/i18n";
 declare global {
   interface Window {
     Alpine: import("alpinejs").Alpine;
-    /** Set by the inline theme script in `Layout.astro` (live preview in /profile). */
+    /** Persistent theme controller set by the inline script in `Layout.astro`. */
+    __vcTheme?: {
+      preference: import("./lib/theme").ThemePreference;
+      query: MediaQueryList | null;
+      listening: boolean;
+      routed: boolean;
+    };
+    /** Live preview in /profile; also used after View Transitions re-init. */
     applyThemePreference?: (preference: import("./lib/theme").ThemePreference) => void;
   }
 

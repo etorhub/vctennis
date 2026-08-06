@@ -56,29 +56,70 @@ const fullTitle = title === SITE_NAME || title === t("siteName") ? title : `${ti
       }}
     >
       (function () {
-        var preference = themePreference;
-        var query = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+        var state = window.__vcTheme;
+        if (!state) {
+          state = window.__vcTheme = {
+            preference: "system",
+            query: null,
+            listening: false,
+            routed: false
+          };
+        }
 
-        function apply() {
-          var dark = preference === "dark" || (preference !== "light" && !!(query && query.matches));
-          document.documentElement.setAttribute("data-theme", dark ? darkTheme : lightTheme);
-          var meta = document.querySelector('meta[name="theme-color"]');
+        // Fresh preference from this page render (DB / default).
+        state.preference = themePreference === "light" || themePreference === "dark" || themePreference === "system"
+          ? themePreference
+          : "system";
+
+        if (!state.query && window.matchMedia) {
+          state.query = window.matchMedia("(prefers-color-scheme: dark)");
+        }
+
+        function isDark() {
+          if (state.preference === "dark") return true;
+          if (state.preference === "light") return false;
+          // "system": trust the OS media query only.
+          return !!(state.query && state.query.matches);
+        }
+
+        function apply(doc) {
+          doc = doc || document;
+          var dark = isDark();
+          doc.documentElement.setAttribute("data-theme", dark ? darkTheme : lightTheme);
+          var meta = doc.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute("content", dark ? darkThemeColor : lightThemeColor);
         }
 
-        apply();
+        apply(document);
 
-        // Follow the OS while the page is open (only matters for "system").
-        if (query && query.addEventListener) {
-          query.addEventListener("change", function () {
-            if (preference === "system") apply();
+        // One OS listener for the whole SPA session (View Transitions re-run this script).
+        if (state.query && !state.listening) {
+          state.listening = true;
+          var onSchemeChange = function () {
+            if (state.preference === "system") apply(document);
+          };
+          if (typeof state.query.addEventListener === "function") {
+            state.query.addEventListener("change", onSchemeChange);
+          } else if (typeof state.query.addListener === "function") {
+            state.query.addListener(onSchemeChange);
+          }
+        }
+
+        // ClientRouter swaps <html> attrs from SSR (system → always light). Re-apply.
+        if (!state.routed) {
+          state.routed = true;
+          document.addEventListener("astro:before-swap", function (ev) {
+            apply(ev.newDocument);
+          });
+          document.addEventListener("astro:after-swap", function () {
+            apply(document);
           });
         }
 
-        // Live preview hook for the appearance picker in /profile.
         window.applyThemePreference = function (next) {
-          preference = next;
-          apply();
+          state.preference =
+            next === "light" || next === "dark" || next === "system" ? next : "system";
+          apply(document);
         };
       })();
     </script>

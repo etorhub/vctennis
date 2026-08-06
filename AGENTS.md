@@ -19,7 +19,7 @@ All constants live in [`src/lib/config.ts`](src/lib/config.ts):
 | Constant | Default | Meaning |
 |---|---|---|
 | `OPEN_HOUR` / `CLOSE_HOUR` | 10 / 21 | Court hours (Europe/Madrid) |
-| `BOOK_AHEAD_DAYS` | 3 | Agenda window: today + 2; book within that window |
+| `BOOK_AHEAD_DAYS` | 3 | Agenda window length; starts today, or tomorrow once no bookable slots remain today |
 | `MAX_ACTIVE_BOOKINGS` | 1 | Max future bookings per user (one active booking at a time) |
 | `SLOT_MINUTES` | 30 | Starts on :00 / :30 |
 | `ALLOWED_DURATIONS` | 30, 60 | Minutes |
@@ -61,7 +61,7 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 
 | Path | Access | Purpose |
 |---|---|---|
-| `/` | Public | Day agenda (today + 2, one day at a time) |
+| `/` | Public | Day agenda (`BOOK_AHEAD_DAYS`, one day at a time; skips today after last slot) |
 | `/rules` | Public | Hours, booking rules, etiquette, access |
 | `/sign-in` | Public | Sign in / sign up |
 | `/sign-out` | Auth | Sign out |

@@ -102,17 +102,29 @@ textarea {
 }
 
 .bottom-sheet {
-  @apply fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-base-100 shadow-2xl border-t border-base-300;
+  @apply w-full rounded-t-2xl border-t border-base-300 bg-base-100 shadow-2xl;
   padding-bottom: calc(1rem + var(--safe-bottom));
   max-height: 85vh;
+  overflow-y: auto;
 }
 
-/* Center a capped sheet on larger viewports without fighting slide transitions. */
-@media (min-width: 768px) {
+.sheet-layer {
+  @apply fixed inset-0 z-50 flex items-end justify-center pointer-events-none;
+}
+
+.sheet-layer .bottom-sheet {
+  @apply pointer-events-auto;
+}
+
+/* Desktop: centered dialog instead of bottom sheet */
+@media (min-width: 1024px) {
+  .sheet-layer {
+    @apply items-center p-4;
+  }
+
   .bottom-sheet {
-    inset-inline: max(1rem, calc(50% - 14rem));
-    width: auto;
-    max-width: 28rem;
+    @apply max-w-md rounded-2xl border border-base-300;
+    padding-bottom: 1rem;
   }
 }
 
