@@ -15,6 +15,10 @@ export default defineConfig({
   ],
   output: "server",
   adapter: netlify(),
+  security: {
+    // Trust the public site host when Netlify forwards X-Forwarded-* (cron/self-POSTs).
+    allowedDomains: [{ hostname: "tennisvinyacanadell.cc", protocol: "https" }]
+  },
   prefetch: {
     defaultStrategy: "hover",
     prefetchAll: true

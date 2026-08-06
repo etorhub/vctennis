@@ -91,6 +91,8 @@ Leave Grafana vars unset to skip shipping (Turso `Events` still records everythi
 
 A Netlify scheduled function (`health-probe`, every 5 minutes) hits `/`, `/sign-in`, and `/rules` and ships `vctennis_probe_*` metrics when Grafana env is set.
 
+**If Grafana dashboards stay empty:** Explore → Prometheus for `vctennis_probe_success` / `vctennis_events`, or Loki `{service_name="vctennis"}`. Empty Explore means Netlify does not have `GRAFANA_CLOUD_TOKEN` (and related vars) — set them in Netlify site env and redeploy. Shipping is a silent no-op without those vars; there is no multi-hour delay.
+
 ### Email (optional, off by default)
 
 Emails (verification, password reset, booking confirmation/reminder) are gated behind `EMAILS_ENABLED`. Leave it `false` (the default) to skip all email sending — registration then activates accounts immediately, with no verification step, and "Forgot password" is hidden since it can't work without email.
