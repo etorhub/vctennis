@@ -54,7 +54,8 @@ const OPTIONAL_VARS = new Set([
   "GRAFANA_LOKI_URL",
   "GRAFANA_LOKI_USER",
   "GRAFANA_PROM_REMOTE_WRITE_URL",
-  "GRAFANA_PROM_USER"
+  "GRAFANA_PROM_USER",
+  "HEALTH_PROBE_BASE_URL"
 ]);
 
 // Resend creds are only required when EMAILS_ENABLED="true" - otherwise all email sending is skipped.
