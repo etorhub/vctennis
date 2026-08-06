@@ -1,7 +1,19 @@
 import { Resend } from "resend";
 
+function normalizeEnvFlag(value: unknown): string {
+  if (typeof value !== "string") return "";
+  // Host UIs (e.g. Netlify) store values literally — strip quotes copied from .env examples.
+  return value.trim().replace(/^['"]|['"]$/g, "");
+}
+
+/** True when EMAILS_ENABLED is true (ignores surrounding quotes/whitespace from .env or host UIs). */
 export function isEmailEnabled(): boolean {
-  return import.meta.env.EMAILS_ENABLED === "true";
+  // Prefer process.env so Netlify runtime updates apply even when a build cache
+  // still has an older import.meta.env inlining for the same commit.
+  const raw =
+    (typeof process !== "undefined" ? process.env.EMAILS_ENABLED : undefined) ??
+    import.meta.env.EMAILS_ENABLED;
+  return normalizeEnvFlag(raw) === "true";
 }
 
 export class EmailSendError extends Error {
@@ -61,7 +73,7 @@ export interface SendEmailOptions {
 
 export async function sendEmail(opts: SendEmailOptions): Promise<{ id: string } | undefined> {
   if (!isEmailEnabled()) {
-    console.log(`Email sending disabled (EMAILS_ENABLED != "true"); skipping email to ${opts.to}`);
+    console.log(`Email sending disabled (EMAILS_ENABLED is not true); skipping email to ${opts.to}`);
     return;
   }
 
