@@ -9,6 +9,7 @@ import { siteUrl } from "./emailLayout";
 import { emitEvent } from "./events";
 import { createT, type Locale } from "./i18n";
 import { DEFAULT_THEME_PREFERENCE, type ThemePreference } from "./theme";
+import { refreshRegisteredUsersMetric } from "./userMetrics";
 
 function userLocale(user: { locale?: string }): Locale {
   return user.locale === "ca" || user.locale === "en" ? user.locale : pendingSignupLocale;
@@ -146,6 +147,7 @@ export const auth = betterAuth({
             subjectUserId: user.id,
             payload: { email: user.email }
           });
+          await refreshRegisteredUsersMetric();
         }
       }
     },

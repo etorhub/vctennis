@@ -1,5 +1,6 @@
 import { Account, Bookings, db, eq, Session, User } from "astro:db";
 import { emitEvent, redactEventEmails } from "@/lib/events";
+import { refreshRegisteredUsersMetric } from "@/lib/userMetrics";
 
 type DeleteUserMeta = {
   actorUserId: string;
@@ -25,4 +26,5 @@ export async function deleteUserCascade(userId: string, meta?: DeleteUserMeta) {
   await db.delete(Session).where(eq(Session.userId, userId));
   await db.delete(Account).where(eq(Account.userId, userId));
   await db.delete(User).where(eq(User.id, userId));
+  await refreshRegisteredUsersMetric();
 }
