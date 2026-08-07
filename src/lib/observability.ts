@@ -184,6 +184,24 @@ export type ProbeResult = {
   instance: string;
 };
 
+/**
+ * Best-effort gauge of current registered users (User row count).
+ * Dashboard panels use lastNotNull on this series — not count_over_time.
+ * Never throws to the caller.
+ */
+export async function shipRegisteredUsers(count: number): Promise<void> {
+  try {
+    await pushPrometheusSamples([
+      {
+        name: "vctennis_users_registered",
+        value: count
+      }
+    ]);
+  } catch (err) {
+    console.error("Failed to ship registered users metric:", err);
+  }
+}
+
 /** Best-effort ship of an HTTP health probe result. Never throws. */
 export async function shipProbeObservability(result: ProbeResult): Promise<void> {
   const path = result.path || "/";

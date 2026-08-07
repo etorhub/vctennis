@@ -178,6 +178,27 @@ export default async () => {
     );
   }
   await Promise.all(results.map((r) => ship(r, base)));
+
+  // Registered-user gauge needs Turso via Astro SSR (this function has no DB).
+  const secret = env("CRON_SECRET");
+  if (secret) {
+    try {
+      const res = await fetch(`${base}/api/cron/metrics`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${secret}`,
+          "content-type": "application/json",
+          origin: base
+        },
+        body: "{}"
+      });
+      if (!res.ok) {
+        console.error(`health-probe: metrics sweep failed (${res.status})`, await res.text());
+      }
+    } catch (err) {
+      console.error("health-probe: metrics sweep error", err);
+    }
+  }
 };
 
 export const config: Config = {

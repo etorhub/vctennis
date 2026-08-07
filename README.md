@@ -70,7 +70,7 @@ Copy [`.env.example`](.env.example). Required:
 | `BETTER_AUTH_URL` | Public app URL (`http://localhost:4321` locally) |
 | `ASTRO_DB_REMOTE_URL` | Turso URL (remote / production) |
 | `ASTRO_DB_APP_TOKEN` | Turso token (remote / production) |
-| `CRON_SECRET` | Bearer for `/api/cron/send-reminders` and `/api/cron/health-probe` |
+| `CRON_SECRET` | Bearer for `/api/cron/send-reminders`, `/api/cron/health-probe`, and `/api/cron/metrics` |
 
 `RESEND_API_KEY` is only required when `EMAILS_ENABLED=true`.
 
@@ -89,7 +89,7 @@ Domain events dual-write to Grafana Cloud Loki + Prometheus when configured. Cre
 
 Leave Grafana vars unset to skip shipping (Turso `Events` still records everything). Dashboards: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](ops/grafana/dashboards/prod-health.json).
 
-A Netlify scheduled function (`health-probe`, every 5 minutes) hits `/`, `/sign-in`, and `/rules` and ships `vctennis_probe_*` metrics when Grafana env is set.
+A Netlify scheduled function (`health-probe`, every 5 minutes) hits `/`, `/sign-in`, and `/rules` and ships `vctennis_probe_*` metrics when Grafana env is set. It also POSTs `/api/cron/metrics` to refresh the `vctennis_users_registered` gauge (User table count).
 
 **If Grafana dashboards stay empty:** Explore → Prometheus for `vctennis_probe_success` / `vctennis_events`, or Loki `{service_name="vctennis"}`. Empty Explore means Netlify does not have `GRAFANA_CLOUD_TOKEN` (and related vars) — set them in Netlify site env and redeploy. Shipping is a silent no-op without those vars; there is no multi-hour delay.
 

@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -19,321 +22,641 @@
   "links": [],
   "panels": [
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "blue", "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
             ]
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
-      "id": 1,
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 11,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Registered users",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
+          "expr": "vctennis_users_registered{service_name=\"vctennis\"}",
+          "instant": true,
+          "legendFormat": "users",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 4,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto"
       },
       "title": "Events in range",
       "type": "stat",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
           "expr": "sum(count_over_time(vctennis_events{service_name=\"vctennis\"}[$__range]))",
+          "instant": true,
           "legendFormat": "events",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
             ]
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 9,
+        "y": 0
+      },
       "id": 2,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto"
       },
       "title": "Bookings created",
       "type": "stat",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
           "expr": "sum(count_over_time(vctennis_events{service_name=\"vctennis\",type=\"booking.created\"}[$__range]))",
+          "instant": true,
           "legendFormat": "created",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 1 },
-              { "color": "red", "value": 10 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
             ]
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 14,
+        "y": 0
+      },
       "id": 3,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto"
       },
       "title": "Booking rejections",
       "type": "stat",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
           "expr": "sum(count_over_time(vctennis_events{service_name=\"vctennis\",type=\"booking.rejected\"}[$__range]))",
+          "instant": true,
           "legendFormat": "rejected",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
             ]
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 0
+      },
       "id": 4,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "textMode": "auto"
       },
       "title": "Reminder failures",
       "type": "stat",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
           "expr": "sum(count_over_time(vctennis_events{service_name=\"vctennis\",type=\"reminder.failed\"}[$__range]))",
+          "instant": true,
           "legendFormat": "failed",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "description": "Event counts per aggregate window (dashboard Aggregate control). Default 1h.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "lineWidth": 2,
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
             "showPoints": "never",
-            "stacking": { "mode": "normal", "group": "A" }
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 4 },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 4
+      },
       "id": 5,
       "options": {
-        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
-      "title": "Event rate by type",
+      "title": "Events by type",
       "type": "timeseries",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
-          "expr": "sum by (type) (count_over_time(vctennis_events{service_name=\"vctennis\"}[$__interval]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
+          "expr": "sum by (type) (count_over_time(vctennis_events{service_name=\"vctennis\"}[$bucket]))",
+          "interval": "$bucket",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
           "mappings": [],
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 4 },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 4
+      },
       "id": 6,
       "options": {
-        "legend": { "displayMode": "table", "placement": "right", "values": ["value"] },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
         "pieType": "pie",
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
+      "description": "Empty until a booking.rejected event is shipped (overlap, max bookings, past, etc.).",
       "title": "Booking rejections by reason",
       "type": "piechart",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
           "expr": "sum by (reason) (count_over_time(vctennis_events{service_name=\"vctennis\",type=\"booking.rejected\"}[$__range]))",
+          "instant": true,
           "legendFormat": "{{reason}}",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "description": "Daily booking.created counts. Uses a fixed 1d window/step (not $__interval) so long ranges do not hit Grafana's max resolution.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "drawStyle": "bars",
             "fillOpacity": 80,
             "lineWidth": 1,
             "showPoints": "never",
-            "stacking": { "mode": "normal", "group": "A" }
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
       "id": 7,
+      "maxDataPoints": 90,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "title": "Bookings created (daily)",
       "type": "timeseries",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
           "expr": "sum(count_over_time(vctennis_events{service_name=\"vctennis\",type=\"booking.created\"}[1d]))",
+          "interval": "1d",
           "legendFormat": "booking.created",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "description": "user.signed_up / verified / signed_in counts per Aggregate bucket. Empty until those events are shipped after Grafana credentials work.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2,
-            "showPoints": "auto"
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
       "id": 8,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "title": "Auth funnel",
       "type": "timeseries",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
-          "expr": "sum by (type) (count_over_time(vctennis_events{service_name=\"vctennis\",type=~\"user.signed_up|user.verified|user.signed_in\"}[$__interval]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
+          "expr": "sum by (type) (count_over_time(vctennis_events{service_name=\"vctennis\",type=~\"user.signed_up|user.verified|user.signed_in\"}[$bucket]))",
+          "interval": "$bucket",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "description": "reminder.sent / reminder.failed per Aggregate bucket. Empty until the reminders cron emits those events.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 2,
-            "showPoints": "auto"
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
       "id": 9,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
       "title": "Reminders sent vs failed",
       "type": "timeseries",
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
-          "expr": "sum by (type) (count_over_time(vctennis_events{service_name=\"vctennis\",type=~\"reminder.sent|reminder.failed\"}[$__interval]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
+          "expr": "sum by (type) (count_over_time(vctennis_events{service_name=\"vctennis\",type=~\"reminder.sent|reminder.failed\"}[$bucket]))",
+          "interval": "$bucket",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "loki", "uid": "grafanacloud-logs" },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 29 },
+      "datasource": {
+        "type": "loki",
+        "uid": "grafanacloud-logs"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
       "id": 10,
       "options": {
         "dedupStrategy": "none",
@@ -348,17 +671,70 @@
       "type": "logs",
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "grafanacloud-logs" },
-          "expr": "{service_name=\"vctennis\"}",
+          "datasource": {
+            "type": "loki",
+            "uid": "grafanacloud-logs"
+          },
+          "expr": "{service_name=\"vctennis\", event_type!=\"probe.http\"}",
           "refId": "A"
         }
       ]
     }
   ],
   "schemaVersion": 39,
-  "tags": ["vctennis", "events"],
-  "templating": { "list": [] },
-  "time": { "from": "now-7d", "to": "now" },
+  "tags": [
+    "vctennis",
+    "events"
+  ],
+  "templating": {
+    "list": [
+      {
+        "auto": false,
+        "current": {
+          "selected": true,
+          "text": "1h",
+          "value": "1h"
+        },
+        "hide": 0,
+        "label": "Aggregate",
+        "name": "bucket",
+        "options": [
+          {
+            "selected": false,
+            "text": "5m",
+            "value": "5m"
+          },
+          {
+            "selected": false,
+            "text": "15m",
+            "value": "15m"
+          },
+          {
+            "selected": true,
+            "text": "1h",
+            "value": "1h"
+          },
+          {
+            "selected": false,
+            "text": "6h",
+            "value": "6h"
+          },
+          {
+            "selected": false,
+            "text": "1d",
+            "value": "1d"
+          }
+        ],
+        "query": "5m,15m,1h,6h,1d",
+        "refresh": 2,
+        "type": "interval"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "Europe/Madrid",
   "title": "Domain events",

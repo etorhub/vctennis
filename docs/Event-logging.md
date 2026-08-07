@@ -12,7 +12,7 @@ Append-only **domain events** for ops and Grafana Cloud dashboards. There is no 
 | Emit helper | [`src/lib/events.ts`](../src/lib/events.ts) — `emitEvent`, `redactEventEmails` |
 | Grafana ship | [`src/lib/observability.ts`](../src/lib/observability.ts) — Loki push + Prometheus remote write |
 | Dashboard | [`ops/grafana/dashboards/domain-events.json`](../ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](../ops/grafana/dashboards/prod-health.json) |
-| Health probe | [`src/lib/healthProbe.ts`](../src/lib/healthProbe.ts) + [`/api/cron/health-probe`](../src/pages/api/cron/health-probe.ts) (Netlify every 5m) |
+| Health probe | [`src/lib/healthProbe.ts`](../src/lib/healthProbe.ts) + Netlify [`health-probe`](../netlify/functions/health-probe.mts) (HTTP probes) + [`/api/cron/metrics`](../src/pages/api/cron/metrics.ts) (user gauge) |
 | Instrumentation | Astro actions (`bookings`, `admin`, `auth`), Better Auth hooks in `src/lib/auth.ts`, reminder cron |
 
 ## Schema
@@ -115,8 +115,8 @@ ORDER BY n DESC;
 When `GRAFANA_CLOUD_TOKEN` and related `GRAFANA_*` vars are set (see [`.env.example`](../.env.example)):
 
 - **Loki** — structured log line per event; labels `service_name=vctennis`, `event_type`, `reason`. Body omits email/name/IP.
-- **Prometheus** — sample `vctennis_events{type,reason,source}=1` per event. Panels use `count_over_time` (not `rate`/`increase`) because serverless has no cumulative counter.
-- **Prod health** — Netlify cron probes `/`, `/sign-in`, `/rules` (same as deploy smoke) and writes `vctennis_probe_success`, `vctennis_probe_duration_seconds`, `vctennis_probe_http_status_code` plus Loki `event_type=probe.http`. Optional `HEALTH_PROBE_BASE_URL` overrides the target (defaults to deploy `URL` / `BETTER_AUTH_URL`).
+- **Prometheus** — sample `vctennis_events{type,reason,source}=1` per event. Panels use `count_over_time` (not `rate`/`increase`) because serverless has no cumulative counter. Stat / pie totals must be **Instant** queries with reduce `lastNotNull` — never `sum` over a range sparkline, which multiplies the true count by the number of steps. Gauge `vctennis_users_registered` is the current `User` row count (refreshed every 5m via `/api/cron/metrics`, and on signup/delete).
+- **Prod health** — Netlify cron probes `/`, `/sign-in`, `/rules` (same as deploy smoke) and writes `vctennis_probe_success`, `vctennis_probe_duration_seconds`, `vctennis_probe_http_status_code` plus Loki `event_type=probe.http`. The same job then POSTs `/api/cron/metrics` (Bearer `CRON_SECRET`) to refresh `vctennis_users_registered`. Optional `HEALTH_PROBE_BASE_URL` overrides the target (defaults to deploy `URL` / `BETTER_AUTH_URL`).
 
 Provisioning: import or sync JSON under [`ops/grafana/dashboards/`](../ops/grafana/dashboards/). Datasource UIDs assume Grafana Cloud defaults `grafanacloud-prom` / `grafanacloud-logs`.
 
