@@ -22,14 +22,14 @@ Public day agenda, email/password accounts with verification, and admin tools �
 - One-court agenda (`BOOK_AHEAD_DAYS`; skips today once no bookable slots remain); one day at a time on mobile, all days side by side on desktop
 - Book 30 or 60 minutes on `:00` / `:30` slots (10:00–21:00)
 - One active future booking per member at a time; overlaps hard-blocked
-- Open signup with email verification and password reset (Resend)
+- Open signup; email verification and password reset via Resend when `EMAILS_ENABLED=true` (off by default)
 - Members give their apartment at signup — block (1–4) and apartment number (1–12 in block 1, 1–9 in blocks 2–4); editable on `/profile` and listed on `/admin/users`
 - Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion on `/profile`; stored-data docs on `/privacy`
 - My bookings (`/my-bookings`): upcoming (edit/cancel) and past history
 - Light / dark / system theme, chosen on `/profile` (stored on the account; defaults to the device setting)
 - Signed-in header: user menu with bookings, profile, privacy, and sign out
 - Roles: `member` / `admin` (first admin via `/setup`)
-- Installable PWA (no offline booking data)
+- Installable PWA with dismissible install banner (no offline booking data)
 - Catalan / English from `Accept-Language`
 
 ## Quick start (local DB)
@@ -70,7 +70,7 @@ Copy [`.env.example`](.env.example). Required:
 | `BETTER_AUTH_URL` | Public app URL (`http://localhost:4321` locally) |
 | `ASTRO_DB_REMOTE_URL` | Turso URL (remote / production) |
 | `ASTRO_DB_APP_TOKEN` | Turso token (remote / production) |
-| `CRON_SECRET` | Bearer for `/api/cron/send-reminders`, `/api/cron/health-probe`, and `/api/cron/metrics` |
+| `CRON_SECRET` | Bearer for `/api/cron/send-reminders` and `/api/cron/metrics` (also `/api/cron/health-probe` if called manually; prod probes use the Netlify `health-probe` scheduled function) |
 
 `RESEND_API_KEY` is only required when `EMAILS_ENABLED=true`.
 
@@ -104,6 +104,7 @@ Once you have a verified Resend sending domain, set:
 | `EMAILS_ENABLED` | Set to `true` to enable email sending (in Netlify enter the bare value, no quotes) |
 | `RESEND_API_KEY` | Verification + password-reset + booking emails |
 | `RESEND_FROM_EMAIL` | Optional, defaults to Resend's onboarding sender |
+| `RESEND_REPLY_TO` | Optional Reply-To; also used for the reminder List-Unsubscribe header |
 
 The onboarding sender (`onboarding@resend.dev`) can only email the Resend account owner — for real signups, [verify a domain](https://resend.com/domains) and set `RESEND_FROM_EMAIL` to an address on that domain.
 
@@ -137,17 +138,20 @@ Netlify production deploys run a smoke plugin (`netlify/plugins/smoke-test`) tha
 1. Link the site (`npx netlify link` or the Netlify UI).
 2. Set the env vars above; use your production URL for `BETTER_AUTH_URL`. Also set `NETLIFY_AUTH_TOKEN` for auto-rollback.
 3. Push schema once: `npm run db:update-schemas`.
-4. Deploy: `npm run host:deploy` (or Netlify Git continuous deploy; `netlify.toml` runs `astro db push --remote` then `npm run build`).
+4. Deploy: `npm run host:deploy` (or Netlify Git continuous deploy; `netlify.toml` runs `astro db push --remote`, then `scripts/migrate-apartment-number.js`, then `npm run build`).
 
 ## Project layout
 
 ```
 src/
   actions/     # bookings, auth, admin (Astro actions)
-  components/  # header, booking bottom sheet
-  lib/         # config, auth, time helpers, i18n
+  components/  # header, booking bottom sheet, privacy content
+  lib/         # config, auth, time, i18n, apartment, theme, events, observability
   pages/       # routes (agenda, sign-in, profile, privacy, my-bookings, admin, …)
 db/            # Astro DB schema + seed
+docs/          # Event-logging catalog (canonical; sync to wiki via docs:wiki)
+ops/grafana/   # Dashboard JSON (domain events, prod health)
+netlify/       # Smoke plugin + scheduled functions (reminders, health-probe)
 public/        # PWA manifest, icons, sw.js
 ```
 

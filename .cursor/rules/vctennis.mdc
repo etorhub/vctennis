@@ -9,9 +9,11 @@ Community tennis court booking PWA. Full agent guide: [`AGENTS.md`](AGENTS.md).
 
 ## Must follow
 
-- Stack: Astro 5 SSR + Netlify, Astro DB/Turso, Better Auth (email/password + Resend), Tailwind/daisyUI `tennis`, Alpine, installable PWA (no offline data)
+- Stack: Astro 5 SSR + Netlify, Astro DB/Turso, Better Auth (email/password + Resend when `EMAILS_ENABLED`), Tailwind/daisyUI `tennis` + `tennis-dark`, Alpine, installable PWA (no offline data)
 - Booking knobs only in `src/lib/config.ts` (not env). Timezone helpers in `src/lib/time.ts` (`Europe/Madrid`)
 - Mutations via Astro actions; validate on the server (`src/actions/bookings.ts`). Overlaps hard-blocked
+- Domain events via `src/lib/events.ts`; Grafana dual-write in `src/lib/observability.ts` — keep [`docs/Event-logging.md`](docs/Event-logging.md) in sync when changing ops/events
 - Do not reintroduce Freedom Stack demos (posts, bknd, marketing, React, HTMX)
 - i18n: `src/lib/i18n/ca.ts` + `en.ts`; locale from `Accept-Language` (`ca`/`es` → Catalan)
 - Human-facing docs: `README.md`. Keep `AGENTS.md` in sync when behavior changes
+- Git: one conversation → one branch from `master`, land via PR (see Git workflow in `AGENTS.md`)
