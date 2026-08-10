@@ -119,7 +119,7 @@ npm run host:deploy
 
 ## Event logging
 
-Append-only domain events in the `Events` table (Astro DB / Turso). Emit via [`src/lib/events.ts`](src/lib/events.ts) (`emitEvent`). After insert, [`src/lib/observability.ts`](src/lib/observability.ts) best-effort dual-writes to Grafana Cloud Loki + Prometheus when `GRAFANA_*` env is set (no-op otherwise; never fails the mutation). Prod HTTP health: Netlify cron [`health-probe`](netlify/functions/health-probe.mts) every 5m ships `vctennis_probe_*` metrics and POSTs [`/api/cron/metrics`](src/pages/api/cron/metrics.ts) for gauge `vctennis_users_registered`. No admin UI yet.
+Append-only domain events in the `Events` table (Astro DB / Turso). Emit via [`src/lib/events.ts`](src/lib/events.ts) (`emitEvent`). After insert, [`src/lib/observability.ts`](src/lib/observability.ts) best-effort dual-writes to Grafana Cloud Loki + Prometheus when `GRAFANA_*` env is set (no-op otherwise; never fails the mutation). Prod HTTP health: Netlify cron [`health-probe`](netlify/functions/health-probe.mts) every 5m ships `vctennis_probe_*` metrics and POSTs [`/api/cron/metrics`](src/pages/api/cron/metrics.ts) for gauge `vctennis_users_registered`. Grafana alerts email ops on probe down / elevated `reminder.failed` — see [`ops/grafana/alerting/`](ops/grafana/alerting/). No admin UI yet.
 
 Canonical catalog, PII rules, and reason codes: [`docs/Event-logging.md`](docs/Event-logging.md). Dashboards: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](ops/grafana/dashboards/prod-health.json). After the GitHub wiki is initialized once in the UI, sync with `npm run docs:wiki` → [wiki Event-logging](https://github.com/etorhub/vctennis/wiki/Event-logging).
 

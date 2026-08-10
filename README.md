@@ -87,7 +87,7 @@ Domain events dual-write to Grafana Cloud Loki + Prometheus when configured. Cre
 | `GRAFANA_PROM_USER` | Prometheus/Mimir numeric instance user |
 | `HEALTH_PROBE_BASE_URL` | Optional override for the health probe target (defaults to Netlify `URL` / `BETTER_AUTH_URL`) |
 
-Leave Grafana vars unset to skip shipping (Turso `Events` still records everything). Dashboards: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](ops/grafana/dashboards/prod-health.json).
+Leave Grafana vars unset to skip shipping (Turso `Events` still records everything). Dashboards: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](ops/grafana/dashboards/prod-health.json). Alerting (email on probe down / reminder failures): [`ops/grafana/alerting/`](ops/grafana/alerting/).
 
 A Netlify scheduled function (`health-probe`, every 5 minutes) hits `/`, `/sign-in`, and `/rules` and ships `vctennis_probe_*` metrics when Grafana env is set. It also POSTs `/api/cron/metrics` to refresh the `vctennis_users_registered` gauge (User table count).
 

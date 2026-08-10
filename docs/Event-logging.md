@@ -120,6 +120,17 @@ When `GRAFANA_CLOUD_TOKEN` and related `GRAFANA_*` vars are set (see [`.env.exam
 
 Provisioning: import or sync JSON under [`ops/grafana/dashboards/`](../ops/grafana/dashboards/). Datasource UIDs assume Grafana Cloud defaults `grafanacloud-prom` / `grafanacloud-logs`.
 
+### Alerting
+
+Grafana Cloud alert rules + email contact point live under [`ops/grafana/alerting/`](../ops/grafana/alerting/) (see that README for recreate / test / mute). Folder **Vinya Canadell Tennis** (`vctennis`), contact point `vctennis-ops-email` → `etor.diaz@proton.me`.
+
+| Rule | Condition | `for` |
+|---|---|---|
+| `vctennis-app-down` | Probe success min over 15m is less than 1, or no data (`vctennis_probe_success`) | 10m |
+| `vctennis-errors-high` | ≥ 3 `reminder.failed` events in 1h (`vctennis_events`) | 5m |
+
+Do **not** alert on `booking.rejected` (expected validation). Email is Grafana Cloud’s built-in mailer (not Resend).
+
 ## Out of scope / future
 
 - Admin UI for browsing events
@@ -127,3 +138,4 @@ Provisioning: import or sync JSON under [`ops/grafana/dashboards/`](../ops/grafa
 - IP logging in events
 - Backfill of historical Turso rows into Loki/Prometheus
 - Persisting `probe.http` into Turso `Events` (today Grafana-only)
+- Grafana scheduled dashboard reports (email summaries)

@@ -1,0 +1,9 @@
+{
+  "name": "vctennis-ops-email",
+  "type": "email",
+  "settings": {
+    "addresses": "etor.diaz@proton.me",
+    "singleEmail": true
+  },
+  "disableResolveMessage": false
+}
