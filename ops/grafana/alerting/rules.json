@@ -1,0 +1,132 @@
+{
+  "folderUid": "vctennis",
+  "folderTitle": "Vinya Canadell Tennis",
+  "group": {
+    "name": "vctennis-health",
+    "interval": "1m",
+    "rules": [
+      {
+        "uid": "cfus13gvppfk0b",
+        "title": "vctennis-app-down",
+        "condition": "C",
+        "for": "10m",
+        "noDataState": "Alerting",
+        "execErrState": "Alerting",
+        "labels": {
+          "service": "vctennis",
+          "severity": "critical"
+        },
+        "annotations": {
+          "summary": "vctennis production HTTP probe is down",
+          "description": "HTTP health probe for tennisvinyacanadell.cc reported failure or missing data for at least 10m. Check Netlify deploy and health-probe cron.",
+          "runbook_url": "https://tennisvinyacanadell.cc"
+        },
+        "notification_settings": {
+          "receiver": "vctennis-ops-email"
+        },
+        "data": [
+          {
+            "refId": "A",
+            "datasourceUid": "grafanacloud-prom",
+            "relativeTimeRange": { "from": 600, "to": 0 },
+            "model": {
+              "editorMode": "code",
+              "expr": "min(last_over_time(vctennis_probe_success{service_name=\"vctennis\"}[15m]))",
+              "instant": true,
+              "refId": "A"
+            }
+          },
+          {
+            "refId": "B",
+            "datasourceUid": "__expr__",
+            "model": {
+              "type": "reduce",
+              "expression": "A",
+              "reducer": "last",
+              "settings": { "mode": "dropNN" },
+              "refId": "B"
+            }
+          },
+          {
+            "refId": "C",
+            "datasourceUid": "__expr__",
+            "model": {
+              "type": "threshold",
+              "expression": "B",
+              "conditions": [
+                {
+                  "evaluator": { "type": "lt", "params": [1] },
+                  "operator": { "type": "and" },
+                  "query": { "params": ["C"] },
+                  "reducer": { "type": "last" }
+                }
+              ],
+              "refId": "C"
+            }
+          }
+        ]
+      },
+      {
+        "uid": "ffus14a7jad4wa",
+        "title": "vctennis-errors-high",
+        "condition": "C",
+        "for": "5m",
+        "noDataState": "OK",
+        "execErrState": "Error",
+        "labels": {
+          "service": "vctennis",
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "vctennis reminder failures are elevated",
+          "description": "At least 3 reminder.failed domain events in the last hour. Check Resend/EMAILS_ENABLED and the send-reminders cron.",
+          "runbook_url": "https://tennisvinyacanadell.cc"
+        },
+        "notification_settings": {
+          "receiver": "vctennis-ops-email"
+        },
+        "data": [
+          {
+            "refId": "A",
+            "datasourceUid": "grafanacloud-prom",
+            "relativeTimeRange": { "from": 3600, "to": 0 },
+            "model": {
+              "editorMode": "code",
+              "expr": "sum(count_over_time(vctennis_events{service_name=\"vctennis\",type=\"reminder.failed\"}[1h]))",
+              "instant": true,
+              "refId": "A"
+            }
+          },
+          {
+            "refId": "B",
+            "datasourceUid": "__expr__",
+            "model": {
+              "type": "reduce",
+              "expression": "A",
+              "reducer": "last",
+              "settings": { "mode": "dropNN" },
+              "refId": "B"
+            }
+          },
+          {
+            "refId": "C",
+            "datasourceUid": "__expr__",
+            "model": {
+              "type": "threshold",
+              "expression": "B",
+              "conditions": [
+                {
+                  "evaluator": { "type": "gte", "params": [3] },
+                  "operator": { "type": "and" },
+                  "query": { "params": ["C"] },
+                  "reducer": { "type": "last" }
+                }
+              ],
+              "refId": "C"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
