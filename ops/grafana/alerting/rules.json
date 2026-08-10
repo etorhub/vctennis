@@ -19,7 +19,9 @@
         "annotations": {
           "summary": "vctennis production HTTP probe is down",
           "description": "HTTP health probe for tennisvinyacanadell.cc reported failure or missing data for at least 10m. Check Netlify deploy and health-probe cron.",
-          "runbook_url": "https://tennisvinyacanadell.cc"
+          "runbook_url": "https://tennisvinyacanadell.cc",
+          "__dashboardUid": "vctennis-prod-health",
+          "__panelId": "6"
         },
         "notification_settings": {
           "receiver": "vctennis-ops-email"
@@ -80,7 +82,9 @@
         "annotations": {
           "summary": "vctennis reminder failures are elevated",
           "description": "At least 3 reminder.failed domain events in the last hour. Check Resend/EMAILS_ENABLED and the send-reminders cron.",
-          "runbook_url": "https://tennisvinyacanadell.cc"
+          "runbook_url": "https://tennisvinyacanadell.cc",
+          "__dashboardUid": "vctennis-domain-events",
+          "__panelId": "4"
         },
         "notification_settings": {
           "receiver": "vctennis-ops-email"

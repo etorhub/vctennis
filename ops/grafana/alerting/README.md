@@ -28,12 +28,12 @@ Set the default notification policy receiver to `vctennis-ops-email` (**Alerting
 
 Group `vctennis-health` (evaluate every 1m). Source of truth for recreate: [`rules.json`](rules.json).
 
-| Rule | UID | Fires when | `for` |
-|---|---|---|---|
-| `vctennis-app-down` | `cfus13gvppfk0b` | `min(last_over_time(vctennis_probe_success{service_name="vctennis"}[15m])) < 1`, or no data | 10m |
-| `vctennis-errors-high` | `ffus14a7jad4wa` | `sum(count_over_time(vctennis_events{service_name="vctennis",type="reminder.failed"}[1h])) >= 3` | 5m |
+| Rule | UID | Fires when | `for` | Dashboard panel |
+|---|---|---|---|---|
+| `vctennis-app-down` | `cfus13gvppfk0b` | `min(last_over_time(vctennis_probe_success{service_name="vctennis"}[15m])) < 1`, or no data | 10m | Prod health → Success rate (15m) |
+| `vctennis-errors-high` | `ffus14a7jad4wa` | `sum(count_over_time(vctennis_events{service_name="vctennis",type="reminder.failed"}[1h])) >= 3` | 5m | Domain events → Reminder failures |
 
-`booking.rejected` is **not** alerted (normal validation noise).
+Both rules appear on the **Alerts** panels (`service=vctennis`) on Prod health and Domain events. `booking.rejected` is **not** alerted (normal validation noise).
 
 ## Mute / pause
 
@@ -44,4 +44,5 @@ Group `vctennis-health` (evaluate every 1m). Source of truth for recreate: [`rul
 
 - Contact points: https://niftyamaranth452.grafana.net/alerting/notifications
 - Alert rules: https://niftyamaranth452.grafana.net/alerting/list
-- Prod health dashboard JSON: [`../dashboards/prod-health.json`](../dashboards/prod-health.json)
+- Prod health: https://niftyamaranth452.grafana.net/d/vctennis-prod-health/prod-health ([JSON](../dashboards/prod-health.json))
+- Domain events: https://niftyamaranth452.grafana.net/d/vctennis-domain-events/domain-events ([JSON](../dashboards/domain-events.json))

@@ -272,6 +272,30 @@
           "refId": "A"
         }
       ]
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "-- Dashboard --" },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 22 },
+      "id": 8,
+      "options": {
+        "alertInstanceLabelFilter": "service=vctennis",
+        "alertName": "",
+        "dashboardAlerts": false,
+        "groupBy": [],
+        "groupMode": "default",
+        "maxItems": 10,
+        "sortOrder": 1,
+        "stateFilter": {
+          "error": true,
+          "firing": true,
+          "noData": true,
+          "normal": true,
+          "pending": true
+        },
+        "viewMode": "list"
+      },
+      "title": "Alerts",
+      "type": "alertlist"
     }
   ],
   "schemaVersion": 39,
