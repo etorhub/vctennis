@@ -50,7 +50,7 @@ export const admin = {
         type: "user.role_changed",
         actorUserId: adminUser.id,
         subjectUserId: input.userId,
-        payload: { role: input.role, ...(email ? { email } : {}) }
+        payload: { role: input.role, source: "admin", ...(email ? { email } : {}) }
       });
       return { success: true };
     }
@@ -80,7 +80,7 @@ export const admin = {
         type: disabled ? "user.disabled" : "user.enabled",
         actorUserId: adminUser.id,
         subjectUserId: input.userId,
-        payload: { ...(email ? { email } : {}) }
+        payload: { source: "admin", ...(email ? { email } : {}) }
       });
       return { success: true };
     }

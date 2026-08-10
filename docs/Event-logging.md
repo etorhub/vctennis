@@ -54,19 +54,19 @@ No foreign keys — history survives booking/user deletion.
 | `booking.created` | `bookings.create` after insert | payload: startsAt, durationMin, source |
 | `booking.updated` | `bookings.update` after update | before/after slot; source member/admin |
 | `booking.cancelled` | `bookings.delete` / `admin.deleteBooking` | source member/admin |
-| `booking.rejected` | booking validation / authz failures | see reason codes below |
-| `user.signed_up` | Better Auth `user.create.after` | email + userId |
-| `user.verified` | `emailVerification.afterEmailVerification` | email + userId |
-| `user.signed_in` | `session.create.after` | also fires after verify auto-sign-in |
-| `user.signed_out` | `auth.signOut` | |
-| `user.profile_updated` | `auth.updateProfile` | showName, theme (not name text) |
-| `user.password_changed` | `auth.changePassword` success | |
-| `user.password_change_rejected` | password change failures | reason: mismatch / incorrect_password / error |
+| `booking.rejected` | booking validation / authz failures | reason codes below; source member/admin; slot (startsAt, durationMin) when known |
+| `user.signed_up` | Better Auth `user.create.after` | email + userId; source member |
+| `user.verified` | `emailVerification.afterEmailVerification` | email + userId; source member |
+| `user.signed_in` | `session.create.after` | also fires after verify auto-sign-in; source member |
+| `user.signed_out` | `auth.signOut` | source member |
+| `user.profile_updated` | `auth.updateProfile` | showName, theme (not name text); source member |
+| `user.password_changed` | `auth.changePassword` success | source member |
+| `user.password_change_rejected` | password change failures | reason: mismatch / incorrect_password / error; source member |
 | `user.deleted` | after redaction in `deleteUserCascade` | source self/admin; email when known |
-| `user.disabled` / `user.enabled` | `admin.setDisabled` | subject + email |
-| `user.role_changed` | `admin.setRole` | role + email |
-| `user.became_admin` | `auth.becomeAdmin` | |
-| `reminder.sent` / `reminder.failed` | `/api/cron/send-reminders` | bookingId; no email |
+| `user.disabled` / `user.enabled` | `admin.setDisabled` | subject + email; source admin |
+| `user.role_changed` | `admin.setRole` | role + email; source admin |
+| `user.became_admin` | `auth.becomeAdmin` | source member |
+| `reminder.sent` / `reminder.failed` | `/api/cron/send-reminders` | bookingId; source system; no email |
 
 ### `booking.rejected` reason codes
 

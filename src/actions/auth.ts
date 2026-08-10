@@ -17,7 +17,12 @@ export const auth = {
         headers: context.request.headers
       });
       if (userId) {
-        await emitEvent({ type: "user.signed_out", actorUserId: userId, subjectUserId: userId });
+        await emitEvent({
+          type: "user.signed_out",
+          actorUserId: userId,
+          subjectUserId: userId,
+          payload: { source: "member" }
+        });
       }
       return { success: true };
     }
@@ -76,7 +81,7 @@ export const auth = {
         type: "user.profile_updated",
         actorUserId: user.id,
         subjectUserId: user.id,
-        payload: { showName, theme }
+        payload: { showName, theme, source: "member" }
       });
 
       return { success: true };
@@ -103,7 +108,8 @@ export const auth = {
           type: "user.password_change_rejected",
           actorUserId: user.id,
           subjectUserId: user.id,
-          reason: "mismatch"
+          reason: "mismatch",
+          payload: { source: "member" }
         });
         throw new ActionError({ code: "BAD_REQUEST", message: "passwordMismatch" });
       }
@@ -124,7 +130,8 @@ export const auth = {
             type: "user.password_change_rejected",
             actorUserId: user.id,
             subjectUserId: user.id,
-            reason
+            reason,
+            payload: { source: "member" }
           });
           if (detail === "Invalid password") {
             throw new ActionError({ code: "BAD_REQUEST", message: "incorrectPassword" });
@@ -137,7 +144,8 @@ export const auth = {
       await emitEvent({
         type: "user.password_changed",
         actorUserId: user.id,
-        subjectUserId: user.id
+        subjectUserId: user.id,
+        payload: { source: "member" }
       });
 
       return { success: true };
@@ -205,7 +213,8 @@ export const auth = {
       await emitEvent({
         type: "user.became_admin",
         actorUserId: user.id,
-        subjectUserId: user.id
+        subjectUserId: user.id,
+        payload: { source: "member" }
       });
 
       return { success: true };

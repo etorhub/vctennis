@@ -145,7 +145,7 @@ export const auth = betterAuth({
             type: "user.signed_up",
             actorUserId: user.id,
             subjectUserId: user.id,
-            payload: { email: user.email }
+            payload: { email: user.email, source: "member" }
           });
           await refreshRegisteredUsersMetric();
         }
@@ -157,7 +157,8 @@ export const auth = betterAuth({
           await emitEvent({
             type: "user.signed_in",
             actorUserId: session.userId,
-            subjectUserId: session.userId
+            subjectUserId: session.userId,
+            payload: { source: "member" }
           });
         }
       }
@@ -207,7 +208,7 @@ export const auth = betterAuth({
         type: "user.verified",
         actorUserId: user.id,
         subjectUserId: user.id,
-        payload: { email: user.email }
+        payload: { email: user.email, source: "member" }
       });
     }
   },
