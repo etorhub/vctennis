@@ -1,5 +1,5 @@
 export const en = {
-  siteName: "Vinya Canadell Tennis",
+  siteName: "Tennis Vinya Canadell",
   tagline: "Book the community tennis court",
   signIn: "Sign in",
   signUp: "Sign up",
@@ -135,7 +135,7 @@ export const en = {
   noUpcomingBookings: "No upcoming bookings",
   noPastBookings: "No past bookings",
   installApp: "Install app",
-  installAppHint: "Add VC Tennis to your home screen for quick access.",
+  installAppHint: "Add Tennis Vinya Canadell to your home screen for quick access.",
   installAppIosHint: "Tap Share, then Add to Home Screen.",
   install: "Install",
   notNow: "Not now",
