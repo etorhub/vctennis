@@ -13,7 +13,7 @@ import {
   formatTime,
   getZonedParts,
   hourLabels,
-  isFuture,
+  isBookableStart,
   isWithinOpenHours,
   rangesOverlap,
   zonedDate
@@ -119,14 +119,14 @@ type ViewSlot = {
   minutesFromOpen: number;
 };
 
-/** Open, aligned, future, unoccupied slots a member can tap to prefill the create sheet. */
+/** Open, aligned, bookable (incl. current mid-period), unoccupied slots a member can tap. */
 function openSlotsForDay(dayParts: ReturnType<typeof getZonedParts>, dayBookings: ViewBooking[]): ViewSlot[] {
   const slots: ViewSlot[] = [];
   for (let hour = OPEN_HOUR; hour < CLOSE_HOUR; hour++) {
     for (let minute = 0; minute < 60; minute += SLOT_MINUTES) {
       const slotStart = zonedDate(dayParts.year, dayParts.month, dayParts.day, hour, minute);
       if (!isWithinOpenHours(slotStart, SLOT_MINUTES)) continue;
-      if (!isFuture(slotStart, now)) continue;
+      if (!isBookableStart(slotStart, now)) continue;
       const occupied = dayBookings.some((b) =>
         rangesOverlap(slotStart, SLOT_MINUTES, new Date(b.startsAtIso), b.durationMin)
       );

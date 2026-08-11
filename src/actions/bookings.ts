@@ -2,12 +2,13 @@ import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro:schema";
 import { db, Bookings, eq, and, gt } from "astro:db";
 import { buildBookingEmail } from "@/lib/bookingEmail";
-import { MAX_ACTIVE_BOOKINGS } from "@/lib/config";
+import { ALLOWED_DURATIONS, MAX_ACTIVE_BOOKINGS } from "@/lib/config";
 import { sendEmail } from "@/lib/email";
 import { emitEvent, type BookingRejectReason } from "@/lib/events";
 import {
   isAlignedSlot,
   isAllowedDuration,
+  isBookableStart,
   isBookingOver,
   isFuture,
   isWithinBookAhead,
@@ -120,7 +121,7 @@ async function validateSlot(
       payload
     });
   }
-  if (!isFuture(startsAt)) {
+  if (!isBookableStart(startsAt)) {
     await rejectBooking(actorUserId, "past", "errorPast", "BAD_REQUEST", {
       bookingId,
       source,
@@ -146,10 +147,15 @@ export const bookings = {
       }
       await validateSlot(user.id, startsAt, input.durationMin);
 
-      const active = await db
+      const now = new Date();
+      const lookbackMs = Math.max(...ALLOWED_DURATIONS) * 60_000;
+      const candidates = await db
         .select()
         .from(Bookings)
-        .where(and(eq(Bookings.userId, user.id), gt(Bookings.startsAt, new Date())));
+        .where(
+          and(eq(Bookings.userId, user.id), gt(Bookings.startsAt, new Date(now.getTime() - lookbackMs)))
+        );
+      const active = candidates.filter((b) => !isBookingOver(b.startsAt, b.durationMin, now));
 
       if (active.length >= MAX_ACTIVE_BOOKINGS) {
         await rejectBooking(user.id, "max_bookings", "errorMaxBookings", "BAD_REQUEST", {
@@ -180,24 +186,27 @@ export const bookings = {
         }
       });
 
-      try {
-        const { subject, html, text } = buildBookingEmail(
-          "confirmed",
-          context.locals.t,
-          context.locals.locale,
-          startsAt,
-          input.durationMin
-        );
-        await sendEmail({
-          to: user.email,
-          subject,
-          html,
-          text,
-          tags: { type: "booking_confirmed", locale: context.locals.locale },
-          idempotencyKey: `booking-confirmed-${id}`
-        });
-      } catch (err) {
-        console.error("Failed to send booking confirmation email:", err);
+      // Walk-up mid-period bookings skip confirmation (start already passed).
+      if (isFuture(startsAt, now)) {
+        try {
+          const { subject, html, text } = buildBookingEmail(
+            "confirmed",
+            context.locals.t,
+            context.locals.locale,
+            startsAt,
+            input.durationMin
+          );
+          await sendEmail({
+            to: user.email,
+            subject,
+            html,
+            text,
+            tags: { type: "booking_confirmed", locale: context.locals.locale },
+            idempotencyKey: `booking-confirmed-${id}`
+          });
+        } catch (err) {
+          console.error("Failed to send booking confirmation email:", err);
+        }
       }
 
       return { success: true, id };

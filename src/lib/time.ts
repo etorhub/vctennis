@@ -151,7 +151,7 @@ export function isWithinBookAhead(startsAt: Date, now = new Date()): boolean {
   const lastDay = days[days.length - 1];
   const p = getZonedParts(lastDay);
   const endOfLast = zonedDate(p.year, p.month, p.day, CLOSE_HOUR, 0);
-  return startsAt.getTime() <= endOfLast.getTime() && startsAt.getTime() > now.getTime();
+  return startsAt.getTime() <= endOfLast.getTime() && isBookableStart(startsAt, now);
 }
 
 export function isFuture(startsAt: Date, now = new Date()): boolean {
@@ -161,6 +161,14 @@ export function isFuture(startsAt: Date, now = new Date()): boolean {
 /** True once a booking's end time has passed. */
 export function isBookingOver(startsAt: Date, durationMin: number, now = new Date()): boolean {
   return bookingEnd(startsAt, durationMin).getTime() <= now.getTime();
+}
+
+/**
+ * True while the start's first SLOT_MINUTES cell is still running or in the future.
+ * Allows walk-up booking of the current in-progress :00/:30 period (e.g. 16:40 → 16:30).
+ */
+export function isBookableStart(startsAt: Date, now = new Date()): boolean {
+  return !isBookingOver(startsAt, SLOT_MINUTES, now);
 }
 
 export function rangesOverlap(aStart: Date, aDuration: number, bStart: Date, bDuration: number): boolean {
@@ -209,8 +217,9 @@ export type SlotOptions = {
 };
 
 /**
- * Bookable start times for a day. Past times and overlaps (for the given duration) are excluded.
- * Default duration 30 lists every start where a 30‑minute booking would fit.
+ * Bookable start times for a day. Fully elapsed grid starts and overlaps (for the given duration) are excluded.
+ * The current in-progress SLOT_MINUTES cell remains bookable. Default duration 30 lists every start
+ * where a 30‑minute booking would fit.
  */
 export function slotOptionsForDay(day: Date, now = new Date(), options: SlotOptions = {}): Date[] {
   const durationMin = options.durationMin ?? 30;
@@ -220,7 +229,7 @@ export function slotOptionsForDay(day: Date, now = new Date(), options: SlotOpti
     for (let minute = 0; minute < 60; minute += SLOT_MINUTES) {
       const slot = zonedDate(p.year, p.month, p.day, hour, minute);
       if (!isWithinOpenHours(slot, durationMin)) continue;
-      if (slot.getTime() <= now.getTime()) continue;
+      if (!isBookableStart(slot, now)) continue;
       if (
         options.existing &&
         conflictsWithExisting(slot, durationMin, options.existing, options.excludeId)

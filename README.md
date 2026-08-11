@@ -20,8 +20,8 @@ Public day agenda, email/password accounts with verification, and admin tools �
 ## Features
 
 - One-court agenda (`BOOK_AHEAD_DAYS`; skips today once no bookable slots remain); one day at a time on mobile, all days side by side on desktop
-- Book 30 or 60 minutes on `:00` / `:30` slots (10:00–21:00)
-- One active future booking per member at a time; overlaps hard-blocked
+- Book 30 or 60 minutes on `:00` / `:30` slots (10:00–21:00); the current in-progress slot stays bookable if free (no confirmation email for that walk-up case)
+- One active booking per member at a time (counts until the booking ends); overlaps hard-blocked
 - Open signup; email verification and password reset via Resend when `EMAILS_ENABLED=true` (off by default)
 - Members give their apartment at signup — block (1–4) and apartment number (1–12 in block 1, 1–9 in blocks 2–4); editable on `/profile` and listed on `/admin/users`
 - Privacy: members can hide their name → shown as **Reserved**; self-serve account deletion on `/profile`; stored-data docs on `/privacy`

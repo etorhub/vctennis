@@ -20,13 +20,13 @@ All constants live in [`src/lib/config.ts`](src/lib/config.ts):
 |---|---|---|
 | `OPEN_HOUR` / `CLOSE_HOUR` | 10 / 21 | Court hours (Europe/Madrid) |
 | `BOOK_AHEAD_DAYS` | 3 | Agenda window length; starts today, or tomorrow once no bookable slots remain today |
-| `MAX_ACTIVE_BOOKINGS` | 1 | Max future bookings per user (one active booking at a time) |
+| `MAX_ACTIVE_BOOKINGS` | 1 | Max not-yet-ended bookings per user (one active booking at a time) |
 | `SLOT_MINUTES` | 30 | Starts on :00 / :30 |
 | `ALLOWED_DURATIONS` | 30, 60 | Minutes |
 | `REMINDER_OFFSET_HOURS` | 2 | Hours before start to send booking reminder email |
 | `TIMEZONE` | Europe/Madrid | Always use helpers in [`src/lib/time.ts`](src/lib/time.ts) |
 
-Server-side validation is in [`src/actions/bookings.ts`](src/actions/bookings.ts). Overlaps are hard-blocked. One court only.
+Server-side validation is in [`src/actions/bookings.ts`](src/actions/bookings.ts). Overlaps are hard-blocked. One court only. The current in-progress `:00`/`:30` slot stays bookable if free (walk-up); confirmation email is skipped when the start has already passed.
 
 UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. Desktop (`lg+`): all `BOOK_AHEAD_DAYS` side by side.
 
