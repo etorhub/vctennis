@@ -1,0 +1,162 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AppHeader from "@/components/AppHeader.astro";
+import { db, Events, User, eq, or } from "astro:db";
+import { bookingEnd, formatTime, getZonedParts } from "@/lib/time";
+
+const LIMIT = 100;
+const RANGES = ["1d", "7d", "30d"] as const;
+type TimelineRange = (typeof RANGES)[number];
+
+const RANGE_MS: Record<TimelineRange, number> = {
+  "1d": 1 * 24 * 60 * 60 * 1000,
+  "7d": 7 * 24 * 60 * 60 * 1000,
+  "30d": 30 * 24 * 60 * 60 * 1000
+};
+
+const { t, locale } = Astro.locals;
+
+const rawRange = Astro.url.searchParams.get("range");
+const range: TimelineRange = RANGES.includes(rawRange as TimelineRange)
+  ? (rawRange as TimelineRange)
+  : "7d";
+const since = new Date(Date.now() - RANGE_MS[range]);
+
+const [eventRows, users] = await Promise.all([
+  db
+    .select()
+    .from(Events)
+    .where(
+      or(
+        eq(Events.type, "user.signed_up"),
+        eq(Events.type, "booking.created"),
+        eq(Events.type, "booking.cancelled")
+      )
+    ),
+  db.select().from(User)
+]);
+
+eventRows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+const events = eventRows
+  .filter((ev) => ev.createdAt.getTime() >= since.getTime())
+  .slice(0, LIMIT);
+const userMap = new Map(users.map((u) => [u.id, u]));
+
+type TimelinePayload = {
+  email?: string;
+  startsAt?: string;
+  durationMin?: number;
+  source?: string;
+};
+
+function parsePayload(raw: string | null | undefined): TimelinePayload {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as TimelinePayload;
+  } catch {
+    return {};
+  }
+}
+
+function typeLabel(type: string): string {
+  if (type === "user.signed_up") return t("eventSignedUp");
+  if (type === "booking.created") return t("eventBookingCreated");
+  if (type === "booking.cancelled") return t("eventBookingCancelled");
+  return type;
+}
+
+function sourceLabel(source: string | undefined): string | null {
+  if (source === "member") return t("eventSourceMember");
+  if (source === "admin") return t("eventSourceAdmin");
+  return null;
+}
+
+function userLabel(userId: string | null | undefined, payloadEmail?: string): string {
+  if (userId) {
+    const u = userMap.get(userId);
+    if (u?.name) return u.name;
+    if (u?.email) return u.email;
+  }
+  if (payloadEmail) return payloadEmail;
+  return "—";
+}
+
+const rangeTabs: { id: TimelineRange; label: string }[] = [
+  { id: "1d", label: t("timelineRange1d") },
+  { id: "7d", label: t("timelineRange7d") },
+  { id: "30d", label: t("timelineRange30d") }
+];
+---
+
+<Layout title={t("timeline")}>
+  <AppHeader title={`${t("admin")} · ${t("timeline")}`} backHref="/" />
+  <main class="mx-auto w-full max-w-lg px-3 py-4 pb-20 md:max-w-2xl lg:max-w-4xl lg:px-4">
+    <div class="mb-4 flex gap-2">
+      <a href="/admin/users" class="btn btn-ghost btn-sm">{t("users")}</a>
+      <a href="/admin/bookings" class="btn btn-ghost btn-sm">{t("bookings")}</a>
+      <a href="/admin/timeline" class="btn btn-primary btn-sm">{t("timeline")}</a>
+    </div>
+
+    <div class="mb-4 flex flex-wrap gap-2">
+      {
+        rangeTabs.map((tab) => (
+          <a
+            href={`/admin/timeline?range=${tab.id}`}
+            class:list={["btn btn-sm", range === tab.id ? "btn-primary" : "btn-ghost"]}
+          >
+            {tab.label}
+          </a>
+        ))
+      }
+    </div>
+
+    {
+      events.length === 0 ? (
+        <p class="py-8 text-center text-base-content/60">{t("noTimelineEvents")}</p>
+      ) : (
+        <ol class="relative ml-2 border-l border-base-300">
+          {events.map((ev) => {
+            const payload = parsePayload(ev.payload);
+            const when = getZonedParts(ev.createdAt);
+            const who = userLabel(ev.subjectUserId ?? ev.actorUserId, payload.email);
+            const source = sourceLabel(payload.source);
+            let slotLine: string | null = null;
+            if (
+              (ev.type === "booking.created" || ev.type === "booking.cancelled") &&
+              payload.startsAt &&
+              typeof payload.durationMin === "number"
+            ) {
+              const startsAt = new Date(payload.startsAt);
+              if (!Number.isNaN(startsAt.getTime())) {
+                const end = bookingEnd(startsAt, payload.durationMin);
+                const p = getZonedParts(startsAt);
+                slotLine = `${p.dateKey} · ${formatTime(startsAt, locale)} – ${formatTime(end, locale)} · ${payload.durationMin} min`;
+              }
+            }
+            return (
+              <li class="relative pb-6 pl-6 last:pb-0">
+                <span
+                  class:list={[
+                    "absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-base-100",
+                    ev.type === "user.signed_up" && "bg-info",
+                    ev.type === "booking.created" && "bg-success",
+                    ev.type === "booking.cancelled" && "bg-error"
+                  ]}
+                />
+                <p class="text-xs text-base-content/50">
+                  {when.dateKey} · {formatTime(ev.createdAt, locale)}
+                </p>
+                <p class="font-semibold">{typeLabel(ev.type)}</p>
+                <p class="text-sm text-base-content/70">
+                  {who}
+                  {source ? ` · ${source}` : ""}
+                </p>
+                {slotLine && <p class="mt-0.5 text-sm text-base-content/60">{slotLine}</p>}
+              </li>
+            );
+          })}
+        </ol>
+      )
+    }
+  </main>
+</Layout>
