@@ -1,6 +1,6 @@
 # Event logging
 
-Append-only **domain events** for ops and Grafana Cloud dashboards. There is no admin UI yet — events are always written to Astro DB / Turso, and optionally dual-written to Loki + Prometheus.
+Append-only **domain events** for ops and Grafana Cloud dashboards. Admins can browse recent sign-ups, bookings created, and bookings cancelled at [`/admin/timeline`](../src/pages/admin/timeline.astro). Events are always written to Astro DB / Turso, and optionally dual-written to Loki + Prometheus.
 
 > Canonical copy lives in this repo. After the GitHub wiki has been initialized once (create any page under Wiki in the GitHub UI), run `npm run docs:wiki` to publish this file (and Home) to [Event-logging](https://github.com/etorhub/vctennis/wiki/Event-logging).
 
@@ -14,6 +14,7 @@ Append-only **domain events** for ops and Grafana Cloud dashboards. There is no 
 | Dashboard | [`ops/grafana/dashboards/domain-events.json`](../ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](../ops/grafana/dashboards/prod-health.json) |
 | Health probe | [`src/lib/healthProbe.ts`](../src/lib/healthProbe.ts) + Netlify [`health-probe`](../netlify/functions/health-probe.mts) (HTTP probes) + [`/api/cron/metrics`](../src/pages/api/cron/metrics.ts) (user gauge) |
 | Instrumentation | Astro actions (`bookings`, `admin`, `auth`), Better Auth hooks in `src/lib/auth.ts`, reminder cron |
+| Admin timeline | [`src/pages/admin/timeline.astro`](../src/pages/admin/timeline.astro) — sign-ups, booking created/cancelled |
 
 ## Schema
 
