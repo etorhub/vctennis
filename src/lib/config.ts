@@ -6,7 +6,7 @@ export const MAX_ACTIVE_BOOKINGS = 1;
 export const SLOT_MINUTES = 30;
 export const ALLOWED_DURATIONS = [30, 60] as const;
 export const TIMEZONE = "Europe/Madrid";
-export const SITE_NAME = "Vinya Canadell Tennis";
+export const SITE_NAME = "Tennis Vinya Canadell";
 export const THEME_COLOR = "#16a34a";
 /** Hours before a booking's start time to send the reminder email. */
 export const REMINDER_OFFSET_HOURS = 2;

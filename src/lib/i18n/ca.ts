@@ -138,7 +138,7 @@ export const ca: Dictionary = {
   noUpcomingBookings: "No tens reserves properes",
   noPastBookings: "No tens reserves anteriors",
   installApp: "Instal·la l'app",
-  installAppHint: "Afegeix VC Tennis a la pantalla d'inici per accedir-hi ràpidament.",
+  installAppHint: "Afegeix Tennis Vinya Canadell a la pantalla d'inici per accedir-hi ràpidament.",
   installAppIosHint: "Toca Comparteix i després Afegeix a la pantalla d'inici.",
   install: "Instal·lar",
   notNow: "Ara no",

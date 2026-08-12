@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { SITE_NAME } from "@/lib/config";
 
 function normalizeEnvFlag(value: unknown): string {
   if (typeof value !== "string") return "";
@@ -77,7 +78,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ id: string } 
     return;
   }
 
-  const from = import.meta.env.RESEND_FROM_EMAIL || "Vinya Canadell Tennis <onboarding@resend.dev>";
+  const from = import.meta.env.RESEND_FROM_EMAIL || `${SITE_NAME} <onboarding@resend.dev>`;
   const replyTo = opts.replyTo ?? import.meta.env.RESEND_REPLY_TO;
 
   const tags = Object.entries({
