@@ -212,5 +212,11 @@ export const ca: Dictionary = {
   emailCtaVerify: "Verificar correu",
   emailCtaReset: "Restablir contrasenya",
   emailLinkFallback: "Si el botó no funciona, copia i enganxa aquest enllaç al teu navegador:",
-  emailFooterTransactional: "Reps aquest correu perquè tens un compte a {site}."
+  emailFooterTransactional: "Reps aquest correu perquè tens un compte a {site}.",
+  emailContactHeading: "Nou missatge de contacte",
+  emailContactPreview: "Nou missatge de {type} de {name}: {subject}",
+  emailContactFrom: "De: {name} ({email})",
+  emailContactTypeLine: "Tipus: {type}",
+  emailContactSubjectLine: "Assumpte: {subject}",
+  emailContactFooter: "Aquest missatge s'ha enviat des del formulari de contacte de {site}."
 };

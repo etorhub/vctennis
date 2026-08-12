@@ -208,7 +208,13 @@ export const en = {
   emailCtaVerify: "Verify email",
   emailCtaReset: "Reset password",
   emailLinkFallback: "If the button doesn't work, copy and paste this link into your browser:",
-  emailFooterTransactional: "You're receiving this because you have an account at {site}."
+  emailFooterTransactional: "You're receiving this because you have an account at {site}.",
+  emailContactHeading: "New contact message",
+  emailContactPreview: "New {type} message from {name}: {subject}",
+  emailContactFrom: "From: {name} ({email})",
+  emailContactTypeLine: "Type: {type}",
+  emailContactSubjectLine: "Subject: {subject}",
+  emailContactFooter: "This message was sent from the contact form at {site}."
 };
 
 export type MessageKey = keyof typeof en;

@@ -2,6 +2,8 @@
 import Icon from "astro-iconify";
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
+import { actions } from "astro:actions";
+import type { MessageKey } from "@/lib/i18n";
 import { ALLOWED_DURATIONS, BOOK_AHEAD_DAYS, CLOSE_HOUR, MAX_ACTIVE_BOOKINGS, OPEN_HOUR } from "@/lib/config";
 
 const { t, user } = Astro.locals;
@@ -17,9 +19,14 @@ const etiquettePictograms = [
   { icon: "dog", label: t("rulesEtiquetteNoPets") }
 ];
 
-const contactMessages = {
-  errorGeneric: t("errorGeneric")
-};
+const contactResult = Astro.getActionResult(actions.contact.send);
+const contactSent = !!contactResult?.data?.success;
+const contactErrKey = contactResult?.error?.message as MessageKey | undefined;
+const contactError = contactErrKey
+  ? t(contactErrKey) !== String(contactErrKey)
+    ? t(contactErrKey)
+    : t("errorGeneric")
+  : "";
 ---
 
 <Layout title={t("rules")}>
@@ -81,120 +88,74 @@ const contactMessages = {
               </a>
             </p>
           ) : (
-            <div
-              x-data={`{
-                type: 'contact',
-                subject: '',
-                message: '',
-                loading: false,
-                success: false,
-                error: '',
-                messages: ${JSON.stringify(contactMessages)},
-                async submit() {
-                  this.loading = true;
-                  this.error = '';
-                  try {
-                    const res = await fetch('/', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                      body: new URLSearchParams({
-                        'form-name': 'contacte-incidencies',
-                        'bot-field': '',
-                        name: ${JSON.stringify(user.name ?? "")},
-                        email: ${JSON.stringify(user.email ?? "")},
-                        type: this.type,
-                        subject: this.subject,
-                        message: this.message
-                      }).toString()
-                    });
-                    if (!res.ok) throw new Error(this.messages.errorGeneric);
-                    this.success = true;
-                    this.subject = '';
-                    this.message = '';
-                    this.type = 'contact';
-                  } catch (e) {
-                    this.error = e.message || this.messages.errorGeneric;
-                  } finally {
-                    this.loading = false;
-                  }
-                }
-              }`}
-            >
-              <div x-show="!success">
-                <p class="mb-3 text-sm text-base-content/60">
-                  {t("rulesContactSendingAs", { name: user.name ?? "", email: user.email ?? "" })}
-                </p>
+            <div>
+              {contactSent && (
+                <p class="mb-3 text-sm font-medium text-primary">{t("rulesContactSuccess")}</p>
+              )}
 
-                <form autocomplete="off" @submit.prevent="submit()">
-                  <div class="grid grid-cols-2 gap-1 rounded-xl bg-base-200 p-1">
-                    <button
-                      type="button"
-                      class="btn btn-sm border-0"
-                      x-bind:class="type === 'contact' ? 'btn-primary' : 'btn-ghost'"
-                      x-bind:aria-pressed="type === 'contact'"
-                      @click="type = 'contact'"
-                    >
-                      {t("rulesContactTypeContact")}
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-sm border-0"
-                      x-bind:class="type === 'incident' ? 'btn-primary' : 'btn-ghost'"
-                      x-bind:aria-pressed="type === 'incident'"
-                      @click="type = 'incident'"
-                    >
-                      {t("rulesContactTypeIncident")}
-                    </button>
-                  </div>
-
-                  <label class="form-control mt-3 w-full" for="contact-subject">
-                    <div class="label py-1">
-                      <span class="label-text">{t("rulesContactSubject")}</span>
-                    </div>
-                    <input
-                      id="contact-subject"
-                      type="text"
-                      class="input input-bordered w-full"
-                      x-model="subject"
-                      required
-                      maxlength="120"
-                      placeholder={t("rulesContactSubjectPlaceholder")}
-                    />
-                  </label>
-
-                  <label class="form-control mt-3 w-full" for="contact-message">
-                    <div class="label py-1">
-                      <span class="label-text">{t("rulesContactMessage")}</span>
-                    </div>
-                    <textarea
-                      id="contact-message"
-                      class="textarea textarea-bordered w-full"
-                      rows="4"
-                      x-model="message"
-                      required
-                      maxlength="2000"
-                      placeholder={t("rulesContactMessagePlaceholder")}
-                    />
-                  </label>
-
-                  <p class="mt-2 text-sm text-error" role="alert" aria-live="polite" x-show="error" x-text="error" />
-
-                  <button
-                    type="submit"
-                    class="btn btn-primary mt-4 w-full"
-                    x-bind:disabled="loading || !subject || !message"
-                  >
-                    <span x-show="!loading">{t("rulesContactSubmit")}</span>
-                    <span x-show="loading" x-cloak>
-                      {t("loading")}
-                    </span>
-                  </button>
-                </form>
-              </div>
-
-              <p class="text-sm font-medium text-primary" x-show="success" x-cloak>
-                {t("rulesContactSuccess")}
+              <p class="mb-3 text-sm text-base-content/60">
+                {t("rulesContactSendingAs", { name: user.name ?? "", email: user.email ?? "" })}
               </p>
+
+              <form method="POST" action={actions.contact.send}>
+                <fieldset class="w-full">
+                  <legend class="sr-only">{t("rulesContactType")}</legend>
+                  <div class="grid grid-cols-2 gap-2">
+                    <label class="cursor-pointer">
+                      <input type="radio" name="type" value="contact" class="peer sr-only" checked required />
+                      <span class="flex items-center justify-center rounded-xl border-2 border-base-300 bg-base-200 px-2 py-2.5 text-sm font-medium peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
+                        {t("rulesContactTypeContact")}
+                      </span>
+                    </label>
+                    <label class="cursor-pointer">
+                      <input type="radio" name="type" value="incident" class="peer sr-only" required />
+                      <span class="flex items-center justify-center rounded-xl border-2 border-base-300 bg-base-200 px-2 py-2.5 text-sm font-medium peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
+                        {t("rulesContactTypeIncident")}
+                      </span>
+                    </label>
+                  </div>
+                </fieldset>
+
+                <label class="form-control mt-3 w-full" for="contact-subject">
+                  <div class="label py-1">
+                    <span class="label-text">{t("rulesContactSubject")}</span>
+                  </div>
+                  <input
+                    id="contact-subject"
+                    name="subject"
+                    type="text"
+                    class="input input-bordered w-full"
+                    required
+                    maxlength="120"
+                    placeholder={t("rulesContactSubjectPlaceholder")}
+                  />
+                </label>
+
+                <label class="form-control mt-3 w-full" for="contact-message">
+                  <div class="label py-1">
+                    <span class="label-text">{t("rulesContactMessage")}</span>
+                  </div>
+                  <textarea
+                    id="contact-message"
+                    name="message"
+                    class="textarea textarea-bordered w-full"
+                    rows="4"
+                    required
+                    maxlength="2000"
+                    placeholder={t("rulesContactMessagePlaceholder")}
+                  />
+                </label>
+
+                {contactError && (
+                  <p class="mt-2 text-sm text-error" role="alert">
+                    {contactError}
+                  </p>
+                )}
+
+                <button type="submit" class="btn btn-primary mt-4 w-full">
+                  {t("rulesContactSubmit")}
+                </button>
+              </form>
             </div>
           )
         }
