@@ -68,6 +68,7 @@ No foreign keys — history survives booking/user deletion.
 | `user.role_changed` | `admin.setRole` | role + email; source admin |
 | `user.became_admin` | `auth.becomeAdmin` | source member |
 | `reminder.sent` / `reminder.failed` | `/api/cron/send-reminders` | bookingId; source system; no email |
+| `contact.submitted` | `contact.send` after insert into `ContactMessages` | payload: contactMessageId, type (contact/incident) |
 
 ### `booking.rejected` reason codes
 

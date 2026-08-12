@@ -94,6 +94,17 @@ const Events = defineTable({
   }
 });
 
+const ContactMessages = defineTable({
+  columns: {
+    id: column.text({ primaryKey: true }),
+    userId: column.text(),
+    type: column.text(),
+    subject: column.text(),
+    message: column.text(),
+    createdAt: column.date()
+  }
+});
+
 export default defineDb({
   tables: {
     User,
@@ -101,6 +112,7 @@ export default defineDb({
     Account,
     Verification,
     Bookings,
-    Events
+    Events,
+    ContactMessages
   }
 });
