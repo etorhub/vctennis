@@ -4,7 +4,7 @@ import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
 import { ALLOWED_DURATIONS, BOOK_AHEAD_DAYS, CLOSE_HOUR, MAX_ACTIVE_BOOKINGS, OPEN_HOUR } from "@/lib/config";
 
-const { t } = Astro.locals;
+const { t, user } = Astro.locals;
 const aheadDays = Math.max(BOOK_AHEAD_DAYS - 1, 0);
 const durations = ALLOWED_DURATIONS.join(" / ");
 const maxBookings =
@@ -16,6 +16,10 @@ const etiquettePictograms = [
   { icon: "bike", label: t("rulesEtiquetteNoBikes") },
   { icon: "dog", label: t("rulesEtiquetteNoPets") }
 ];
+
+const contactMessages = {
+  errorGeneric: t("errorGeneric")
+};
 ---
 
 <Layout title={t("rules")}>
@@ -62,6 +66,138 @@ const etiquettePictograms = [
             ))
           }
         </ul>
+      </section>
+
+      <section class="flex flex-col gap-3 border-t border-base-300 pt-6">
+        <h2 class="text-base font-semibold text-base-content">{t("rulesContactTitle")}</h2>
+        <p class="text-sm leading-relaxed text-base-content/70">{t("rulesContactIntro")}</p>
+
+        {
+          !user ? (
+            <p class="text-sm text-base-content/70">
+              {t("rulesContactSignInPrompt")}{" "}
+              <a href="/sign-in" class="link link-primary">
+                {t("signIn")}
+              </a>
+            </p>
+          ) : (
+            <div
+              x-data={`{
+                type: 'contact',
+                subject: '',
+                message: '',
+                loading: false,
+                success: false,
+                error: '',
+                messages: ${JSON.stringify(contactMessages)},
+                async submit() {
+                  this.loading = true;
+                  this.error = '';
+                  try {
+                    const res = await fetch('/', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                      body: new URLSearchParams({
+                        'form-name': 'contacte-incidencies',
+                        'bot-field': '',
+                        name: ${JSON.stringify(user.name ?? "")},
+                        email: ${JSON.stringify(user.email ?? "")},
+                        type: this.type,
+                        subject: this.subject,
+                        message: this.message
+                      }).toString()
+                    });
+                    if (!res.ok) throw new Error(this.messages.errorGeneric);
+                    this.success = true;
+                    this.subject = '';
+                    this.message = '';
+                    this.type = 'contact';
+                  } catch (e) {
+                    this.error = e.message || this.messages.errorGeneric;
+                  } finally {
+                    this.loading = false;
+                  }
+                }
+              }`}
+            >
+              <div x-show="!success">
+                <p class="mb-3 text-sm text-base-content/60">
+                  {t("rulesContactSendingAs", { name: user.name ?? "", email: user.email ?? "" })}
+                </p>
+
+                <form autocomplete="off" @submit.prevent="submit()">
+                  <div class="grid grid-cols-2 gap-1 rounded-xl bg-base-200 p-1">
+                    <button
+                      type="button"
+                      class="btn btn-sm border-0"
+                      x-bind:class="type === 'contact' ? 'btn-primary' : 'btn-ghost'"
+                      x-bind:aria-pressed="type === 'contact'"
+                      @click="type = 'contact'"
+                    >
+                      {t("rulesContactTypeContact")}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm border-0"
+                      x-bind:class="type === 'incident' ? 'btn-primary' : 'btn-ghost'"
+                      x-bind:aria-pressed="type === 'incident'"
+                      @click="type = 'incident'"
+                    >
+                      {t("rulesContactTypeIncident")}
+                    </button>
+                  </div>
+
+                  <label class="form-control mt-3 w-full" for="contact-subject">
+                    <div class="label py-1">
+                      <span class="label-text">{t("rulesContactSubject")}</span>
+                    </div>
+                    <input
+                      id="contact-subject"
+                      type="text"
+                      class="input input-bordered w-full"
+                      x-model="subject"
+                      required
+                      maxlength="120"
+                      placeholder={t("rulesContactSubjectPlaceholder")}
+                    />
+                  </label>
+
+                  <label class="form-control mt-3 w-full" for="contact-message">
+                    <div class="label py-1">
+                      <span class="label-text">{t("rulesContactMessage")}</span>
+                    </div>
+                    <textarea
+                      id="contact-message"
+                      class="textarea textarea-bordered w-full"
+                      rows="4"
+                      x-model="message"
+                      required
+                      maxlength="2000"
+                      placeholder={t("rulesContactMessagePlaceholder")}
+                    />
+                  </label>
+
+                  <p class="mt-2 text-sm text-error" role="alert" aria-live="polite" x-show="error" x-text="error" />
+
+                  <button
+                    type="submit"
+                    class="btn btn-primary mt-4 w-full"
+                    x-bind:disabled="loading || !subject || !message"
+                  >
+                    <span x-show="!loading">{t("rulesContactSubmit")}</span>
+                    <span x-show="loading" x-cloak>
+                      {t("loading")}
+                    </span>
+                  </button>
+                </form>
+              </div>
+
+              <p class="text-sm font-medium text-primary" x-show="success" x-cloak>
+                {t("rulesContactSuccess")}
+              </p>
+            </div>
+          )
+        }
       </section>
     </div>
   </main>

@@ -63,7 +63,8 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 | Path | Access | Purpose |
 |---|---|---|
 | `/` | Public | Day agenda (`BOOK_AHEAD_DAYS`, one day at a time; skips today after last slot) |
-| `/rules` | Public | Hours, booking rules, etiquette, access |
+| `/rules` | Public | Hours, booking rules, etiquette, access; contact/incident form (auth-only) via Netlify Forms |
+| `/netlify-forms` | Public, prerendered | Never linked — static form-detection target so Netlify's build-time scan can register `contacte-incidencies` (the SSR `/rules` page isn't visible to that scan) |
 | `/sign-in` | Public | Sign in / sign up |
 | `/sign-out` | Auth | Sign out |
 | `/reset-password` | Public | Set new password from email link |
