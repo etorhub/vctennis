@@ -148,6 +148,15 @@ const overlapDetailTemplate = t("errorOverlapDetail");
     onDurationChange() {
       this.ensureSelectableStart();
     },
+    // x-model applies the value before x-for has rendered the matching <option>, so the browser
+    // falls back to the first option and the select ends up showing a different time than the
+    // state holds. Re-apply once the options exist.
+    syncStartSelect(el, _days, value) {
+      this.$nextTick(() => {
+        if (!value || el.value === value) return;
+        if ([...el.options].some((o) => o.value === value)) el.value = value;
+      });
+    },
     get selectedDayLabel() {
       if (!this.startsAt) return '';
       for (const day of this.slotsByDay) {
@@ -292,7 +301,12 @@ const overlapDetailTemplate = t("errorOverlapDetail");
 
         <label class="form-control w-full">
           <div class="label py-1"><span class="label-text font-medium">{t("startTime")}</span></div>
-          <select class="select select-bordered w-full" x-model="startsAt" required>
+          <select
+            class="select select-bordered w-full"
+            x-model="startsAt"
+            x-effect="syncStartSelect($el, selectableDays, startsAt)"
+            required
+          >
             <template x-for="day in selectableDays" :key="day.dateKey">
               <optgroup :label="day.label">
                 <template x-for="slot in day.slots" :key="slot.value">
@@ -332,7 +346,12 @@ const overlapDetailTemplate = t("errorOverlapDetail");
 
         <label class="form-control w-full">
           <div class="label py-1"><span class="label-text font-medium">{t("startTime")}</span></div>
-          <select class="select select-bordered w-full" x-model="startsAt" required>
+          <select
+            class="select select-bordered w-full"
+            x-model="startsAt"
+            x-effect="syncStartSelect($el, selectableDays, startsAt)"
+            required
+          >
             <template x-for="day in selectableDays" :key="day.dateKey">
               <optgroup :label="day.label">
                 <template x-for="slot in day.slots" :key="slot.value">
