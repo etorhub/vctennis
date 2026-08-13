@@ -6,28 +6,28 @@ Append-only **domain events** for ops and Grafana Cloud dashboards. Admins can b
 
 ## Code
 
-| Piece | Location |
-| --- | --- |
-| Schema | [`db/config.ts`](../db/config.ts) — `Events` table |
-| Emit helper | [`src/lib/events.ts`](../src/lib/events.ts) — `emitEvent`, `redactEventEmails` |
-| Grafana ship | [`src/lib/observability.ts`](../src/lib/observability.ts) — Loki push + Prometheus remote write |
-| Dashboard | [`ops/grafana/dashboards/domain-events.json`](../ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](../ops/grafana/dashboards/prod-health.json) |
-| Health probe | [`src/lib/healthProbe.ts`](../src/lib/healthProbe.ts) + Netlify [`health-probe`](../netlify/functions/health-probe.mts) (HTTP probes) + [`/api/cron/metrics`](../src/pages/api/cron/metrics.ts) (user gauge) |
-| Instrumentation | Astro actions (`bookings`, `admin`, `auth`), Better Auth hooks in `src/lib/auth.ts`, reminder cron |
-| Admin timeline | [`src/pages/admin/timeline.astro`](../src/pages/admin/timeline.astro) — sign-ups, booking created/cancelled |
+| Piece           | Location                                                                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Schema          | [`db/config.ts`](../db/config.ts) — `Events` table                                                                                                                                                           |
+| Emit helper     | [`src/lib/events.ts`](../src/lib/events.ts) — `emitEvent`, `redactEventEmails`                                                                                                                               |
+| Grafana ship    | [`src/lib/observability.ts`](../src/lib/observability.ts) — Loki push + Prometheus remote write                                                                                                              |
+| Dashboard       | [`ops/grafana/dashboards/domain-events.json`](../ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](../ops/grafana/dashboards/prod-health.json)                         |
+| Health probe    | [`src/lib/healthProbe.ts`](../src/lib/healthProbe.ts) + Netlify [`health-probe`](../netlify/functions/health-probe.mts) (HTTP probes) + [`/api/cron/metrics`](../src/pages/api/cron/metrics.ts) (user gauge) |
+| Instrumentation | Astro actions (`bookings`, `admin`, `auth`), Better Auth hooks in `src/lib/auth.ts`, reminder cron                                                                                                           |
+| Admin timeline  | [`src/pages/admin/timeline.astro`](../src/pages/admin/timeline.astro) — sign-ups, booking created/cancelled                                                                                                  |
 
 ## Schema
 
-| Column | Type | Meaning |
-| --- | --- | --- |
-| `id` | text PK | UUID |
-| `type` | text | Event name (see catalog) |
-| `actorUserId` | text? | Who performed the action |
-| `subjectUserId` | text? | Target user when different from actor |
-| `bookingId` | text? | Related booking |
-| `reason` | text? | Stable rejection / failure code |
-| `payload` | text? | JSON extras |
-| `createdAt` | date | Event time (UTC stored) |
+| Column          | Type    | Meaning                               |
+| --------------- | ------- | ------------------------------------- |
+| `id`            | text PK | UUID                                  |
+| `type`          | text    | Event name (see catalog)              |
+| `actorUserId`   | text?   | Who performed the action              |
+| `subjectUserId` | text?   | Target user when different from actor |
+| `bookingId`     | text?   | Related booking                       |
+| `reason`        | text?   | Stable rejection / failure code       |
+| `payload`       | text?   | JSON extras                           |
+| `createdAt`     | date    | Event time (UTC stored)               |
 
 No foreign keys — history survives booking/user deletion.
 
@@ -50,41 +50,42 @@ No foreign keys — history survives booking/user deletion.
 
 ## Event catalog
 
-| type | Emitted from | Notes |
-| --- | --- | --- |
-| `booking.created` | `bookings.create` after insert | payload: startsAt, durationMin, source |
-| `booking.updated` | `bookings.update` after update | before/after slot; source member/admin |
-| `booking.cancelled` | `bookings.delete` / `admin.deleteBooking` | source member/admin |
-| `booking.rejected` | booking validation / authz failures | reason codes below; source member/admin; slot (startsAt, durationMin) when known |
-| `user.signed_up` | Better Auth `user.create.after` | email + userId; source member |
-| `user.verified` | `emailVerification.afterEmailVerification` | email + userId; source member |
-| `user.signed_in` | `session.create.after` | also fires after verify auto-sign-in; source member |
-| `user.signed_out` | `auth.signOut` | source member |
-| `user.profile_updated` | `auth.updateProfile` | showName, theme (not name text); source member |
-| `user.password_changed` | `auth.changePassword` success | source member |
-| `user.password_change_rejected` | password change failures | reason: mismatch / incorrect_password / error; source member |
-| `user.deleted` | after redaction in `deleteUserCascade` | source self/admin; email when known |
-| `user.disabled` / `user.enabled` | `admin.setDisabled` | subject + email; source admin |
-| `user.role_changed` | `admin.setRole` | role + email; source admin |
-| `user.became_admin` | `auth.becomeAdmin` | source member |
-| `reminder.sent` / `reminder.failed` | `/api/cron/send-reminders` | bookingId; source system; no email |
-| `contact.submitted` | `contact.send` after insert into `ContactMessages` | payload: contactMessageId, type (contact/incident) |
+| type                                | Emitted from                                       | Notes                                                                            |
+| ----------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `booking.created`                   | `bookings.create` after insert                     | payload: startsAt, durationMin, source                                           |
+| `booking.updated`                   | `bookings.update` after update                     | before/after slot; source member/admin                                           |
+| `booking.cancelled`                 | `bookings.delete` / `admin.deleteBooking`          | source member/admin                                                              |
+| `booking.rejected`                  | booking validation / authz failures                | reason codes below; source member/admin; slot (startsAt, durationMin) when known |
+| `user.signed_up`                    | Better Auth `user.create.after`                    | email + userId; source member                                                    |
+| `user.verified`                     | `emailVerification.afterEmailVerification`         | email + userId; source member                                                    |
+| `user.signed_in`                    | `session.create.after`                             | also fires after verify auto-sign-in; source member                              |
+| `user.signed_out`                   | `auth.signOut`                                     | source member                                                                    |
+| `user.profile_updated`              | `auth.updateProfile`                               | showName, theme (not name text); source member                                   |
+| `user.password_changed`             | `auth.changePassword` success                      | source member                                                                    |
+| `user.password_change_rejected`     | password change failures                           | reason: mismatch / incorrect_password / error; source member                     |
+| `user.deleted`                      | after redaction in `deleteUserCascade`             | source self/admin; email when known                                              |
+| `user.disabled` / `user.enabled`    | `admin.setDisabled`                                | subject + email; source admin                                                    |
+| `user.role_changed`                 | `admin.setRole`                                    | role + email; source admin                                                       |
+| `user.became_admin`                 | `auth.becomeAdmin`                                 | source member                                                                    |
+| `reminder.sent` / `reminder.failed` | `/api/cron/send-reminders`                         | bookingId; source system; no email                                               |
+| `contact.submitted`                 | `contact.send` after insert into `ContactMessages` | payload: contactMessageId, type (contact/incident)                               |
 
 ### `booking.rejected` reason codes
 
-| reason | Typical cause |
-| --- | --- |
-| `overlap` | Slot conflicts with another booking |
-| `max_bookings` | Over `MAX_ACTIVE_BOOKINGS` |
-| `outside_hours` | Outside open hours |
-| `too_far` | Outside book-ahead window |
-| `past` | Start in the past / booking already over |
-| `invalid_slot` | Bad duration, alignment, or timestamp |
-| `cutoff` | Reserved for cancel/change cutoff (if reintroduced) |
-| `unauthorized` | Not signed in |
-| `disabled` | Account disabled |
-| `forbidden` | Not allowed |
-| `not_found` | Booking missing |
+| reason          | Typical cause                                             |
+| --------------- | --------------------------------------------------------- |
+| `overlap`       | Slot conflicts with another booking                       |
+| `closed`        | Slot inside a configured court closure (`COURT_CLOSURES`) |
+| `max_bookings`  | Over `MAX_ACTIVE_BOOKINGS`                                |
+| `outside_hours` | Outside open hours                                        |
+| `too_far`       | Outside book-ahead window                                 |
+| `past`          | Start in the past / booking already over                  |
+| `invalid_slot`  | Bad duration, alignment, or timestamp                     |
+| `cutoff`        | Reserved for cancel/change cutoff (if reintroduced)       |
+| `unauthorized`  | Not signed in                                             |
+| `disabled`      | Account disabled                                          |
+| `forbidden`     | Not allowed                                               |
+| `not_found`     | Booking missing                                           |
 
 ## Example queries
 
@@ -126,10 +127,10 @@ Provisioning: import or sync JSON under [`ops/grafana/dashboards/`](../ops/grafa
 
 Grafana Cloud alert rules + email contact point live under [`ops/grafana/alerting/`](../ops/grafana/alerting/) (see that README for recreate / test / mute). Folder **Vinya Canadell Tennis** (`vctennis`), contact point `vctennis-ops-email` → `etor.diaz@proton.me`.
 
-| Rule | Condition | `for` |
-|---|---|---|
-| `vctennis-app-down` | Probe success min over 15m is less than 1, or no data (`vctennis_probe_success`) | 10m |
-| `vctennis-errors-high` | ≥ 3 `reminder.failed` events in 1h (`vctennis_events`) | 5m |
+| Rule                   | Condition                                                                        | `for` |
+| ---------------------- | -------------------------------------------------------------------------------- | ----- |
+| `vctennis-app-down`    | Probe success min over 15m is less than 1, or no data (`vctennis_probe_success`) | 10m   |
+| `vctennis-errors-high` | ≥ 3 `reminder.failed` events in 1h (`vctennis_events`)                           | 5m    |
 
 Do **not** alert on `booking.rejected` (expected validation). Email is Grafana Cloud’s built-in mailer (not Resend).
 

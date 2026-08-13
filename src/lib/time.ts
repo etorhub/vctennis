@@ -2,10 +2,13 @@ import {
   ALLOWED_DURATIONS,
   BOOK_AHEAD_DAYS,
   CLOSE_HOUR,
+  CLOSURE_ANNOUNCE_AHEAD_DAYS,
+  COURT_CLOSURES,
   OPEN_HOUR,
   SLOT_MINUTES,
   TIMEZONE,
-  type AllowedDuration
+  type AllowedDuration,
+  type CourtClosure
 } from "./config";
 
 /** Instant representing local wall-clock time in Europe/Madrid. */
@@ -191,17 +194,63 @@ export function conflictsWithExisting(
   excludeId?: string
 ): boolean {
   return existing.some(
-    (b) =>
-      (!excludeId || b.id !== excludeId) &&
-      rangesOverlap(startsAt, durationMin, b.startsAt, b.durationMin)
+    (b) => (!excludeId || b.id !== excludeId) && rangesOverlap(startsAt, durationMin, b.startsAt, b.durationMin)
+  );
+}
+
+export type ClosureInterval = BookingInterval & {
+  id: string;
+  labelKey: CourtClosure["labelKey"];
+  /** `YYYY-MM-DD` in Europe/Madrid. */
+  dateKey: string;
+};
+
+let closureCache: ClosureInterval[] | null = null;
+
+/**
+ * Configured closures as concrete Madrid-local intervals.
+ * Memoised: `COURT_CLOSURES` is static and `zonedDate` builds `Intl` formatters on every call.
+ */
+export function closureIntervals(): ClosureInterval[] {
+  if (closureCache) return closureCache;
+  closureCache = COURT_CLOSURES.map((c) => {
+    const [year, month, day] = c.date.split("-").map(Number);
+    const startMinute = c.startMinute ?? 0;
+    const endMinute = c.endMinute ?? 0;
+    return {
+      id: `closure-${c.date}-${pad(c.startHour, 2)}${pad(startMinute, 2)}`,
+      labelKey: c.labelKey,
+      dateKey: c.date,
+      startsAt: zonedDate(year, month, day, c.startHour, startMinute),
+      durationMin: c.endHour * 60 + endMinute - (c.startHour * 60 + startMinute)
+    };
+  }).sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+  return closureCache;
+}
+
+/** Closures falling on the given Madrid calendar day. */
+export function closuresForDay(day: Date): ClosureInterval[] {
+  const { dateKey } = getZonedParts(day);
+  return closureIntervals().filter((c) => c.dateKey === dateKey);
+}
+
+/** True if `startsAt`+`durationMin` overlaps a configured closure. */
+export function isClosedRange(startsAt: Date, durationMin: number): boolean {
+  return conflictsWithExisting(startsAt, durationMin, closureIntervals());
+}
+
+/** Closures not yet over and starting within `aheadDays` — what the home banner announces. */
+export function upcomingClosures(now = new Date(), aheadDays = CLOSURE_ANNOUNCE_AHEAD_DAYS): ClosureInterval[] {
+  const horizon = addZonedDays(startOfZonedDay(now), aheadDays);
+  return closureIntervals().filter(
+    (c) => bookingEnd(c.startsAt, c.durationMin).getTime() > now.getTime() && c.startsAt.getTime() <= horizon.getTime()
   );
 }
 
 export function agendaDays(now = new Date()): Date[] {
   const today = startOfZonedDay(now);
   // After the last bookable slot today, start from tomorrow (sliding BOOK_AHEAD_DAYS window)
-  const start =
-    slotOptionsForDay(today, now).length === 0 ? addZonedDays(today, 1) : today;
+  const start = slotOptionsForDay(today, now).length === 0 ? addZonedDays(today, 1) : today;
   return Array.from({ length: BOOK_AHEAD_DAYS }, (_, i) => addZonedDays(start, i));
 }
 
@@ -217,7 +266,7 @@ export type SlotOptions = {
 };
 
 /**
- * Bookable start times for a day. Fully elapsed grid starts and overlaps (for the given duration) are excluded.
+ * Bookable start times for a day. Fully elapsed grid starts, court closures and overlaps (for the given duration) are excluded.
  * The current in-progress SLOT_MINUTES cell remains bookable. Default duration 30 lists every start
  * where a 30‑minute booking would fit.
  */
@@ -230,10 +279,8 @@ export function slotOptionsForDay(day: Date, now = new Date(), options: SlotOpti
       const slot = zonedDate(p.year, p.month, p.day, hour, minute);
       if (!isWithinOpenHours(slot, durationMin)) continue;
       if (!isBookableStart(slot, now)) continue;
-      if (
-        options.existing &&
-        conflictsWithExisting(slot, durationMin, options.existing, options.excludeId)
-      ) {
+      if (isClosedRange(slot, durationMin)) continue;
+      if (options.existing && conflictsWithExisting(slot, durationMin, options.existing, options.excludeId)) {
         continue;
       }
       slots.push(slot);

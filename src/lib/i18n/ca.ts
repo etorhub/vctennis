@@ -54,6 +54,8 @@ export const ca: Dictionary = {
   signInToBook: "Inicia sessió per reservar",
   bookAt: "Reservar a les {time}",
   noBookings: "Encara no hi ha reserves",
+  closureTournament: "Torneig",
+  closureBannerBody: "La pista estarà ocupada {days}, de {from} a {to}.",
   bookingCreated: "Reserva creada",
   bookingConfirmTitle: "Confirma la reserva",
   bookingConflictTitle: "Franja no disponible",
@@ -67,6 +69,7 @@ export const ca: Dictionary = {
   errorOverlap: "Aquesta franja ja està reservada.",
   errorOverlapDetail:
     "La reserva de {time} ({duration}) se solapa amb una reserva existent. Torna enrere i tria una altra hora o una durada més curta.",
+  errorClosed: "Aquesta franja està reservada per a un esdeveniment de la pista.",
   errorMaxBookings: "Ja tens el màxim de reserves actives.",
   errorPast: "Aquesta hora ja ha passat.",
   errorOutsideHours: "Les reserves han d'estar dins l'horari d'obertura.",

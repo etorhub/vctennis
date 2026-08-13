@@ -52,6 +52,8 @@ export const en = {
   signInToBook: "Sign in to book",
   bookAt: "Book at {time}",
   noBookings: "No bookings yet",
+  closureTournament: "Tournament",
+  closureBannerBody: "The court is reserved {days}, from {from} to {to}.",
   bookingCreated: "Booking created",
   bookingConfirmTitle: "Confirm booking",
   bookingConflictTitle: "Slot unavailable",
@@ -65,6 +67,7 @@ export const en = {
   errorOverlap: "That time slot is already booked.",
   errorOverlapDetail:
     "Your booking from {time} ({duration}) overlaps an existing reservation. Go back and choose another time or a shorter duration.",
+  errorClosed: "That time slot is reserved for a court event.",
   errorMaxBookings: "You already have the maximum number of active bookings.",
   errorPast: "That time has already passed.",
   errorOutsideHours: "Bookings must be within opening hours.",
