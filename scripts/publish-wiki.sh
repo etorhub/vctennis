@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publish docs/Event-logging.md to the GitHub wiki.
+# Publish every docs/*.md page to the GitHub wiki, regenerating Home from what is there.
 # Prerequisite: create the first wiki page once in the GitHub UI
 # (https://github.com/etorhub/vctennis/wiki) so the vctennis.wiki.git remote exists.
 set -euo pipefail
@@ -15,23 +15,37 @@ if ! git ls-remote "https://github.com/etorhub/vctennis.wiki.git" HEAD &>/dev/nu
 fi
 
 git clone --depth 1 "https://github.com/etorhub/vctennis.wiki.git" "$WIKI_DIR"
-cp "$ROOT/docs/Event-logging.md" "$WIKI_DIR/Event-logging.md"
-cat > "$WIKI_DIR/Home.md" <<'EOF'
-# Vinya Canadell Tennis wiki
 
-Internal documentation for the [vctennis](https://github.com/etorhub/vctennis) booking PWA.
+# Page title: the H1 text. Summary: first sentence of the first paragraph, links flattened.
+page_title() { sed -n 's/^# //p' "$1" | head -1; }
+page_summary() {
+  awk 'NR==1 && /^# /{next} /^[#>]/{next} NF{print; exit}' "$1" |
+    sed -e 's/\[\([^]]*\)\]([^)]*)/\1/g' -e 's/\([^.]*\.\).*/\1/' -e 's/\*\*//g'
+}
 
-## Pages
+{
+  echo "# Vinya Canadell Tennis wiki"
+  echo
+  echo "Internal documentation for the [vctennis](https://github.com/etorhub/vctennis) booking PWA."
+  echo
+  echo "Published from \`docs/\` by \`npm run docs:wiki\` — edit there, not here."
+  echo
+  echo "## Pages"
+  echo
+} > "$WIKI_DIR/Home.md"
 
-- [Event logging](Event-logging) — domain events stored in Turso (`Events` table), catalog, PII rules, and query examples
-EOF
+for doc in "$ROOT"/docs/*.md; do
+  name="$(basename "$doc" .md)"
+  cp "$doc" "$WIKI_DIR/$name.md"
+  echo "- [$(page_title "$doc")]($name) — $(page_summary "$doc")" >> "$WIKI_DIR/Home.md"
+done
 
 cd "$WIKI_DIR"
-git add Home.md Event-logging.md
+git add -A
 if git diff --cached --quiet; then
   echo "Wiki already up to date."
   exit 0
 fi
-git commit -m "Sync Event-logging from docs/"
+git commit -m "Sync wiki pages from docs/"
 git push origin HEAD
-echo "Published https://github.com/etorhub/vctennis/wiki/Event-logging"
+echo "Published https://github.com/etorhub/vctennis/wiki"

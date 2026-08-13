@@ -2,6 +2,15 @@
 
 Community tennis court booking PWA for **Vinya Canadell**.
 
+Start here, then follow the pointers. This file is the index: invariants, constants, routes, and commands. The depth lives in `docs/`.
+
+| Doc | For |
+| --- | --- |
+| [`docs/Architecture.md`](docs/Architecture.md) | Request lifecycle, `Astro.locals`, route guards, module map, data model, email pipeline |
+| [`docs/Recipes.md`](docs/Recipes.md) | How to add an action, a string, an event, a column, a route, an email — and how to verify |
+| [`docs/Event-logging.md`](docs/Event-logging.md) | Domain event catalog, PII rules, reason codes |
+| [`README.md`](README.md) | Human-facing setup, env vars, deploy |
+
 ## Stack
 
 - **Astro 5** (SSR) + **Netlify** adapter (`output: "server"`)
@@ -11,6 +20,20 @@ Community tennis court booking PWA for **Vinya Canadell**.
 - **Alpine.js** for day switcher, bottom sheets, and client UI
 - **PWA**: installable (`manifest.webmanifest` + minimal `sw.js`), dismissible install banner, no offline data
 - **Node 20** (`.nvmrc`)
+
+## Invariants
+
+Non-obvious rules. Breaking one typechecks fine and fails in production — details in [`docs/Architecture.md`](docs/Architecture.md).
+
+- **Route guards live in [`src/middleware.ts`](src/middleware.ts)**, not in pages. New protected route → add it there.
+- **Actions re-check auth themselves.** The middleware guards page paths, not action calls. Every action verifies `locals.user` and `user.disabled` (admin actions also check `role`).
+- **`ActionError`'s `message` is an i18n key** (`"errorUnauthorized"`), not prose. The page resolves it through `locals.t`.
+- **The middleware must never throw.** A DB/auth outage degrades to a logged-out request; it must not 500 the public pages (incident 2026-07-26).
+- **[`src/lib/i18n/en.ts`](src/lib/i18n/en.ts) types the dictionary.** Add the English key first; a missing Catalan key falls back silently and `astro check` will not catch it.
+- **`emitEvent()` never throws**, and Grafana shipping is best-effort. Logging must not break a mutation. Same rule for email: wrap sends in `try`/`catch`.
+- **Booking knobs live in [`src/lib/config.ts`](src/lib/config.ts)**, never in env vars.
+- **All dates go through [`src/lib/time.ts`](src/lib/time.ts)** (`Europe/Madrid`). No raw `Date` math.
+- **There are no tests in this repo.** `npm run ci` (typecheck + build + dist verify) is the gate — see [Verifying a change](docs/Recipes.md#verifying-a-change).
 
 ## Booking rules
 
@@ -32,31 +55,10 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 
 ## Auth & roles
 
-- Open registration via email/password (`/sign-in`). When `EMAILS_ENABLED=true`, verify via Resend link; when false (default), accounts activate immediately and “Forgot password” is hidden
-- Login with email/password; optional “keep me signed in” (`rememberMe`, long-lived session cookie)
-- Password reset via email link (`/reset-password`) only when emails are enabled
-- Roles: `member` | `admin` on `User.role`
-- First admin: visit `/setup` while signed in when **no admin exists**
+- Open registration via email/password (`/sign-in`); roles are `member` | `admin` on `User.role`. First admin: visit `/setup` while signed in when **no admin exists**
+- Privacy: `User.showName` (default `true`, opt-out). Hidden → display **"Reserved"**. Self-serve account deletion on `/profile` — use `deleteUserCascade()` in [`src/lib/users.ts`](src/lib/users.ts); last admin cannot self-delete
+- Disabled users redirected to `/disabled`. Signup IP stored on `User.signupIp`
 - Apartment collected at sign-up: `User.apartmentBlock` (1–4) and `User.apartmentNumber` (1–12 in block 1, 1–9 in blocks 2–4 — see `APARTMENTS_PER_BLOCK`). Constants, parsers and `formatApartment()` live in [`src/lib/apartment.ts`](src/lib/apartment.ts); a number is only ever validated together with its block. Required by the `databaseHooks.user.create.before` hook, DB columns stay optional so pre-existing accounts keep working. Editable on `/profile`, shown on `/admin/users`. Deprecated `apartmentFloor` / `apartmentDoor` remain in [`db/config.ts`](db/config.ts) (`deprecated: true`); `scripts/migrate-apartment-number.js` still runs on every Netlify build after `astro db push`. Drop those columns and remove the migrate step from `netlify.toml` in a follow-up after confirming the backfill is complete
-- Signup IP stored on `User.signupIp`
-- Disabled users redirected to `/disabled`
-- Privacy: `User.showName` (default `true`, opt-out). Hidden → display **"Reserved"**
-- Appearance: `User.theme` (`system` default | `light` | `dark`), set on `/profile`
-- Self-serve account deletion on `/profile` (type email to confirm); deletes bookings + auth rows; last admin cannot self-delete
-- Privacy docs (stored data / deletion) on `/privacy` via `PrivacyContent.astro` — auth-only; `/settings` redirects to `/profile`
-- Header user menu (signed-in): bookings, profile, privacy, sign out
-
-## Theming
-
-- daisyUI themes `tennis` / `tennis-dark` in [`tailwind.config.mjs`](tailwind.config.mjs); names, meta colours and the `ThemePreference` type live in [`src/lib/theme.ts`](src/lib/theme.ts)
-- `Layout.astro` renders `data-theme` from `Astro.locals.user.theme` and an inline head script resolves `system` (and follows OS changes) before first paint — no flash
-- Use daisyUI semantic classes (`bg-base-100`, `border-base-300`, `text-base-content/70`, …) in new UI, never `bg-white` / `text-slate-*`; `dark:` variants are wired to `[data-theme="tennis-dark"]`
-
-## i18n
-
-- Dictionaries: [`src/lib/i18n/ca.ts`](src/lib/i18n/ca.ts), [`src/lib/i18n/en.ts`](src/lib/i18n/en.ts)
-- Locale from `Accept-Language`: `ca`/`es` → Catalan, else English
-- Middleware sets `Astro.locals.locale` and `Astro.locals.t`
 
 ## Key routes
 
@@ -76,35 +78,18 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 | `/admin/bookings` | Admin | All bookings |
 | `/admin/timeline` | Admin | Recent domain events (sign-ups, bookings created/cancelled) |
 | `/api/auth/[...all]` | Public | Better Auth handler |
+| `/api/cron/*` | `CRON_SECRET` | Reminders, metrics, manual health probe |
+| `/api/dev/email-preview` | DEV only | Render any email template without sending |
 
 ## Commands
 
 ```bash
 npm install
-
-# Local file DB (fastest to start — no Turso)
-# Needs BETTER_AUTH_SECRET / BETTER_AUTH_URL in .env (RESEND_API_KEY only if EMAILS_ENABLED=true)
-npm run dev:local
-npm run build:local
-
-# Same checks as GitHub Actions (typecheck + local build + dist verify)
-npm run ci
-
-# Turso (required for npm run dev / build --remote and Netlify)
-turso auth login
-npm run db:setup            # create Turso DB + write ASTRO_DB_* to .env
-npm run db:update-schemas   # push schema to Turso
-
-# Backfills apartmentNumber from the deprecated apartmentFloor/apartmentDoor columns.
-# The Netlify build runs it after `astro db push`; --dry-run prints the mapping only.
-node scripts/migrate-apartment-number.js --dry-run
-npm run dev                 # uses Turso --remote (LAN-bound via --host)
-npm run build               # uses Turso --remote (Netlify)
-
-# Deploy (builds on Netlify so smoke + rollback run)
-npm run host:login
-npm run host:deploy
+npm run dev:local   # local file DB, no Turso — needs only BETTER_AUTH_SECRET / BETTER_AUTH_URL in .env
+npm run ci          # the gate: typecheck + local build + dist verify (same as GitHub Actions)
 ```
+
+Turso is only needed for `npm run dev` / `npm run build --remote` and Netlify: `turso auth login`, `npm run db:setup`, `npm run db:update-schemas`. Full script table and env reference: [`README.md`](README.md).
 
 ## Deploy stability
 
@@ -119,18 +104,11 @@ npm run host:deploy
 - Read-only exploration needs no branch. Offer to open a PR when work is ready; merge only when asked.
 - Do not add `Co-Authored-By` or `Claude-Session` attribution footers (or any AI-attribution trailer) to commit messages or PR descriptions.
 
-## Event logging
-
-Append-only domain events in the `Events` table (Astro DB / Turso). Emit via [`src/lib/events.ts`](src/lib/events.ts) (`emitEvent`). After insert, [`src/lib/observability.ts`](src/lib/observability.ts) best-effort dual-writes to Grafana Cloud Loki + Prometheus when `GRAFANA_*` env is set (no-op otherwise; never fails the mutation). Prod HTTP health: Netlify cron [`health-probe`](netlify/functions/health-probe.mts) every 5m ships `vctennis_probe_*` metrics and POSTs [`/api/cron/metrics`](src/pages/api/cron/metrics.ts) for gauge `vctennis_users_registered`. Grafana alerts email ops on probe down / elevated `reminder.failed` — see [`ops/grafana/alerting/`](ops/grafana/alerting/). Admins can browse recent sign-ups and booking create/cancel events at `/admin/timeline`.
-
-Canonical catalog, PII rules, and reason codes: [`docs/Event-logging.md`](docs/Event-logging.md). Dashboards: [`ops/grafana/dashboards/domain-events.json`](ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](ops/grafana/dashboards/prod-health.json). After the GitHub wiki is initialized once in the UI, sync with `npm run docs:wiki` → [wiki Event-logging](https://github.com/etorhub/vctennis/wiki/Event-logging).
-
 ## Conventions
 
 - Mobile-first UI; Google-agenda style calendar
 - Prefer Astro actions for mutations; validate on the server
-- Timezone always `Europe/Madrid` via helpers in [`src/lib/time.ts`](src/lib/time.ts)
+- Use daisyUI semantic classes (`bg-base-100`, `border-base-300`, `text-base-content/70`, …) in new UI, never `bg-white` / `text-slate-*`
 - Do not reintroduce Freedom Stack demos (posts, bknd, marketing, React, HTMX)
-- Config knobs stay in code (`config.ts`), not env vars
-- Keep human docs in [`README.md`](README.md); keep this file accurate for agents
+- Keep human docs in [`README.md`](README.md); keep this file and `docs/` accurate for agents
 - Follow the Git workflow above (feature branch + PR)
