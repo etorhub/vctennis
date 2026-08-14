@@ -16,15 +16,17 @@ Community tennis court booking PWA for **Vinya Canadell**.
 
 All constants live in [`src/lib/config.ts`](src/lib/config.ts):
 
-| Constant | Default | Meaning |
-|---|---|---|
-| `OPEN_HOUR` / `CLOSE_HOUR` | 10 / 21 | Court hours (Europe/Madrid) |
-| `BOOK_AHEAD_DAYS` | 3 | Agenda window length; starts today, or tomorrow once no bookable slots remain today |
-| `MAX_ACTIVE_BOOKINGS` | 1 | Max not-yet-ended bookings per user (one active booking at a time) |
-| `SLOT_MINUTES` | 30 | Starts on :00 / :30 |
-| `ALLOWED_DURATIONS` | 30, 60 | Minutes |
-| `REMINDER_OFFSET_HOURS` | 2 | Hours before start to send booking reminder email |
-| `TIMEZONE` | Europe/Madrid | Always use helpers in [`src/lib/time.ts`](src/lib/time.ts) |
+| Constant                      | Default            | Meaning                                                                                                                        |
+| ----------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `OPEN_HOUR` / `CLOSE_HOUR`    | 10 / 21            | Court hours (Europe/Madrid)                                                                                                    |
+| `BOOK_AHEAD_DAYS`             | 3                  | Agenda window length; starts today, or tomorrow once no bookable slots remain today                                            |
+| `MAX_ACTIVE_BOOKINGS`         | 1                  | Max not-yet-ended bookings per user (one active booking at a time)                                                             |
+| `SLOT_MINUTES`                | 30                 | Starts on :00 / :30                                                                                                            |
+| `ALLOWED_DURATIONS`           | 30, 60             | Minutes                                                                                                                        |
+| `REMINDER_OFFSET_HOURS`       | 2                  | Hours before start to send booking reminder email                                                                              |
+| `TIMEZONE`                    | Europe/Madrid      | Always use helpers in [`src/lib/time.ts`](src/lib/time.ts)                                                                     |
+| `COURT_CLOSURES`              | tournament weekend | Court-wide blocked ranges (Madrid wall-clock). Hidden from bookable slots, painted on the agenda, announced by the home banner |
+| `CLOSURE_ANNOUNCE_AHEAD_DAYS` | 14                 | How far ahead a closure shows in the home banner                                                                               |
 
 Server-side validation is in [`src/actions/bookings.ts`](src/actions/bookings.ts). Overlaps are hard-blocked. One court only. The current in-progress `:00`/`:30` slot stays bookable if free (walk-up); confirmation email is skipped when the start has already passed.
 
@@ -60,22 +62,22 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 
 ## Key routes
 
-| Path | Access | Purpose |
-|---|---|---|
-| `/` | Public | Day agenda (`BOOK_AHEAD_DAYS`, one day at a time; skips today after last slot) |
-| `/rules` | Public | Hours, booking rules, etiquette, access; contact/incident form (auth-only) — `actions.contact.send` stores to `ContactMessages` and emails all admins via Resend (not Netlify Forms: SSR routes aren't visible to Netlify's form capture) |
-| `/sign-in` | Public | Sign in / sign up |
-| `/sign-out` | Auth | Sign out |
-| `/reset-password` | Public | Set new password from email link |
-| `/profile` | Auth | Name, showName, appearance (theme), change password, delete account |
-| `/privacy` | Auth | Stored data and deletion docs (`PrivacyContent.astro`) |
-| `/settings` | Auth | Redirects to `/profile` |
-| `/my-bookings` | Auth | Upcoming + past bookings (edit/cancel upcoming) |
-| `/setup` | Auth, once | Become first admin |
-| `/admin/users` | Admin | User management |
-| `/admin/bookings` | Admin | All bookings |
-| `/admin/timeline` | Admin | Recent domain events (sign-ups, bookings created/cancelled) |
-| `/api/auth/[...all]` | Public | Better Auth handler |
+| Path                 | Access     | Purpose                                                                                                                                                                                                                                   |
+| -------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                  | Public     | Day agenda (`BOOK_AHEAD_DAYS`, one day at a time; skips today after last slot)                                                                                                                                                            |
+| `/rules`             | Public     | Hours, booking rules, etiquette, access; contact/incident form (auth-only) — `actions.contact.send` stores to `ContactMessages` and emails all admins via Resend (not Netlify Forms: SSR routes aren't visible to Netlify's form capture) |
+| `/sign-in`           | Public     | Sign in / sign up                                                                                                                                                                                                                         |
+| `/sign-out`          | Auth       | Sign out                                                                                                                                                                                                                                  |
+| `/reset-password`    | Public     | Set new password from email link                                                                                                                                                                                                          |
+| `/profile`           | Auth       | Name, showName, appearance (theme), change password, delete account                                                                                                                                                                       |
+| `/privacy`           | Auth       | Stored data and deletion docs (`PrivacyContent.astro`)                                                                                                                                                                                    |
+| `/settings`          | Auth       | Redirects to `/profile`                                                                                                                                                                                                                   |
+| `/my-bookings`       | Auth       | Upcoming + past bookings (edit/cancel upcoming)                                                                                                                                                                                           |
+| `/setup`             | Auth, once | Become first admin                                                                                                                                                                                                                        |
+| `/admin/users`       | Admin      | User management                                                                                                                                                                                                                           |
+| `/admin/bookings`    | Admin      | All bookings                                                                                                                                                                                                                              |
+| `/admin/timeline`    | Admin      | Recent domain events (sign-ups, bookings created/cancelled)                                                                                                                                                                               |
+| `/api/auth/[...all]` | Public     | Better Auth handler                                                                                                                                                                                                                       |
 
 ## Commands
 

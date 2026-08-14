@@ -1,0 +1,68 @@
+---
+import Icon from "astro-iconify";
+import { bookingEnd, formatFullDate, formatTime, getZonedParts, upcomingClosures } from "@/lib/time";
+import type { ClosureInterval } from "@/lib/time";
+
+const { t, locale } = Astro.locals;
+
+type Notice = {
+  id: string;
+  labelKey: ClosureInterval["labelKey"];
+  days: string;
+  from: string;
+  to: string;
+};
+
+/** Consecutive closures with the same event and the same time of day collapse into one notice. */
+function toNotices(closures: ClosureInterval[]): Notice[] {
+  const groups = new Map<string, ClosureInterval[]>();
+  for (const c of closures) {
+    const { hour, minute } = getZonedParts(c.startsAt);
+    const key = `${c.labelKey}|${hour}:${minute}|${c.durationMin}`;
+    const group = groups.get(key);
+    if (group) group.push(c);
+    else groups.set(key, [c]);
+  }
+
+  const listFormat = new Intl.ListFormat(locale === "ca" ? "ca" : "en", {
+    style: "long",
+    type: "conjunction"
+  });
+
+  return [...groups.values()].map((group) => {
+    const first = group[0];
+    return {
+      id: first.id,
+      labelKey: first.labelKey,
+      days: listFormat.format(group.map((c) => formatFullDate(c.startsAt, locale))),
+      from: formatTime(first.startsAt, locale),
+      to: formatTime(bookingEnd(first.startsAt, first.durationMin), locale)
+    };
+  });
+}
+
+const notices = toNotices(upcomingClosures());
+---
+
+{
+  notices.map((notice) => (
+    <div
+      class="alert alert-warning mb-2 grid-flow-col items-start justify-items-start gap-3 py-2 text-left text-sm"
+      role="status"
+      x-data={`{ dismissed: $persist(false).as(${JSON.stringify(`closure-dismissed:${notice.id}`)}) }`}
+      x-cloak
+      x-show="!dismissed"
+    >
+      <Icon pack="lucide" name="trophy" height={18} width={18} class="mt-0.5 shrink-0" />
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold leading-tight">{t(notice.labelKey)}</p>
+        <p class="mt-0.5 leading-snug">
+          {t("closureBannerBody", { days: notice.days, from: notice.from, to: notice.to })}
+        </p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-xs btn-circle" aria-label={t("close")} @click="dismissed = true">
+        <Icon pack="lucide" name="x" height={16} width={16} />
+      </button>
+    </div>
+  ))
+}

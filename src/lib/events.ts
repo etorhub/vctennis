@@ -27,6 +27,7 @@ export type EventType = (typeof EVENT_TYPES)[number];
 
 export type BookingRejectReason =
   | "overlap"
+  | "closed"
   | "max_bookings"
   | "outside_hours"
   | "too_far"

@@ -10,6 +10,7 @@ import {
   isAllowedDuration,
   isBookableStart,
   isBookingOver,
+  isClosedRange,
   isFuture,
   isWithinBookAhead,
   isWithinOpenHours,
@@ -128,6 +129,14 @@ async function validateSlot(
       payload
     });
   }
+  // Last, so an otherwise-invalid slot still reports its own reason. Applies to admins too.
+  if (isClosedRange(startsAt, durationMin)) {
+    await rejectBooking(actorUserId, "closed", "errorClosed", "CONFLICT", {
+      bookingId,
+      source,
+      payload
+    });
+  }
 }
 
 export const bookings = {
@@ -152,9 +161,7 @@ export const bookings = {
       const candidates = await db
         .select()
         .from(Bookings)
-        .where(
-          and(eq(Bookings.userId, user.id), gt(Bookings.startsAt, new Date(now.getTime() - lookbackMs)))
-        );
+        .where(and(eq(Bookings.userId, user.id), gt(Bookings.startsAt, new Date(now.getTime() - lookbackMs))));
       const active = candidates.filter((b) => !isBookingOver(b.startsAt, b.durationMin, now));
 
       if (active.length >= MAX_ACTIVE_BOOKINGS) {

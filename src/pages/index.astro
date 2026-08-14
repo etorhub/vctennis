@@ -3,17 +3,20 @@ import { actions } from "astro:actions";
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
 import BookingSheet from "@/components/BookingSheet.astro";
+import ClosureBanner from "@/components/ClosureBanner.astro";
 import { db, Bookings, User, gte, lte, and } from "astro:db";
 import { OPEN_HOUR, CLOSE_HOUR, SLOT_MINUTES } from "@/lib/config";
 import {
   agendaDays,
   bookingEnd,
+  closuresForDay,
   formatDayHeader,
   formatFullDate,
   formatTime,
   getZonedParts,
   hourLabels,
   isBookableStart,
+  isClosedRange,
   isWithinOpenHours,
   rangesOverlap,
   zonedDate
@@ -33,8 +36,7 @@ if (createResult?.data?.success) toastMessage = t("bookingCreated");
 if (updateResult?.data?.success) toastMessage = t("bookingUpdated");
 if (deleteResult?.data?.success) toastMessage = t("bookingDeleted");
 
-const err =
-  createResult?.error?.message || updateResult?.error?.message || deleteResult?.error?.message;
+const err = createResult?.error?.message || updateResult?.error?.message || deleteResult?.error?.message;
 if (err) {
   const key = err as MessageKey;
   toastErrorMessage = t(key) !== String(key) ? t(key) : t("errorGeneric");
@@ -103,6 +105,29 @@ const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
   };
 });
 
+type ViewClosure = {
+  label: string;
+  timeLabel: string;
+  top: number;
+  height: number;
+  endMinutesFromOpen: number;
+};
+
+function closureViewsForDay(day: Date): ViewClosure[] {
+  return closuresForDay(day).map((c) => {
+    const parts = getZonedParts(c.startsAt);
+    const minutesFromOpen = (parts.hour - OPEN_HOUR) * 60 + parts.minute;
+    const end = bookingEnd(c.startsAt, c.durationMin);
+    return {
+      label: t(c.labelKey),
+      timeLabel: `${formatTime(c.startsAt, locale)} – ${formatTime(end, locale)}`,
+      top: (minutesFromOpen / 60) * hourHeight,
+      height: Math.max((c.durationMin / 60) * hourHeight - 2, 28),
+      endMinutesFromOpen: minutesFromOpen + c.durationMin
+    };
+  });
+}
+
 function hiddenPastHoursForDay(dateKey: string): number {
   if (dateKey !== todayKey) return 0;
   if (nowParts.hour < OPEN_HOUR) return 0;
@@ -131,8 +156,10 @@ function openSlotsForDay(dayParts: ReturnType<typeof getZonedParts>, dayBookings
         rangesOverlap(slotStart, SLOT_MINUTES, new Date(b.startsAtIso), b.durationMin)
       );
       if (occupied) continue;
+      if (isClosedRange(slotStart, SLOT_MINUTES)) continue;
       const canFitHour =
         isWithinOpenHours(slotStart, 60) &&
+        !isClosedRange(slotStart, 60) &&
         !dayBookings.some((b) => rangesOverlap(slotStart, 60, new Date(b.startsAtIso), b.durationMin));
       const minutesFromOpen = (hour - OPEN_HOUR) * 60 + minute;
       slots.push({
@@ -159,6 +186,7 @@ const dayViews = days.map((day, index) => {
     title,
     hiddenPastHours,
     bookings: dayBookings,
+    closures: closureViewsForDay(day),
     slots: openSlotsForDay(dayParts, dayBookings)
   };
 });
@@ -168,222 +196,230 @@ const dayViews = days.map((day, index) => {
   <AppHeader />
 
   {toastMessage && <div x-init={`toastMessage = ${JSON.stringify(toastMessage)}`} class="sr-only" />}
-  {
-    toastErrorMessage && (
-      <div x-init={`toastErrorMessage = ${JSON.stringify(toastErrorMessage)}`} class="sr-only" />
-    )
-  }
+  {toastErrorMessage && <div x-init={`toastErrorMessage = ${JSON.stringify(toastErrorMessage)}`} class="sr-only" />}
 
   <main
     class="pb-28 lg:min-h-[calc(100dvh-3.5rem)] lg:bg-base-200"
     x-data={`{ dayIndex: 0, dayCount: ${dayViews.length} }`}
   >
     <div class="mx-auto w-full max-w-lg md:max-w-2xl lg:max-w-7xl">
+      <div class="px-3 pt-3">
+        <ClosureBanner />
+      </div>
       <div
         class="sticky top-[61px] z-10 flex items-center gap-1 border-b border-base-300 bg-base-200/95 px-2 py-2 backdrop-blur lg:hidden"
       >
-      <button
-        type="button"
-        class="btn btn-ghost btn-sm btn-circle"
-        aria-label={t("previousDay")}
-        :disabled="dayIndex === 0"
-        @click="dayIndex = Math.max(0, dayIndex - 1)"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          ><path d="m15 18-6-6 6-6"></path></svg
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm btn-circle"
+          aria-label={t("previousDay")}
+          :disabled="dayIndex === 0"
+          @click="dayIndex = Math.max(0, dayIndex - 1)"
         >
-      </button>
-      <div class="min-w-0 flex-1 text-center">
-        {
-          dayViews.map((day) => (
-            <h2
-              class="text-sm font-semibold capitalize text-base-content"
-              x-show={`dayIndex === ${day.index}`}
-              x-cloak={day.index !== 0 ? true : undefined}
-            >
-              {day.title}
-            </h2>
-          ))
-        }
-      </div>
-      <button
-        type="button"
-        class="btn btn-ghost btn-sm btn-circle"
-        aria-label={t("nextDay")}
-        :disabled="dayIndex === dayCount - 1"
-        @click="dayIndex = Math.min(dayCount - 1, dayIndex + 1)"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          ><path d="m9 18 6-6-6-6"></path></svg
-        >
-      </button>
-    </div>
-
-    <div
-      class="agenda-days lg:grid lg:gap-3 lg:px-3 lg:pb-4 lg:pt-3"
-      style={`--day-cols: ${dayViews.length}`}
-    >
-    {
-      dayViews.map((day) => {
-        const offsetPx = day.hiddenPastHours * hourHeight;
-        const fullHours = hours.length;
-        const collapsedHours = fullHours - day.hiddenPastHours;
-        const startMinutesWhenCollapsed = day.hiddenPastHours * 60;
-        const initialHours = day.hiddenPastHours > 0 ? collapsedHours : fullHours;
-
-        return (
-          <section
-            class="agenda-day lg:rounded-xl lg:border lg:border-base-300 lg:bg-base-100"
-            id={`day-${day.dateKey}`}
-            x-show={`dayIndex === ${day.index}`}
-            x-cloak={day.index !== 0 ? true : undefined}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg
           >
-            <div class="sticky top-[61px] z-10 hidden border-b border-base-300 bg-base-200/95 px-3 py-2.5 backdrop-blur lg:block lg:rounded-t-xl">
-              <h2 class="text-center text-sm font-semibold capitalize text-base-content">
+        </button>
+        <div class="min-w-0 flex-1 text-center">
+          {
+            dayViews.map((day) => (
+              <h2
+                class="text-sm font-semibold capitalize text-base-content"
+                x-show={`dayIndex === ${day.index}`}
+                x-cloak={day.index !== 0 ? true : undefined}
+              >
                 {day.title}
               </h2>
-            </div>
-            <div
-              class="relative px-2 pb-4 pt-2 md:px-3 lg:overflow-hidden lg:rounded-b-xl"
-              x-data={`{ showPastHours: false, hiddenPastHours: ${day.hiddenPastHours}, hourHeight: ${hourHeight}, fullHours: ${fullHours}, collapsedHours: ${collapsedHours} }`}
-            >
-              {day.hiddenPastHours > 0 && (
-                <div class="mb-2 px-2" x-show="!showPastHours">
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-xs w-full text-base-content/60"
-                    @click="showPastHours = true"
-                  >
-                    {t("showEarlierHours")}
-                  </button>
-                </div>
-              )}
-              <div
-                class="agenda-grid"
-                style={`--agenda-hours: ${initialHours}`}
-                x-bind:style={`{ '--agenda-hours': showPastHours || hiddenPastHours === 0 ? fullHours : collapsedHours }`}
+            ))
+          }
+        </div>
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm btn-circle"
+          aria-label={t("nextDay")}
+          :disabled="dayIndex === dayCount - 1"
+          @click="dayIndex = Math.min(dayCount - 1, dayIndex + 1)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg
+          >
+        </button>
+      </div>
+
+      <div class="agenda-days lg:grid lg:gap-3 lg:px-3 lg:pb-4 lg:pt-3" style={`--day-cols: ${dayViews.length}`}>
+        {
+          dayViews.map((day) => {
+            const offsetPx = day.hiddenPastHours * hourHeight;
+            const fullHours = hours.length;
+            const collapsedHours = fullHours - day.hiddenPastHours;
+            const startMinutesWhenCollapsed = day.hiddenPastHours * 60;
+            const initialHours = day.hiddenPastHours > 0 ? collapsedHours : fullHours;
+
+            return (
+              <section
+                class="agenda-day lg:rounded-xl lg:border lg:border-base-300 lg:bg-base-100"
+                id={`day-${day.dateKey}`}
+                x-show={`dayIndex === ${day.index}`}
+                x-cloak={day.index !== 0 ? true : undefined}
               >
-                {hours.map((h, hourIndex) => {
-                  const visibleWhenCollapsed = hourIndex >= day.hiddenPastHours;
-                  return (
-                    <div
-                      class="agenda-hour-line relative"
-                      x-show={
-                        day.hiddenPastHours > 0
-                          ? `showPastHours || ${hourIndex} >= hiddenPastHours`
-                          : undefined
-                      }
-                      style={
-                        day.hiddenPastHours > 0 && !visibleWhenCollapsed
-                          ? "display: none"
-                          : undefined
-                      }
-                    >
-                      <span class="absolute left-2 top-1 text-xs text-base-content/50 lg:left-1 lg:text-[11px]">
-                        {String(h).padStart(2, "0")}:00
-                      </span>
+                <div class="sticky top-[61px] z-10 hidden border-b border-base-300 bg-base-200/95 px-3 py-2.5 backdrop-blur lg:block lg:rounded-t-xl">
+                  <h2 class="text-center text-sm font-semibold capitalize text-base-content">{day.title}</h2>
+                </div>
+                <div
+                  class="relative px-2 pb-4 pt-2 md:px-3 lg:overflow-hidden lg:rounded-b-xl"
+                  x-data={`{ showPastHours: false, hiddenPastHours: ${day.hiddenPastHours}, hourHeight: ${hourHeight}, fullHours: ${fullHours}, collapsedHours: ${collapsedHours} }`}
+                >
+                  {day.hiddenPastHours > 0 && (
+                    <div class="mb-2 px-2" x-show="!showPastHours">
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs w-full text-base-content/60"
+                        @click="showPastHours = true"
+                      >
+                        {t("showEarlierHours")}
+                      </button>
                     </div>
-                  );
-                })}
-                {day.slots.map((slot) => {
-                  const visibleWhenCollapsed = slot.minutesFromOpen + SLOT_MINUTES > startMinutesWhenCollapsed;
-                  const collapsedTop = slot.top - offsetPx;
-                  const initialTop = day.hiddenPastHours > 0 ? collapsedTop : slot.top;
-                  const initialDisplay =
-                    day.hiddenPastHours > 0 && !visibleWhenCollapsed ? "none" : undefined;
-                  const styleParts = [`top: ${initialTop}px`, `height: ${slot.height}px`];
-                  if (initialDisplay) styleParts.push(`display: ${initialDisplay}`);
-                  const slotStyle = styleParts.join("; ");
-                  const slotBind =
-                    day.hiddenPastHours > 0
-                      ? `{
+                  )}
+                  <div
+                    class="agenda-grid"
+                    style={`--agenda-hours: ${initialHours}`}
+                    x-bind:style={`{ '--agenda-hours': showPastHours || hiddenPastHours === 0 ? fullHours : collapsedHours }`}
+                  >
+                    {hours.map((h, hourIndex) => {
+                      const visibleWhenCollapsed = hourIndex >= day.hiddenPastHours;
+                      return (
+                        <div
+                          class="agenda-hour-line relative"
+                          x-show={
+                            day.hiddenPastHours > 0 ? `showPastHours || ${hourIndex} >= hiddenPastHours` : undefined
+                          }
+                          style={day.hiddenPastHours > 0 && !visibleWhenCollapsed ? "display: none" : undefined}
+                        >
+                          <span class="absolute left-2 top-1 text-xs text-base-content/50 lg:left-1 lg:text-[11px]">
+                            {String(h).padStart(2, "0")}:00
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {day.slots.map((slot) => {
+                      const visibleWhenCollapsed = slot.minutesFromOpen + SLOT_MINUTES > startMinutesWhenCollapsed;
+                      const collapsedTop = slot.top - offsetPx;
+                      const initialTop = day.hiddenPastHours > 0 ? collapsedTop : slot.top;
+                      const initialDisplay = day.hiddenPastHours > 0 && !visibleWhenCollapsed ? "none" : undefined;
+                      const styleParts = [`top: ${initialTop}px`, `height: ${slot.height}px`];
+                      if (initialDisplay) styleParts.push(`display: ${initialDisplay}`);
+                      const slotStyle = styleParts.join("; ");
+                      const slotBind =
+                        day.hiddenPastHours > 0
+                          ? `{
                           display: (showPastHours || ${visibleWhenCollapsed}) ? null : 'none',
                           top: (showPastHours ? ${slot.top} : ${collapsedTop}) + 'px',
                           height: '${slot.height}px'
                         }`
-                      : undefined;
+                          : undefined;
 
-                  return (
-                    <button
-                      type="button"
-                      class="agenda-slot"
-                      style={slotStyle}
-                      x-bind:style={slotBind}
-                      aria-label={t("bookAt", { time: slot.timeLabel })}
-                      data-starts={slot.startsAtIso}
-                      data-duration={slot.durationMin}
-                      onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'create', startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration) } }))"
-                    />
-                  );
-                })}
-                {day.bookings.map((b) => {
-                  const visibleWhenCollapsed = b.endMinutesFromOpen > startMinutesWhenCollapsed;
-                  const collapsedTop = b.top - offsetPx;
-                  const initialTop = day.hiddenPastHours > 0 ? collapsedTop : b.top;
-                  const initialDisplay =
-                    day.hiddenPastHours > 0 && !visibleWhenCollapsed ? "none" : undefined;
-                  const styleParts = [`top: ${initialTop}px`, `height: ${b.height}px`];
-                  if (initialDisplay) styleParts.push(`display: ${initialDisplay}`);
-                  const bookingStyle = styleParts.join("; ");
-                  const bookingBind =
-                    day.hiddenPastHours > 0
-                      ? `{
+                      return (
+                        <button
+                          type="button"
+                          class="agenda-slot"
+                          style={slotStyle}
+                          x-bind:style={slotBind}
+                          aria-label={t("bookAt", { time: slot.timeLabel })}
+                          data-starts={slot.startsAtIso}
+                          data-duration={slot.durationMin}
+                          onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'create', startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration) } }))"
+                        />
+                      );
+                    })}
+                    {day.closures.map((c) => {
+                      const visibleWhenCollapsed = c.endMinutesFromOpen > startMinutesWhenCollapsed;
+                      const collapsedTop = c.top - offsetPx;
+                      const initialTop = day.hiddenPastHours > 0 ? collapsedTop : c.top;
+                      const initialDisplay = day.hiddenPastHours > 0 && !visibleWhenCollapsed ? "none" : undefined;
+                      const styleParts = [`top: ${initialTop}px`, `height: ${c.height}px`];
+                      if (initialDisplay) styleParts.push(`display: ${initialDisplay}`);
+                      const closureStyle = styleParts.join("; ");
+                      const closureBind =
+                        day.hiddenPastHours > 0
+                          ? `{
+                          display: (showPastHours || ${visibleWhenCollapsed}) ? null : 'none',
+                          top: (showPastHours ? ${c.top} : ${collapsedTop}) + 'px',
+                          height: '${c.height}px'
+                        }`
+                          : undefined;
+
+                      return (
+                        <div class="agenda-closure" style={closureStyle} x-bind:style={closureBind}>
+                          <div class="relative text-xs font-semibold leading-tight">{c.timeLabel}</div>
+                          <div class="relative truncate text-xs opacity-90">{c.label}</div>
+                        </div>
+                      );
+                    })}
+                    {day.bookings.map((b) => {
+                      const visibleWhenCollapsed = b.endMinutesFromOpen > startMinutesWhenCollapsed;
+                      const collapsedTop = b.top - offsetPx;
+                      const initialTop = day.hiddenPastHours > 0 ? collapsedTop : b.top;
+                      const initialDisplay = day.hiddenPastHours > 0 && !visibleWhenCollapsed ? "none" : undefined;
+                      const styleParts = [`top: ${initialTop}px`, `height: ${b.height}px`];
+                      if (initialDisplay) styleParts.push(`display: ${initialDisplay}`);
+                      const bookingStyle = styleParts.join("; ");
+                      const bookingBind =
+                        day.hiddenPastHours > 0
+                          ? `{
                           display: (showPastHours || ${visibleWhenCollapsed}) ? null : 'none',
                           top: (showPastHours ? ${b.top} : ${collapsedTop}) + 'px',
                           height: '${b.height}px'
                         }`
-                      : undefined;
+                          : undefined;
 
-                  return (
-                    <button
-                      type="button"
-                      class:list={["agenda-booking text-left", { mine: b.mine }]}
-                      style={bookingStyle}
-                      x-bind:style={bookingBind}
-                      data-id={b.id}
-                      data-starts={b.startsAtIso}
-                      data-duration={b.durationMin}
-                      data-label={b.label}
-                      data-time={b.timeLabel}
-                      data-day={b.dayLabel}
-                      data-manage={b.canManage ? "1" : "0"}
-                      onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'view', id: this.dataset.id, startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration), label: this.dataset.label, timeLabel: this.dataset.time, dayLabel: this.dataset.day, canManage: this.dataset.manage === '1' } }))"
-                    >
-                      <div class="text-xs font-semibold leading-tight">{b.timeLabel}</div>
-                      <div class="truncate text-xs opacity-95">{b.label}</div>
-                    </button>
-                  );
-                })}
-              </div>
-              {day.bookings.length === 0 && (
-                <p class="pointer-events-none absolute inset-x-16 top-10 text-center text-sm text-base-content/50 lg:inset-x-10">
-                  {t("noBookings")}
-                </p>
-              )}
-            </div>
-          </section>
-        );
-      })
-    }
-    </div>
+                      return (
+                        <button
+                          type="button"
+                          class:list={["agenda-booking text-left", { mine: b.mine }]}
+                          style={bookingStyle}
+                          x-bind:style={bookingBind}
+                          data-id={b.id}
+                          data-starts={b.startsAtIso}
+                          data-duration={b.durationMin}
+                          data-label={b.label}
+                          data-time={b.timeLabel}
+                          data-day={b.dayLabel}
+                          data-manage={b.canManage ? "1" : "0"}
+                          onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'view', id: this.dataset.id, startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration), label: this.dataset.label, timeLabel: this.dataset.time, dayLabel: this.dataset.day, canManage: this.dataset.manage === '1' } }))"
+                        >
+                          <div class="text-xs font-semibold leading-tight">{b.timeLabel}</div>
+                          <div class="truncate text-xs opacity-95">{b.label}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {day.bookings.length === 0 && day.closures.length === 0 && (
+                    <p class="pointer-events-none absolute inset-x-16 top-10 text-center text-sm text-base-content/50 lg:inset-x-10">
+                      {t("noBookings")}
+                    </p>
+                  )}
+                </div>
+              </section>
+            );
+          })
+        }
+      </div>
     </div>
   </main>
 
@@ -401,8 +437,7 @@ const dayViews = days.map((day, index) => {
       fill="none"
       stroke="currentColor"
       stroke-width="2.5"
-      stroke-linecap="round"
-      ><path d="M12 5v14M5 12h14"></path></svg
+      stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg
     >
   </button>
 
