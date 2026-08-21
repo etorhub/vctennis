@@ -4,7 +4,7 @@ import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
 import BookingSheet from "@/components/BookingSheet.astro";
 import { db, Bookings, eq } from "astro:db";
-import { bookingEnd, formatFullDate, formatTime } from "@/lib/time";
+import { bookingEnd, effectiveEnd, formatFullDate, formatTime } from "@/lib/time";
 import type { MessageKey } from "@/lib/i18n";
 
 const { t, locale, user } = Astro.locals;
@@ -29,6 +29,8 @@ if (err) {
 const now = new Date();
 const rows = await db.select().from(Bookings).where(eq(Bookings.userId, user.id));
 
+// Split on the *booked* end, not the early-end one: a booking ended early still counts as the
+// user's active booking (MAX_ACTIVE_BOOKINGS) until its original end time.
 const upcoming = rows
   .filter((b) => bookingEnd(b.startsAt, b.durationMin).getTime() > now.getTime())
   .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
@@ -68,7 +70,7 @@ function durationLabel(durationMin: number) {
         }
         {
           upcoming.map((b) => {
-            const end = bookingEnd(b.startsAt, b.durationMin);
+            const end = effectiveEnd(b);
             return (
               <li class="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
                 <p class="font-semibold">{formatFullDate(b.startsAt, locale)}</p>
@@ -76,16 +78,20 @@ function durationLabel(durationMin: number) {
                   {formatTime(b.startsAt, locale)} – {formatTime(end, locale)} ·{" "}
                   {durationLabel(b.durationMin)}
                 </p>
-                <button
-                  type="button"
-                  class="btn btn-primary btn-sm mt-3"
-                  data-id={b.id}
-                  data-starts={b.startsAt.toISOString()}
-                  data-duration={b.durationMin}
-                  onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'edit', id: this.dataset.id, startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration) } }))"
-                >
-                  {t("editBooking")}
-                </button>
+                {b.endedAt ? (
+                  <p class="mt-2 text-sm font-medium text-base-content/70">{t("endedEarly")}</p>
+                ) : (
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm mt-3"
+                    data-id={b.id}
+                    data-starts={b.startsAt.toISOString()}
+                    data-duration={b.durationMin}
+                    onclick="window.dispatchEvent(new CustomEvent('open-booking-sheet', { detail: { mode: 'edit', id: this.dataset.id, startsAt: this.dataset.starts, durationMin: Number(this.dataset.duration) } }))"
+                  >
+                    {t("editBooking")}
+                  </button>
+                )}
               </li>
             );
           })
@@ -105,13 +111,14 @@ function durationLabel(durationMin: number) {
         }
         {
           past.map((b) => {
-            const end = bookingEnd(b.startsAt, b.durationMin);
+            const end = effectiveEnd(b);
             return (
               <li class="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
                 <p class="font-semibold">{formatFullDate(b.startsAt, locale)}</p>
                 <p class="mt-0.5 text-sm text-base-content/60">
                   {formatTime(b.startsAt, locale)} – {formatTime(end, locale)} ·{" "}
                   {durationLabel(b.durationMin)}
+                  {b.endedAt ? ` · ${t("endedEarly")}` : ""}
                 </p>
               </li>
             );

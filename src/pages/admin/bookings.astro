@@ -3,7 +3,7 @@ import { actions } from "astro:actions";
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
 import { db, Bookings as BookingsTable, User } from "astro:db";
-import { bookingEnd, formatTime, getZonedParts } from "@/lib/time";
+import { bookingEnd, effectiveEnd, formatTime, getZonedParts } from "@/lib/time";
 
 const { t, locale } = Astro.locals;
 
@@ -45,7 +45,7 @@ const past = bookingRows
         {
           upcoming.map((b) => {
             const u = userMap.get(b.userId);
-            const end = bookingEnd(b.startsAt, b.durationMin);
+            const end = effectiveEnd(b);
             const p = getZonedParts(b.startsAt);
             return (
               <li class="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
@@ -54,6 +54,7 @@ const past = bookingRows
                 </p>
                 <p class="text-sm text-base-content/60">
                   {u?.name || "—"} · {u?.email || b.userId} · {b.durationMin} min
+                  {b.endedAt ? ` · ${t("endedEarly")}` : ""}
                 </p>
                 <form method="POST" action={actions.admin.deleteBooking} class="mt-3">
                   <input type="hidden" name="id" value={b.id} />
@@ -81,7 +82,7 @@ const past = bookingRows
         {
           past.map((b) => {
             const u = userMap.get(b.userId);
-            const end = bookingEnd(b.startsAt, b.durationMin);
+            const end = effectiveEnd(b);
             const p = getZonedParts(b.startsAt);
             return (
               <li class="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
@@ -90,6 +91,7 @@ const past = bookingRows
                 </p>
                 <p class="text-sm text-base-content/60">
                   {u?.name || "—"} · {u?.email || b.userId} · {b.durationMin} min
+                  {b.endedAt ? ` · ${t("endedEarly")}` : ""}
                 </p>
               </li>
             );

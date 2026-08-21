@@ -5,6 +5,7 @@ export const EVENT_TYPES = [
   "booking.created",
   "booking.updated",
   "booking.cancelled",
+  "booking.ended",
   "booking.rejected",
   "user.signed_up",
   "user.verified",
@@ -31,6 +32,8 @@ export type BookingRejectReason =
   | "outside_hours"
   | "too_far"
   | "past"
+  | "not_started"
+  | "already_ended"
   | "invalid_slot"
   | "cutoff"
   | "unauthorized"

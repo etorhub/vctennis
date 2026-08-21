@@ -6,6 +6,8 @@ import { ALLOWED_DURATIONS, MAX_ACTIVE_BOOKINGS } from "@/lib/config";
 import { sendEmail } from "@/lib/email";
 import { emitEvent, type BookingRejectReason } from "@/lib/events";
 import {
+  earlyEndAt,
+  effectiveDurationMin,
   isAlignedSlot,
   isAllowedDuration,
   isBookableStart,
@@ -240,6 +242,14 @@ export const bookings = {
           payload: slotPayload(booking.startsAt, booking.durationMin)
         });
       }
+      // Ending is final: the freed time may already belong to someone else.
+      if (booking.endedAt) {
+        await rejectBooking(user.id, "already_ended", "errorAlreadyEnded", "BAD_REQUEST", {
+          bookingId: booking.id,
+          source,
+          payload: slotPayload(booking.startsAt, booking.durationMin)
+        });
+      }
 
       const startsAt = new Date(input.startsAt);
       if (Number.isNaN(startsAt.getTime())) {
@@ -267,6 +277,86 @@ export const bookings = {
           beforeDurationMin: booking.durationMin,
           startsAt: startsAt.toISOString(),
           durationMin: input.durationMin,
+          source
+        }
+      });
+
+      return { success: true };
+    }
+  }),
+
+  /**
+   * Release the rest of an in-progress booking. The row is kept (so it still counts towards
+   * MAX_ACTIVE_BOOKINGS until its original end) and `endedAt` marks how far the court stays
+   * blocked: the start of the SLOT_MINUTES cell in progress. Everything after that reads as free
+   * through `conflictsWithExisting`, so the freed time can be booked normally and can never
+   * overlap the shortened booking.
+   */
+  end: defineAction({
+    accept: "form",
+    input: z.object({
+      id: z.string().min(1)
+    }),
+    handler: async (input, context) => {
+      const user = await requireUser(context);
+      const rows = await db.select().from(Bookings).where(eq(Bookings.id, input.id)).limit(1);
+      const booking = rows[0];
+      if (!booking) {
+        await rejectBooking(user.id, "not_found", "errorGeneric", "NOT_FOUND", {
+          bookingId: input.id
+        });
+      }
+
+      const isAdmin = user.role === "admin";
+      const source: BookingEventSource = isAdmin && booking.userId !== user.id ? "admin" : "member";
+      if (booking.userId !== user.id && !isAdmin) {
+        await rejectBooking(user.id, "forbidden", "errorUnauthorized", "FORBIDDEN", {
+          bookingId: booking.id,
+          source
+        });
+      }
+
+      const payload = slotPayload(booking.startsAt, booking.durationMin);
+      if (booking.endedAt) {
+        await rejectBooking(user.id, "already_ended", "errorAlreadyEnded", "BAD_REQUEST", {
+          bookingId: booking.id,
+          source,
+          payload
+        });
+      }
+
+      const now = new Date();
+      // Only a running booking can be ended; a future one is cancelled instead.
+      if (isFuture(booking.startsAt, now)) {
+        await rejectBooking(user.id, "not_started", "errorNotStarted", "BAD_REQUEST", {
+          bookingId: booking.id,
+          source,
+          payload
+        });
+      }
+      if (isBookingOver(booking.startsAt, booking.durationMin, now)) {
+        await rejectBooking(user.id, "past", "errorPast", "BAD_REQUEST", {
+          bookingId: booking.id,
+          source,
+          payload
+        });
+      }
+
+      const endedAt = earlyEndAt(booking.startsAt, booking.durationMin, now);
+      await db.update(Bookings).set({ endedAt }).where(eq(Bookings.id, booking.id));
+
+      const playedMin = effectiveDurationMin({ ...booking, endedAt });
+      await emitEvent({
+        type: "booking.ended",
+        actorUserId: user.id,
+        subjectUserId: booking.userId,
+        bookingId: booking.id,
+        payload: {
+          startsAt: booking.startsAt.toISOString(),
+          durationMin: booking.durationMin,
+          endedAt: endedAt.toISOString(),
+          playedMin,
+          freedMin: booking.durationMin - playedMin,
           source
         }
       });

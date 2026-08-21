@@ -28,6 +28,15 @@ All constants live in [`src/lib/config.ts`](src/lib/config.ts):
 
 Server-side validation is in [`src/actions/bookings.ts`](src/actions/bookings.ts). Overlaps are hard-blocked. One court only. The current in-progress `:00`/`:30` slot stays bookable if free (walk-up); confirmation email is skipped when the start has already passed.
 
+### Ending a booking early
+
+While a member's booking is running, the agenda shows a banner with **End booking** (`actions.bookings.end`). It sets `Bookings.endedAt` to the start of the `SLOT_MINUTES` cell in progress (16:47 → 16:30), clamped to the booking's own start — so ending inside the first cell releases the whole booking. The row is kept and `durationMin` still holds the *booked* length; only `endedAt` decides how long the court stays blocked.
+
+- Effective occupancy lives in [`src/lib/time.ts`](src/lib/time.ts): `effectiveDurationMin` / `effectiveEnd` / `freedMinutes`, plus `earlyEndAt`, `slotStartFor` and `isBookingInProgress`. `conflictsWithExisting` uses the effective duration, so every booking path sees released time as free and it can never double-book.
+- Anything reading the *booked* end (the `MAX_ACTIVE_BOOKINGS` count in `bookings.create`, the upcoming/past split on `/my-bookings` and `/admin/bookings`) deliberately keeps using `durationMin`: an early end frees the court but still uses up the member's one active booking until the original end time.
+- Ending is final — an ended booking can no longer be edited (`already_ended`) and loses its manage buttons. A not-yet-started booking must be cancelled, not ended (`not_started`). Owner or admin only.
+- Emits `booking.ended` (payload: `startsAt`, `durationMin`, `endedAt`, `playedMin`, `freedMin`, `source`).
+
 UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. Desktop (`lg+`): all `BOOK_AHEAD_DAYS` side by side.
 
 ## Auth & roles
@@ -74,7 +83,7 @@ UI: Google-agenda style. Mobile/tablet: **one day at a time** with prev/next. De
 | `/setup` | Auth, once | Become first admin |
 | `/admin/users` | Admin | User management |
 | `/admin/bookings` | Admin | All bookings |
-| `/admin/timeline` | Admin | Recent domain events (sign-ups, bookings created/cancelled) |
+| `/admin/timeline` | Admin | Recent domain events (sign-ups, bookings created/cancelled/ended) |
 | `/api/auth/[...all]` | Public | Better Auth handler |
 
 ## Commands

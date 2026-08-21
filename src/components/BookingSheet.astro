@@ -4,6 +4,7 @@ import { db, Bookings, and, gte, lte } from "astro:db";
 import { OPEN_HOUR, CLOSE_HOUR } from "@/lib/config";
 import {
   agendaDays,
+  effectiveDurationMin,
   formatFullDate,
   formatTime,
   getZonedParts,
@@ -24,11 +25,15 @@ const existingRows = await db
   .from(Bookings)
   .where(and(gte(Bookings.startsAt, rangeStart), lte(Bookings.startsAt, rangeEnd)));
 
-const existing = existingRows.map((b) => ({
-  id: b.id,
-  startsAt: b.startsAt.toISOString(),
-  durationMin: b.durationMin
-}));
+// Only the part a booking actually occupies blocks the picker — time released by an early
+// end is offered like any free slot, and the server re-checks it on submit.
+const existing = existingRows
+  .map((b) => ({
+    id: b.id,
+    startsAt: b.startsAt.toISOString(),
+    durationMin: effectiveDurationMin(b)
+  }))
+  .filter((b) => b.durationMin > 0);
 
 const slotsByDay = days.map((d) => ({
   dateKey: d.toISOString(),
