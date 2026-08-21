@@ -171,19 +171,74 @@ export function isBookableStart(startsAt: Date, now = new Date()): boolean {
   return !isBookingOver(startsAt, SLOT_MINUTES, now);
 }
 
+/** Start of the SLOT_MINUTES cell containing `date` (e.g. 16:47 -> 16:30). */
+export function slotStartFor(date: Date): Date {
+  const p = getZonedParts(date);
+  return zonedDate(p.year, p.month, p.day, p.hour, p.minute - (p.minute % SLOT_MINUTES));
+}
+
+/**
+ * Instant a booking ends when released now: the start of the SLOT_MINUTES cell in progress,
+ * clamped to the booking's own start and end. Ending inside the first cell returns `startsAt`,
+ * i.e. the whole booking is freed.
+ */
+export function earlyEndAt(startsAt: Date, durationMin: number, now = new Date()): Date {
+  const boundary = slotStartFor(now).getTime();
+  const end = bookingEnd(startsAt, durationMin).getTime();
+  return new Date(Math.min(Math.max(boundary, startsAt.getTime()), end));
+}
+
+export type EndableBooking = {
+  startsAt: Date;
+  durationMin: number;
+  /** Set when the booking was ended early; the court is free from this instant on. */
+  endedAt?: Date | null;
+};
+
+/**
+ * Minutes the court is actually blocked. Equals `durationMin` unless the booking was ended
+ * early, in which case only the elapsed (slot-aligned) part still blocks the court. `0` means
+ * the whole booking was released and it no longer occupies the agenda.
+ */
+export function effectiveDurationMin(booking: EndableBooking): number {
+  if (!booking.endedAt) return booking.durationMin;
+  const elapsed = Math.round((booking.endedAt.getTime() - booking.startsAt.getTime()) / 60_000);
+  return Math.min(booking.durationMin, Math.max(0, elapsed));
+}
+
+/** End instant the court is blocked until — earlier than the booked end when ended early. */
+export function effectiveEnd(booking: EndableBooking): Date {
+  return bookingEnd(booking.startsAt, effectiveDurationMin(booking));
+}
+
+/** Minutes released back to the agenda by ending early (0 when not ended). */
+export function freedMinutes(booking: EndableBooking): number {
+  return booking.endedAt ? booking.durationMin - effectiveDurationMin(booking) : 0;
+}
+
+/** True while the booking is running: started, not ended early, not over. */
+export function isBookingInProgress(booking: EndableBooking, now = new Date()): boolean {
+  if (booking.startsAt.getTime() > now.getTime()) return false;
+  if (booking.endedAt) return false;
+  return !isBookingOver(booking.startsAt, booking.durationMin, now);
+}
+
 export function rangesOverlap(aStart: Date, aDuration: number, bStart: Date, bDuration: number): boolean {
+  if (aDuration <= 0 || bDuration <= 0) return false;
   const aEnd = bookingEnd(aStart, aDuration).getTime();
   const bEnd = bookingEnd(bStart, bDuration).getTime();
   return aStart.getTime() < bEnd && bStart.getTime() < aEnd;
 }
 
-export type BookingInterval = {
-  startsAt: Date;
-  durationMin: number;
+export type BookingInterval = EndableBooking & {
   id?: string;
 };
 
-/** True if `startsAt`+`durationMin` overlaps any existing booking (optionally skipping one id). */
+/**
+ * True if `startsAt`+`durationMin` overlaps any existing booking (optionally skipping one id).
+ * Bookings ended early only block their elapsed part, so released time reads as free here — this
+ * is the single check every booking path goes through, so freed time can never double-book.
+ */
 export function conflictsWithExisting(
   startsAt: Date,
   durationMin: number,
@@ -193,7 +248,7 @@ export function conflictsWithExisting(
   return existing.some(
     (b) =>
       (!excludeId || b.id !== excludeId) &&
-      rangesOverlap(startsAt, durationMin, b.startsAt, b.durationMin)
+      rangesOverlap(startsAt, durationMin, b.startsAt, effectiveDurationMin(b))
   );
 }
 

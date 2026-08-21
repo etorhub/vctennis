@@ -75,6 +75,10 @@ const Bookings = defineTable({
     userId: column.text(),
     startsAt: column.date(),
     durationMin: column.number(),
+    // Set when the court was released early ("end booking now"). `durationMin` keeps the
+    // originally booked length; the court is only blocked until `endedAt`. Always aligned to
+    // a SLOT_MINUTES boundary, so the freed time maps cleanly onto the agenda grid.
+    endedAt: column.date({ optional: true }),
     createdAt: column.date(),
     reminderSentAt: column.date({ optional: true })
   }

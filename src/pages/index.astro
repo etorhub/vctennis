@@ -3,17 +3,20 @@ import { actions } from "astro:actions";
 import Layout from "@/layouts/Layout.astro";
 import AppHeader from "@/components/AppHeader.astro";
 import BookingSheet from "@/components/BookingSheet.astro";
-import { db, Bookings, User, gte, lte, and } from "astro:db";
-import { OPEN_HOUR, CLOSE_HOUR, SLOT_MINUTES } from "@/lib/config";
+import { db, Bookings, User, eq, gt, gte, lte, and } from "astro:db";
+import { ALLOWED_DURATIONS, OPEN_HOUR, CLOSE_HOUR, SLOT_MINUTES } from "@/lib/config";
 import {
   agendaDays,
   bookingEnd,
+  earlyEndAt,
+  effectiveDurationMin,
   formatDayHeader,
   formatFullDate,
   formatTime,
   getZonedParts,
   hourLabels,
   isBookableStart,
+  isBookingInProgress,
   isWithinOpenHours,
   rangesOverlap,
   zonedDate
@@ -25,6 +28,7 @@ const { t, locale, user } = Astro.locals;
 const createResult = Astro.getActionResult(actions.bookings.create);
 const updateResult = Astro.getActionResult(actions.bookings.update);
 const deleteResult = Astro.getActionResult(actions.bookings.delete);
+const endResult = Astro.getActionResult(actions.bookings.end);
 
 let toastMessage = "";
 let toastErrorMessage = "";
@@ -32,9 +36,13 @@ let toastErrorMessage = "";
 if (createResult?.data?.success) toastMessage = t("bookingCreated");
 if (updateResult?.data?.success) toastMessage = t("bookingUpdated");
 if (deleteResult?.data?.success) toastMessage = t("bookingDeleted");
+if (endResult?.data?.success) toastMessage = t("bookingEnded");
 
 const err =
-  createResult?.error?.message || updateResult?.error?.message || deleteResult?.error?.message;
+  createResult?.error?.message ||
+  updateResult?.error?.message ||
+  deleteResult?.error?.message ||
+  endResult?.error?.message;
 if (err) {
   const key = err as MessageKey;
   toastErrorMessage = t(key) !== String(key) ? t(key) : t("errorGeneric");
@@ -46,12 +54,22 @@ const last = days[days.length - 1];
 const lp = getZonedParts(last);
 const rangeEnd = zonedDate(lp.year, lp.month, lp.day, CLOSE_HOUR, 0);
 
-const [bookingsRaw, users] = await Promise.all([
+// The signed-in user's own recent rows are fetched separately: a booking running right now can
+// start before the agenda window, once that window has rolled over to tomorrow.
+const ownLookback = new Date(Date.now() - Math.max(...ALLOWED_DURATIONS) * 60_000);
+
+const [bookingsRaw, users, ownRecent] = await Promise.all([
   db
     .select()
     .from(Bookings)
     .where(and(gte(Bookings.startsAt, rangeStart), lte(Bookings.startsAt, rangeEnd))),
-  db.select().from(User)
+  db.select().from(User),
+  user
+    ? db
+        .select()
+        .from(Bookings)
+        .where(and(eq(Bookings.userId, user.id), gt(Bookings.startsAt, ownLookback)))
+    : Promise.resolve([])
 ]);
 const userMap = new Map(users.map((u) => [u.id, u]));
 
@@ -76,32 +94,54 @@ type ViewBooking = {
   endMinutesFromOpen: number;
 };
 
-const viewBookings: ViewBooking[] = bookingsRaw.map((b) => {
-  const u = userMap.get(b.userId);
-  const parts = getZonedParts(b.startsAt);
-  const minutesFromOpen = (parts.hour - OPEN_HOUR) * 60 + parts.minute;
-  const top = (minutesFromOpen / 60) * hourHeight;
-  const height = Math.max((b.durationMin / 60) * hourHeight - 2, 28);
-  const end = bookingEnd(b.startsAt, b.durationMin);
-  const mine = !!user && user.id === b.userId;
-  const canManage = mine || user?.role === "admin";
-  const show = u?.showName !== false;
-  const name = show ? u?.name || t("reserved") : t("reserved");
-  return {
-    id: b.id,
-    startsAtIso: b.startsAt.toISOString(),
-    durationMin: b.durationMin,
-    label: mine ? `${name} (${t("you")})` : name,
-    dayLabel: formatFullDate(b.startsAt, locale),
-    mine,
-    canManage,
-    top,
-    height,
-    timeLabel: `${formatTime(b.startsAt, locale)} – ${formatTime(end, locale)}`,
-    dateKey: parts.dateKey,
-    endMinutesFromOpen: minutesFromOpen + b.durationMin
-  };
-});
+// A booking ended early only occupies its elapsed part; a fully released one drops off the grid.
+const viewBookings: ViewBooking[] = bookingsRaw
+  .map((b) => ({ ...b, shownDurationMin: effectiveDurationMin(b) }))
+  .filter((b) => b.shownDurationMin > 0)
+  .map((b) => {
+    const u = userMap.get(b.userId);
+    const parts = getZonedParts(b.startsAt);
+    const minutesFromOpen = (parts.hour - OPEN_HOUR) * 60 + parts.minute;
+    const top = (minutesFromOpen / 60) * hourHeight;
+    const height = Math.max((b.shownDurationMin / 60) * hourHeight - 2, 28);
+    const end = bookingEnd(b.startsAt, b.shownDurationMin);
+    const mine = !!user && user.id === b.userId;
+    const canManage = (mine || user?.role === "admin") && !b.endedAt;
+    const show = u?.showName !== false;
+    const name = show ? u?.name || t("reserved") : t("reserved");
+    return {
+      id: b.id,
+      startsAtIso: b.startsAt.toISOString(),
+      durationMin: b.shownDurationMin,
+      label: mine ? `${name} (${t("you")})` : name,
+      dayLabel: formatFullDate(b.startsAt, locale),
+      mine,
+      canManage,
+      top,
+      height,
+      timeLabel: `${formatTime(b.startsAt, locale)} – ${formatTime(end, locale)}`,
+      dateKey: parts.dateKey,
+      endMinutesFromOpen: minutesFromOpen + b.shownDurationMin
+    };
+  });
+
+/** The signed-in user's running booking, if any — drives the "end booking" banner. */
+const activeBooking = ownRecent.find((b) => isBookingInProgress(b, now));
+
+const activeBookingView = activeBooking
+  ? (() => {
+      const releasedFrom = earlyEndAt(activeBooking.startsAt, activeBooking.durationMin, now);
+      const bookedEnd = bookingEnd(activeBooking.startsAt, activeBooking.durationMin);
+      const freesAll = releasedFrom.getTime() <= activeBooking.startsAt.getTime();
+      return {
+        id: activeBooking.id,
+        untilLabel: t("bookingInProgressUntil", { time: formatTime(bookedEnd, locale) }),
+        freesLabel: freesAll
+          ? t("endBookingFreesAll")
+          : t("endBookingFrees", { time: formatTime(releasedFrom, locale) })
+      };
+    })()
+  : null;
 
 function hiddenPastHoursForDay(dateKey: string): number {
   if (dateKey !== todayKey) return 0;
@@ -171,6 +211,31 @@ const dayViews = days.map((day, index) => {
   {
     toastErrorMessage && (
       <div x-init={`toastErrorMessage = ${JSON.stringify(toastErrorMessage)}`} class="sr-only" />
+    )
+  }
+
+  {
+    activeBookingView && (
+      <div class="border-b border-primary/30 bg-primary/10">
+        <div class="mx-auto flex w-full max-w-lg flex-wrap items-center gap-x-3 gap-y-2 px-3 py-3 md:max-w-2xl lg:max-w-7xl lg:px-4">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold text-base-content">{t("bookingInProgress")}</p>
+            <p class="text-sm text-base-content/70">
+              {activeBookingView.untilLabel} · {activeBookingView.freesLabel}
+            </p>
+          </div>
+          <form
+            method="POST"
+            action={actions.bookings.end}
+            onsubmit={`return confirm(${JSON.stringify(t("confirmEndBooking"))})`}
+          >
+            <input type="hidden" name="id" value={activeBookingView.id} />
+            <button type="submit" class="btn btn-primary btn-sm whitespace-nowrap">
+              {t("endBooking")}
+            </button>
+          </form>
+        </div>
+      </div>
     )
   }
 

@@ -1,6 +1,6 @@
 # Event logging
 
-Append-only **domain events** for ops and Grafana Cloud dashboards. Admins can browse recent sign-ups, bookings created, and bookings cancelled at [`/admin/timeline`](../src/pages/admin/timeline.astro). Events are always written to Astro DB / Turso, and optionally dual-written to Loki + Prometheus.
+Append-only **domain events** for ops and Grafana Cloud dashboards. Admins can browse recent sign-ups, bookings created, cancelled, and ended early at [`/admin/timeline`](../src/pages/admin/timeline.astro). Events are always written to Astro DB / Turso, and optionally dual-written to Loki + Prometheus.
 
 > Canonical copy lives in this repo. After the GitHub wiki has been initialized once (create any page under Wiki in the GitHub UI), run `npm run docs:wiki` to publish this file (and Home) to [Event-logging](https://github.com/etorhub/vctennis/wiki/Event-logging).
 
@@ -14,7 +14,7 @@ Append-only **domain events** for ops and Grafana Cloud dashboards. Admins can b
 | Dashboard | [`ops/grafana/dashboards/domain-events.json`](../ops/grafana/dashboards/domain-events.json), [`ops/grafana/dashboards/prod-health.json`](../ops/grafana/dashboards/prod-health.json) |
 | Health probe | [`src/lib/healthProbe.ts`](../src/lib/healthProbe.ts) + Netlify [`health-probe`](../netlify/functions/health-probe.mts) (HTTP probes) + [`/api/cron/metrics`](../src/pages/api/cron/metrics.ts) (user gauge) |
 | Instrumentation | Astro actions (`bookings`, `admin`, `auth`), Better Auth hooks in `src/lib/auth.ts`, reminder cron |
-| Admin timeline | [`src/pages/admin/timeline.astro`](../src/pages/admin/timeline.astro) — sign-ups, booking created/cancelled |
+| Admin timeline | [`src/pages/admin/timeline.astro`](../src/pages/admin/timeline.astro) — sign-ups, booking created/cancelled/ended |
 
 ## Schema
 
@@ -55,6 +55,7 @@ No foreign keys — history survives booking/user deletion.
 | `booking.created` | `bookings.create` after insert | payload: startsAt, durationMin, source |
 | `booking.updated` | `bookings.update` after update | before/after slot; source member/admin |
 | `booking.cancelled` | `bookings.delete` / `admin.deleteBooking` | source member/admin |
+| `booking.ended` | `bookings.end` — court released mid-booking | payload: startsAt, durationMin (as booked), endedAt, playedMin, freedMin; source member/admin |
 | `booking.rejected` | booking validation / authz failures | reason codes below; source member/admin; slot (startsAt, durationMin) when known |
 | `user.signed_up` | Better Auth `user.create.after` | email + userId; source member |
 | `user.verified` | `emailVerification.afterEmailVerification` | email + userId; source member |
@@ -79,6 +80,8 @@ No foreign keys — history survives booking/user deletion.
 | `outside_hours` | Outside open hours |
 | `too_far` | Outside book-ahead window |
 | `past` | Start in the past / booking already over |
+| `not_started` | Tried to end a booking that has not started (cancel it instead) |
+| `already_ended` | Tried to end or edit a booking already ended early |
 | `invalid_slot` | Bad duration, alignment, or timestamp |
 | `cutoff` | Reserved for cancel/change cutoff (if reintroduced) |
 | `unauthorized` | Not signed in |
