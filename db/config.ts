@@ -109,6 +109,18 @@ const ContactMessages = defineTable({
   }
 });
 
+// Better Auth's database-backed rate limiter (issue #56). Column names/types
+// must match `better-auth`'s built-in `rateLimit` model — see the `rateLimit`
+// schema mapping passed to `drizzleAdapter` in `src/lib/auth.ts`.
+const RateLimit = defineTable({
+  columns: {
+    id: column.text({ primaryKey: true }),
+    key: column.text(),
+    count: column.number(),
+    lastRequest: column.number()
+  }
+});
+
 export default defineDb({
   tables: {
     User,
@@ -117,6 +129,7 @@ export default defineDb({
     Verification,
     Bookings,
     Events,
-    ContactMessages
+    ContactMessages,
+    RateLimit
   }
 });

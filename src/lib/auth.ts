@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
-import { Account, db, Session, User, Verification } from "astro:db";
+import { Account, db, RateLimit, Session, User, Verification } from "astro:db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { parseApartmentBlock, parseApartmentNumber } from "./apartment";
 import { buildResetEmail, buildVerifyEmail } from "./authEmail";
@@ -52,10 +52,23 @@ export const auth = betterAuth({
       user: User,
       account: Account,
       session: Session,
-      verification: Verification
+      verification: Verification,
+      rateLimit: RateLimit
     },
     provider: "sqlite"
   }),
+  // Persisted in the DB (issue #56): Better Auth's default in-memory limiter
+  // doesn't survive across Netlify Functions invocations/cold starts, so
+  // without this, login/signup/password-reset are effectively unthrottled.
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+      "/sign-up/email": { window: 60 * 60, max: 5 },
+      "/forget-password": { window: 60 * 60, max: 5 }
+    }
+  },
   user: {
     additionalFields: {
       role: {
