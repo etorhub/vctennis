@@ -76,6 +76,7 @@ const overlapDetailTemplate = t("errorOverlapDetail");
     canManage: false,
     startsAt: '',
     durationMin: 60,
+    triggerEl: null,
     slotsByDay: ${JSON.stringify(slotsByDay)},
     existing: ${JSON.stringify(existing)},
     durationLabels: ${JSON.stringify(durationLabels)},
@@ -167,6 +168,37 @@ const overlapDetailTemplate = t("errorOverlapDetail");
       if (this.step === 'conflict') return this.labels.conflict;
       return this.mode === 'edit' ? this.labels.edit : this.labels.create;
     },
+    focusables() {
+      const container = this.$refs.panel;
+      if (!container) return [];
+      const nodes = container.querySelectorAll(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      return Array.from(nodes).filter((el) => el.offsetParent !== null);
+    },
+    focusFirst() {
+      const container = this.$refs.panel;
+      if (!container) return;
+      const first = this.focusables()[0];
+      (first || container).focus();
+    },
+    trapFocus(e) {
+      if (!this.open) return;
+      const items = this.focusables();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const inPanel = this.$refs.panel && this.$refs.panel.contains(document.activeElement);
+      if (e.shiftKey) {
+        if (!inPanel || document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (!inPanel || document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    },
     init() {
       const onOpenBookingSheet = (e) => {
         const d = e.detail || {};
@@ -174,6 +206,7 @@ const overlapDetailTemplate = t("errorOverlapDetail");
           window.location.href = '/sign-in';
           return;
         }
+        this.triggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         this.mode = d.mode || 'create';
         this.bookingId = d.id || '';
         this.bookingLabel = d.label || '';
@@ -196,6 +229,7 @@ const overlapDetailTemplate = t("errorOverlapDetail");
         }
         this.open = true;
         document.body.style.overflow = 'hidden';
+        this.$nextTick(() => this.focusFirst());
       };
       window.addEventListener('open-booking-sheet', onOpenBookingSheet);
       Alpine.onElRemoved(this.$el, () => window.removeEventListener('open-booking-sheet', onOpenBookingSheet));
@@ -205,6 +239,9 @@ const overlapDetailTemplate = t("errorOverlapDetail");
       this.step = 'form';
       this.mode = 'create';
       document.body.style.overflow = '';
+      const trigger = this.triggerEl;
+      this.triggerEl = null;
+      if (trigger) this.$nextTick(() => trigger.focus());
     },
     goConfirm() {
       if (!this.startsAt) return;
@@ -236,10 +273,15 @@ const overlapDetailTemplate = t("errorOverlapDetail");
 >
   <div class="sheet-backdrop" x-show="open" x-transition.opacity @click="close()"></div>
 
-  <div class="sheet-layer" @keydown.escape.window="open && close()">
+  <div class="sheet-layer" @keydown.escape.window="open && close()" @keydown.tab.window="trapFocus($event)">
     <div
       class="bottom-sheet p-4"
+      x-ref="panel"
       x-show="open"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sheet-title"
+      tabindex="-1"
       x-transition:enter="transition ease-out duration-200"
       x-transition:enter-start="translate-y-full lg:translate-y-4 lg:opacity-0"
       x-transition:enter-end="translate-y-0 lg:opacity-100"
@@ -250,9 +292,8 @@ const overlapDetailTemplate = t("errorOverlapDetail");
     >
       <div class="mx-auto mb-3 h-1.5 w-10 rounded-full bg-base-300"></div>
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold" x-text="title"></h2>
-        <button type="button" class="btn btn-ghost btn-sm btn-circle" @click="close()" aria-label={t("close")}
-          >✕</button
+        <h2 id="sheet-title" class="text-lg font-semibold" x-text="title"></h2>
+        <button type="button" class="btn btn-ghost btn-sm btn-circle" @click="close()" aria-label={t("close")}>✕</button
         >
       </div>
 
@@ -352,11 +393,7 @@ const overlapDetailTemplate = t("errorOverlapDetail");
         </label>
 
         <div class="flex gap-2 pt-2">
-          <button
-            type="button"
-            class="btn btn-ghost flex-1"
-            @click="viewDayLabel ? goView() : close()"
-          >
+          <button type="button" class="btn btn-ghost flex-1" @click="viewDayLabel ? goView() : close()">
             <span x-show="viewDayLabel" x-cloak>{t("back")}</span>
             <span x-show="!viewDayLabel">{t("cancel")}</span>
           </button>
