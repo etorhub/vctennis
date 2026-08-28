@@ -1,11 +1,12 @@
 import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro:schema";
-import { db, Bookings, eq, and, gt } from "astro:db";
+import { db, Bookings, eq, and, gt, lt } from "astro:db";
 import { buildBookingEmail } from "@/lib/bookingEmail";
 import { ALLOWED_DURATIONS, MAX_ACTIVE_BOOKINGS } from "@/lib/config";
 import { sendEmail } from "@/lib/email";
 import { emitEvent, type BookingRejectReason } from "@/lib/events";
 import {
+  bookingEnd,
   earlyEndAt,
   effectiveDurationMin,
   isAlignedSlot,
@@ -77,7 +78,16 @@ async function assertNoOverlap(
   excludeId?: string,
   source: BookingEventSource = "member"
 ) {
-  const existing = await db.select().from(Bookings);
+  // A booking can only occupy up to its own durationMin, so any existing row whose start
+  // falls outside [newStart - maxDuration, newEnd) cannot overlap the new slot — bound the
+  // scan to that range in SQL instead of loading every booking ever made.
+  const maxDurationMs = Math.max(...ALLOWED_DURATIONS) * 60_000;
+  const rangeStart = new Date(startsAt.getTime() - maxDurationMs);
+  const rangeEnd = bookingEnd(startsAt, durationMin);
+  const existing = await db
+    .select()
+    .from(Bookings)
+    .where(and(gt(Bookings.startsAt, rangeStart), lt(Bookings.startsAt, rangeEnd)));
   if (conflictsWithExisting(startsAt, durationMin, existing, excludeId)) {
     await rejectBooking(actorUserId, "overlap", "errorOverlap", "CONFLICT", {
       bookingId: excludeId,
