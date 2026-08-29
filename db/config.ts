@@ -26,6 +26,10 @@ const User = defineTable({
     theme: column.text({ optional: true, default: "system" }),
     createdAt: column.date(),
     updatedAt: column.date()
+  },
+  indexes: {
+    idx_user_role: { on: "role" },
+    idx_user_disabled: { on: "disabled" }
   }
 });
 
@@ -81,6 +85,10 @@ const Bookings = defineTable({
     endedAt: column.date({ optional: true }),
     createdAt: column.date(),
     reminderSentAt: column.date({ optional: true })
+  },
+  indexes: {
+    idx_bookings_startsAt: { on: "startsAt" },
+    idx_bookings_userId: { on: "userId" }
   }
 });
 
