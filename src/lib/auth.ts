@@ -47,6 +47,11 @@ async function sendAuthEmail(opts: SendEmailOptions, locale: Locale) {
 export const auth = betterAuth({
   baseURL: import.meta.env.BETTER_AUTH_URL,
   secret: import.meta.env.BETTER_AUTH_SECRET,
+  // Pin explicitly (issue #57) rather than relying on Better Auth's built-in
+  // Origin/Referer check alone — astro.config.mjs separately widens
+  // `security.allowedDomains` to trust forwarded headers, so this list is
+  // worth double-checking rather than leaving unset.
+  trustedOrigins: [siteUrl()],
   database: drizzleAdapter(db, {
     schema: {
       user: User,
