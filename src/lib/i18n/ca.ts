@@ -53,6 +53,7 @@ export const ca: Dictionary = {
   you: "Tu",
   signInToBook: "Inicia sessió per reservar",
   bookAt: "Reservar a les {time}",
+  bookingSummary: "Reserva {time}, {name}",
   noBookings: "Encara no hi ha reserves",
   bookingCreated: "Reserva creada",
   bookingConfirmTitle: "Confirma la reserva",

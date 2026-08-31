@@ -51,6 +51,7 @@ export const en = {
   you: "You",
   signInToBook: "Sign in to book",
   bookAt: "Book at {time}",
+  bookingSummary: "Booking {time}, {name}",
   noBookings: "No bookings yet",
   bookingCreated: "Booking created",
   bookingConfirmTitle: "Confirm booking",
