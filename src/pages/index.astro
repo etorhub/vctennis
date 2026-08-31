@@ -423,6 +423,7 @@ const dayViews = days.map((day, index) => {
                       class:list={["agenda-booking text-left", { mine: b.mine }]}
                       style={bookingStyle}
                       x-bind:style={bookingBind}
+                      aria-label={t("bookingSummary", { time: b.timeLabel, name: b.label })}
                       data-id={b.id}
                       data-starts={b.startsAtIso}
                       data-duration={b.durationMin}
