@@ -29,6 +29,7 @@ export const ca: Dictionary = {
   incorrectPassword: "La contrasenya actual no és correcta.",
   backToSignIn: "Torna a iniciar sessió",
   backToCalendar: "Torna al calendari",
+  skipToContent: "Vés al contingut",
   invalidResetToken: "Aquest enllaç de restabliment no és vàlid o ha caducat.",
   passwordResetDone: "Contrasenya actualitzada. Ja pots iniciar sessió.",
   today: "Avui",

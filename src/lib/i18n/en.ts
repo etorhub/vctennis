@@ -27,6 +27,7 @@ export const en = {
   incorrectPassword: "Current password is incorrect.",
   backToSignIn: "Back to sign in",
   backToCalendar: "Back to calendar",
+  skipToContent: "Skip to content",
   invalidResetToken: "This reset link is invalid or has expired.",
   passwordResetDone: "Password updated. You can sign in now.",
   today: "Today",
