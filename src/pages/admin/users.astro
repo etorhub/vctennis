@@ -27,9 +27,9 @@ const countMap = new Map(bookingCounts);
   <AppHeader title={`${t("admin")} · ${t("users")}`} backHref="/" />
   <main class="mx-auto w-full max-w-lg px-3 py-4 pb-20 md:max-w-2xl lg:max-w-4xl lg:px-4">
     <div class="mb-4 flex gap-2">
-      <a href="/admin/users" class="btn btn-primary btn-sm">{t("users")}</a>
-      <a href="/admin/bookings" class="btn btn-ghost btn-sm">{t("bookings")}</a>
-      <a href="/admin/timeline" class="btn btn-ghost btn-sm">{t("timeline")}</a>
+      <a href="/admin/users" class="btn btn-primary btn-sm" data-astro-prefetch="false">{t("users")}</a>
+      <a href="/admin/bookings" class="btn btn-ghost btn-sm" data-astro-prefetch="false">{t("bookings")}</a>
+      <a href="/admin/timeline" class="btn btn-ghost btn-sm" data-astro-prefetch="false">{t("timeline")}</a>
     </div>
 
     <ul class="flex flex-col gap-3">

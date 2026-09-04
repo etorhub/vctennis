@@ -16,7 +16,7 @@ const { title = t("siteName"), backHref } = Astro.props;
   <div class="mx-auto flex w-full max-w-lg items-center gap-2 px-3 py-3 md:max-w-2xl lg:max-w-7xl lg:px-4">
     {
       backHref ? (
-        <a href={backHref} class="btn btn-ghost btn-sm btn-circle" aria-label={t("backToCalendar")}>
+        <a href={backHref} class="btn btn-ghost btn-sm btn-circle" aria-label={t("backToCalendar")} data-astro-prefetch>
           <Icon pack="lucide" name="arrow-left" height={20} width={20} />
         </a>
       ) : (
@@ -29,12 +29,12 @@ const { title = t("siteName"), backHref } = Astro.props;
       <h1 class="truncate text-base font-semibold leading-tight">{title}</h1>
     </div>
     <nav class="flex items-center gap-1">
-      <a href="/rules" class="btn btn-ghost btn-sm" title={t("rules")} aria-label={t("rules")}>
+      <a href="/rules" class="btn btn-ghost btn-sm" title={t("rules")} aria-label={t("rules")} data-astro-prefetch>
         <Icon pack="lucide" name="circle-help" height={18} width={18} />
       </a>
       {
         user?.role === "admin" && (
-          <a href="/admin/users" class="btn btn-ghost btn-sm" title={t("admin")}>
+          <a href="/admin/users" class="btn btn-ghost btn-sm" title={t("admin")} data-astro-prefetch="false">
             <Icon pack="lucide" name="shield" height={18} width={18} />
           </a>
         )
@@ -71,6 +71,7 @@ const { title = t("siteName"), backHref } = Astro.props;
                   role="menuitem"
                   class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-base-200"
                   @click="open = false"
+                  data-astro-prefetch
                 >
                   <Icon pack="lucide" name="calendar" height={16} width={16} class="shrink-0 opacity-70" />
                   {t("myBookings")}
@@ -82,6 +83,7 @@ const { title = t("siteName"), backHref } = Astro.props;
                   role="menuitem"
                   class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-base-200"
                   @click="open = false"
+                  data-astro-prefetch
                 >
                   <Icon pack="lucide" name="user" height={16} width={16} class="shrink-0 opacity-70" />
                   {t("profile")}
@@ -93,6 +95,7 @@ const { title = t("siteName"), backHref } = Astro.props;
                   role="menuitem"
                   class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-base-200"
                   @click="open = false"
+                  data-astro-prefetch
                 >
                   <Icon pack="lucide" name="lock" height={16} width={16} class="shrink-0 opacity-70" />
                   {t("privacy")}
@@ -114,7 +117,7 @@ const { title = t("siteName"), backHref } = Astro.props;
             </ul>
           </div>
         ) : (
-          <a href="/sign-in" class="btn btn-primary btn-sm">
+          <a href="/sign-in" class="btn btn-primary btn-sm" data-astro-prefetch>
             {t("signIn")}
           </a>
         )
