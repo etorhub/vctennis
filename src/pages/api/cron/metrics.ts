@@ -1,12 +1,12 @@
 import type { APIRoute } from "astro";
+import { isAuthorizedCronRequest } from "@/lib/cronAuth";
 import { refreshRegisteredUsersMetric } from "@/lib/userMetrics";
 
 export const prerender = false;
 
 /** Periodic / on-demand gauges that need Astro DB (e.g. registered users). */
 export const POST: APIRoute = async ({ request }) => {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${import.meta.env.CRON_SECRET}`) {
+  if (!isAuthorizedCronRequest(request)) {
     return new Response("Unauthorized", { status: 401 });
   }
 
