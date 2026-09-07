@@ -92,7 +92,7 @@ const rangeTabs: { id: TimelineRange; label: string }[] = [
 
 <Layout title={t("timeline")}>
   <AppHeader title={`${t("admin")} · ${t("timeline")}`} backHref="/" />
-  <main class="mx-auto w-full max-w-lg px-3 py-4 pb-20 md:max-w-2xl lg:max-w-4xl lg:px-4">
+  <main id="main-content" class="mx-auto w-full max-w-lg px-3 py-4 pb-20 md:max-w-2xl lg:max-w-4xl lg:px-4">
     <div class="mb-4 flex gap-2">
       <a href="/admin/users" class="btn btn-ghost btn-sm" data-astro-prefetch="false">{t("users")}</a>
       <a href="/admin/bookings" class="btn btn-ghost btn-sm" data-astro-prefetch="false">{t("bookings")}</a>
@@ -149,7 +149,7 @@ const rangeTabs: { id: TimelineRange; label: string }[] = [
                     ev.type === "booking.ended" && "bg-warning"
                   ]}
                 />
-                <p class="text-xs text-base-content/50">
+                <p class="text-xs text-base-content/70">
                   {when.dateKey} · {formatTime(ev.createdAt, locale)}
                 </p>
                 <p class="font-semibold">{typeLabel(ev.type)}</p>
