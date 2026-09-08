@@ -6,7 +6,7 @@ import { deleteUserCascade } from "@/lib/users";
 import { parseApartmentBlock, parseApartmentNumber } from "@/lib/apartment";
 import { emitEvent } from "@/lib/events";
 import { THEME_PREFERENCES } from "@/lib/theme";
-import { db, eq, User } from "astro:db";
+import { and, db, eq, notExists, User } from "astro:db";
 
 export const auth = {
   signOut: defineAction({
@@ -203,12 +203,18 @@ export const auth = {
         throw new ActionError({ code: "UNAUTHORIZED", message: "Sign in required" });
       }
 
-      const admins = await db.select().from(User).where(eq(User.role, "admin")).limit(1);
-      if (admins.length > 0) {
+      // Atomic check-and-set: the "no admin exists yet" check and the promotion happen in a
+      // single SQL statement, so two concurrent bootstrap requests can't both pass the check
+      // before either one writes (the TOCTOU race a separate select-then-update would have).
+      const promoted = await db
+        .update(User)
+        .set({ role: "admin", updatedAt: new Date() })
+        .where(and(eq(User.id, user.id), notExists(db.select().from(User).where(eq(User.role, "admin")))))
+        .returning({ id: User.id });
+
+      if (promoted.length === 0) {
         throw new ActionError({ code: "FORBIDDEN", message: "Setup unavailable" });
       }
-
-      await db.update(User).set({ role: "admin", updatedAt: new Date() }).where(eq(User.id, user.id));
 
       await emitEvent({
         type: "user.became_admin",
