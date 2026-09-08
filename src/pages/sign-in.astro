@@ -22,7 +22,7 @@ const messages = {
 
 <Layout title={t("signIn")}>
   <AppHeader title={t("signIn")} backHref="/" />
-  <main class="mx-auto max-w-sm px-4 py-8">
+  <main id="main-content" class="mx-auto max-w-sm px-4 py-8">
     <div
       class="rounded-2xl border border-base-300 bg-base-100 p-6 shadow-sm"
       x-data={`{
@@ -399,7 +399,7 @@ const messages = {
         <button type="button" class="btn btn-ghost mt-6 w-full" @click="setMode('signIn')">
           {t("backToSignIn")}
         </button>
-        <a href="/" class="btn btn-ghost mt-2 w-full">{t("backToCalendar")}</a>
+        <a href="/" class="btn btn-ghost mt-2 w-full" data-astro-prefetch>{t("backToCalendar")}</a>
       </div>
     </div>
   </main>
