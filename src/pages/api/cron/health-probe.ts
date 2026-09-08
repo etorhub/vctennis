@@ -1,12 +1,12 @@
 import type { APIRoute } from "astro";
+import { isAuthorizedCronRequest } from "@/lib/cronAuth";
 import { runHealthProbes } from "@/lib/healthProbe";
 
 export const prerender = false;
 
 /** Scheduled HTTP health checks for prod routes; ships metrics to Grafana Cloud. */
 export const POST: APIRoute = async ({ request }) => {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${import.meta.env.CRON_SECRET}`) {
+  if (!isAuthorizedCronRequest(request)) {
     return new Response("Unauthorized", { status: 401 });
   }
 

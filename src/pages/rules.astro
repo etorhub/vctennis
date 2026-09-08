@@ -31,7 +31,7 @@ const contactError = contactErrKey
 
 <Layout title={t("rules")}>
   <AppHeader title={t("rules")} backHref="/" />
-  <main class="mx-auto max-w-lg px-4 py-6">
+  <main id="main-content" class="mx-auto max-w-lg px-4 py-6">
     <div class="flex flex-col gap-6 rounded-2xl border border-base-300 bg-base-100 p-6 shadow-sm">
       <section class="flex flex-col gap-2">
         <h2 class="text-base font-semibold text-base-content">{t("rulesHoursTitle")}</h2>
@@ -83,7 +83,7 @@ const contactError = contactErrKey
           !user ? (
             <p class="text-sm text-base-content/70">
               {t("rulesContactSignInPrompt")}{" "}
-              <a href="/sign-in" class="link link-primary">
+              <a href="/sign-in" class="link link-primary" data-astro-prefetch>
                 {t("signIn")}
               </a>
             </p>

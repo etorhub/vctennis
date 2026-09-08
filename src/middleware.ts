@@ -42,9 +42,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     : null;
 
+  const path = context.url.pathname;
+
   // Authoritative role/disabled from DB (session can lag after direct updates).
   // Same failure mode as above: fall back to the session's own values rather than 500ing.
-  if (user) {
+  // Only worth a second DB round-trip where the staleness is actually consequential —
+  // privileged routes and non-GET (mutating) requests. Plain GET requests to public
+  // pages use the session's own role/disabled values instead of re-querying on every load.
+  const needsFreshRoleCheck = path.startsWith("/admin") || context.request.method !== "GET";
+  if (user && needsFreshRoleCheck) {
     try {
       const [row] = await db
         .select({ role: User.role, disabled: User.disabled })
@@ -62,8 +68,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   context.locals.user = user;
   context.locals.session = session?.session ?? null;
-
-  const path = context.url.pathname;
 
   if (user?.disabled && path !== "/sign-out" && !path.startsWith("/api/auth")) {
     if (path !== "/disabled") {
