@@ -257,7 +257,12 @@ const overlapDetailTemplate = t("errorOverlapDetail");
       </div>
 
       {/* View existing booking */}
-      <div class="flex flex-col gap-4" x-show="mode === 'view' && step === 'view'" x-cloak>
+      <div
+        class="flex flex-col gap-4"
+        x-show="mode === 'view' && step === 'view'"
+        x-cloak
+        x-bind:inert="!(mode === 'view' && step === 'view')"
+      >
         <div class="rounded-xl border border-base-300 bg-base-200/60 px-4 py-4 text-center">
           <p class="text-base font-semibold" x-text="viewDayLabel"></p>
           <p class="mt-1 text-2xl font-semibold tabular-nums" x-text="viewTimeLabel"></p>
@@ -282,7 +287,11 @@ const overlapDetailTemplate = t("errorOverlapDetail");
       </div>
 
       {/* Step 1: pick slot (create) */}
-      <div class="flex flex-col gap-4" x-show="mode === 'create' && step === 'form'">
+      <div
+        class="flex flex-col gap-4"
+        x-show="mode === 'create' && step === 'form'"
+        x-bind:inert="!(mode === 'create' && step === 'form')"
+      >
         <p class="text-sm font-medium text-base-content" x-show="selectedDayLabel" x-text="selectedDayLabel"></p>
 
         <label class="form-control w-full">
@@ -322,7 +331,12 @@ const overlapDetailTemplate = t("errorOverlapDetail");
       </div>
 
       {/* Step 1: pick slot (edit) */}
-      <div class="flex flex-col gap-4" x-show="mode === 'edit' && step === 'form'" x-cloak>
+      <div
+        class="flex flex-col gap-4"
+        x-show="mode === 'edit' && step === 'form'"
+        x-cloak
+        x-bind:inert="!(mode === 'edit' && step === 'form')"
+      >
         <p class="text-sm font-medium text-base-content" x-show="selectedDayLabel" x-text="selectedDayLabel"></p>
 
         <label class="form-control w-full">
@@ -367,7 +381,12 @@ const overlapDetailTemplate = t("errorOverlapDetail");
       </div>
 
       {/* Conflict (create + edit) — replaces confirmation when the slot overlaps */}
-      <div class="flex flex-col gap-4" x-show="step === 'conflict'" x-cloak>
+      <div
+        class="flex flex-col gap-4"
+        x-show="step === 'conflict'"
+        x-cloak
+        x-bind:inert="step !== 'conflict'"
+      >
         <div class="rounded-xl border border-error/40 bg-error/10 px-4 py-4 text-center">
           <p class="text-base font-semibold text-error">{t("errorOverlap")}</p>
           <p class="mt-2 text-sm text-base-content/80" x-text="overlapDetail"></p>
@@ -386,6 +405,7 @@ const overlapDetailTemplate = t("errorOverlapDetail");
         class="flex flex-col gap-4"
         x-show="mode === 'create' && step === 'confirm'"
         x-cloak
+        x-bind:inert="!(mode === 'create' && step === 'confirm')"
       >
         <input type="hidden" name="startsAt" :value="startsAt" />
         <input type="hidden" name="durationMin" :value="durationMin" />
@@ -409,6 +429,7 @@ const overlapDetailTemplate = t("errorOverlapDetail");
         class="flex flex-col gap-4"
         x-show="mode === 'edit' && step === 'confirm'"
         x-cloak
+        x-bind:inert="!(mode === 'edit' && step === 'confirm')"
       >
         <input type="hidden" name="id" :value="bookingId" />
         <input type="hidden" name="startsAt" :value="startsAt" />
@@ -432,6 +453,7 @@ const overlapDetailTemplate = t("errorOverlapDetail");
         class="mt-3"
         x-show="mode === 'edit' && step === 'form'"
         x-cloak
+        x-bind:inert="!(mode === 'edit' && step === 'form')"
         onsubmit={`return confirm(${JSON.stringify(t("confirmCancelBooking"))})`}
       >
         <input type="hidden" name="id" :value="bookingId" />
