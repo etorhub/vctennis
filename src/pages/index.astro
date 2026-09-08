@@ -240,6 +240,7 @@ const dayViews = days.map((day, index) => {
   }
 
   <main
+    id="main-content"
     class="pb-28 lg:min-h-[calc(100dvh-3.5rem)] lg:bg-base-200"
     x-data={`{ dayIndex: 0, dayCount: ${dayViews.length} }`}
   >
@@ -362,7 +363,7 @@ const dayViews = days.map((day, index) => {
                           : undefined
                       }
                     >
-                      <span class="absolute left-2 top-1 text-xs text-base-content/50 lg:left-1 lg:text-[11px]">
+                      <span class="absolute left-2 top-1 text-xs text-base-content/70 lg:left-1 lg:text-[11px]">
                         {String(h).padStart(2, "0")}:00
                       </span>
                     </div>
@@ -423,6 +424,7 @@ const dayViews = days.map((day, index) => {
                       class:list={["agenda-booking text-left", { mine: b.mine }]}
                       style={bookingStyle}
                       x-bind:style={bookingBind}
+                      aria-label={t("bookingSummary", { time: b.timeLabel, name: b.label })}
                       data-id={b.id}
                       data-starts={b.startsAtIso}
                       data-duration={b.durationMin}
@@ -439,7 +441,7 @@ const dayViews = days.map((day, index) => {
                 })}
               </div>
               {day.bookings.length === 0 && (
-                <p class="pointer-events-none absolute inset-x-16 top-10 text-center text-sm text-base-content/50 lg:inset-x-10">
+                <p class="pointer-events-none absolute inset-x-16 top-10 text-center text-sm text-base-content/70 lg:inset-x-10">
                   {t("noBookings")}
                 </p>
               )}

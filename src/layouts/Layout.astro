@@ -145,6 +145,13 @@ const fullTitle = title === SITE_NAME || title === t("siteName") ? title : `${ti
     <slot name="head" />
   </head>
   <body class={`min-h-dvh w-full ${bodyClasses}`}>
+    <a
+      href="#main-content"
+      rel="nofollow noreferrer"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[80] focus:rounded-box focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-content focus:shadow-lg"
+    >
+      {t("skipToContent")}
+    </a>
     <div
       x-data="navProgress"
       x-show="active"
