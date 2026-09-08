@@ -67,7 +67,7 @@ const profileError = profileErr
   <AppHeader title={t("profile")} backHref="/" />
   {saved && <div x-init={`toastMessage = ${JSON.stringify(t("profileSaved"))}`} class="sr-only" />}
   {passwordChanged && <div x-init={`toastMessage = ${JSON.stringify(t("passwordChanged"))}`} class="sr-only" />}
-  <main class="mx-auto w-full max-w-sm px-4 py-6">
+  <main id="main-content" class="mx-auto w-full max-w-sm px-4 py-6">
     {
       apartmentMissing && (
         <div class="alert alert-warning mb-4 text-sm" role="alert">

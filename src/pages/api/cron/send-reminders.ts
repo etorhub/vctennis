@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { db, Bookings, User, and, eq, gt, isNull, lte } from "astro:db";
 import { buildBookingEmail } from "@/lib/bookingEmail";
 import { REMINDER_OFFSET_HOURS } from "@/lib/config";
+import { isAuthorizedCronRequest } from "@/lib/cronAuth";
 import { sendEmail } from "@/lib/email";
 import { emitEvent } from "@/lib/events";
 import { createT, type Locale } from "@/lib/i18n";
@@ -9,8 +10,7 @@ import { createT, type Locale } from "@/lib/i18n";
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${import.meta.env.CRON_SECRET}`) {
+  if (!isAuthorizedCronRequest(request)) {
     return new Response("Unauthorized", { status: 401 });
   }
 
