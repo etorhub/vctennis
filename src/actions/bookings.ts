@@ -1,11 +1,12 @@
 import { defineAction, ActionError } from "astro:actions";
 import { z } from "astro:schema";
-import { db, Bookings, eq, and, gt } from "astro:db";
+import { db, Bookings, eq, and, gt, lt } from "astro:db";
 import { buildBookingEmail } from "@/lib/bookingEmail";
 import { ALLOWED_DURATIONS, MAX_ACTIVE_BOOKINGS } from "@/lib/config";
 import { sendEmail } from "@/lib/email";
 import { emitEvent, type BookingRejectReason } from "@/lib/events";
 import {
+  bookingEnd,
   earlyEndAt,
   effectiveDurationMin,
   isAlignedSlot,
@@ -17,6 +18,11 @@ import {
   isWithinOpenHours,
   conflictsWithExisting
 } from "@/lib/time";
+
+// Widest a booking can be, so any existing row that could possibly overlap a new
+// [startsAt, startsAt + durationMin) window starts no earlier than one of these
+// durations before it — see `assertNoOverlap`.
+const MAX_DURATION_MIN = Math.max(...ALLOWED_DURATIONS);
 
 type BookingEventSource = "member" | "admin";
 
@@ -77,7 +83,16 @@ async function assertNoOverlap(
   excludeId?: string,
   source: BookingEventSource = "member"
 ) {
-  const existing = await db.select().from(Bookings);
+  // Only rows whose startsAt falls in this window can possibly overlap [startsAt, end):
+  // anything ending before startsAt started earlier than MAX_DURATION_MIN before it, and
+  // anything starting at/after `end` can't overlap it either. Bounded in SQL instead of a
+  // full-table scan (issue #63) — `idx_bookings_startsAt` makes this an index range scan.
+  const end = bookingEnd(startsAt, durationMin);
+  const earliestRelevantStart = new Date(startsAt.getTime() - MAX_DURATION_MIN * 60_000);
+  const existing = await db
+    .select()
+    .from(Bookings)
+    .where(and(gt(Bookings.startsAt, earliestRelevantStart), lt(Bookings.startsAt, end)));
   if (conflictsWithExisting(startsAt, durationMin, existing, excludeId)) {
     await rejectBooking(actorUserId, "overlap", "errorOverlap", "CONFLICT", {
       bookingId: excludeId,
